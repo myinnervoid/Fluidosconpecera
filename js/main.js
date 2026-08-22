@@ -1,7 +1,7 @@
 /**
  * AETHERIA | Main Application Orchestrator
  * Coordinates FluidCore (PavelDoGreat Navier-Stokes), Sand Particle Post-Process,
- * Symmetrical Multi-cursor, Fidgets, and UI Controller.
+ * Symmetrical Multi-cursor with Thematic Avatars (Nyan, Rocket, Comet), Fidgets, and UI.
  */
 
 (function (root) {
@@ -77,11 +77,14 @@
 
       for (let i = 0; i < symPoints.length; i++) {
         const pt = symPoints[i];
-        const col = AetheriaUI.getColorForAngle(pt.angleIndex, symPoints.length);
+        let col = AetheriaUI.getColorForAngle(pt.angleIndex, symPoints.length);
+        if (typeof AetheriaCursor !== 'undefined') {
+          col = AetheriaCursor.getSpecialTrailColor(col);
+        }
         FluidCore.splat(pt.x, pt.y, 0, 0, col);
       }
 
-      AetheriaSymmetry.renderVisualPoints(normX, normY, window.innerWidth, window.innerHeight, true);
+      AetheriaSymmetry.renderVisualPoints(normX, normY, window.innerWidth, window.innerHeight, true, 0, 0);
     }
 
     onPointerMove(e) {
@@ -92,7 +95,7 @@
       const aspect = window.innerWidth / window.innerHeight;
 
       if (!pointer) {
-        AetheriaSymmetry.renderVisualPoints(normX, normY, window.innerWidth, window.innerHeight, false);
+        AetheriaSymmetry.renderVisualPoints(normX, normY, window.innerWidth, window.innerHeight, false, 0, 0);
         return;
       }
 
@@ -113,11 +116,14 @@
 
       for (let i = 0; i < symPoints.length; i++) {
         const pt = symPoints[i];
-        const col = AetheriaUI.getColorForAngle(pt.angleIndex, symPoints.length);
+        let col = AetheriaUI.getColorForAngle(pt.angleIndex, symPoints.length);
+        if (typeof AetheriaCursor !== 'undefined') {
+          col = AetheriaCursor.getSpecialTrailColor(col);
+        }
         FluidCore.splat(pt.x, pt.y, pt.dx, pt.dy, col);
       }
 
-      AetheriaSymmetry.renderVisualPoints(normX, normY, window.innerWidth, window.innerHeight, true);
+      AetheriaSymmetry.renderVisualPoints(normX, normY, window.innerWidth, window.innerHeight, true, dx, dy);
     }
 
     onPointerUp(e) {

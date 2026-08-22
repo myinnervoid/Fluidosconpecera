@@ -1,6 +1,6 @@
 /**
  * AETHERIA | UI & Interaction Controller
- * Coordinates Floating Top Navigation, Hamburger Menu Drawer, Zen Mode, Accessibility, and Tooltips.
+ * Coordinates Floating Top Navigation, Hamburger Menu Drawer, Avatar Selector, Zen Mode, and Custom Image Upload.
  */
 
 (function (root) {
@@ -43,6 +43,11 @@
       // Element Mode Buttons
       this.elementBtns = document.querySelectorAll('.mode-btn');
 
+      // Avatar Cursor Buttons
+      this.avatarBtns = document.querySelectorAll('.avatar-btn');
+      this.customAvatarInput = document.getElementById('custom-avatar-input');
+      this.btnUploadAvatar = document.getElementById('btn-upload-avatar');
+
       // Symmetry Buttons
       this.symmetryBtns = document.querySelectorAll('.sym-btn');
 
@@ -82,7 +87,7 @@
       this.btnCloseDrawer.addEventListener('click', () => this.toggleDrawer(false));
       this.drawerOverlay.addEventListener('click', () => this.toggleDrawer(false));
 
-      // 2. Zen Mode Toggle (Hide / Show HUD)
+      // 2. Zen Mode Toggle
       if (this.btnZenToggle) {
         this.btnZenToggle.addEventListener('click', () => this.toggleZenMode());
       }
@@ -95,7 +100,36 @@
         });
       });
 
-      // 4. Symmetry Selectors
+      // 4. Avatar Cursor Selectors (Nyan, Rocket, Comet, Orb)
+      this.avatarBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const type = btn.dataset.avatar;
+          this.setAvatarType(type);
+        });
+      });
+
+      // Upload Custom Avatar Image
+      if (this.btnUploadAvatar && this.customAvatarInput) {
+        this.btnUploadAvatar.addEventListener('click', () => {
+          this.customAvatarInput.click();
+        });
+
+        this.customAvatarInput.addEventListener('change', (e) => {
+          const file = e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+              const dataUrl = ev.target.result;
+              AetheriaCursor.saveCustomAvatar(dataUrl);
+              this.setAvatarType('custom');
+              this.showToast('✨ Avatar personalizado guardado en local');
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+      }
+
+      // 5. Symmetry Selectors
       this.symmetryBtns.forEach((btn) => {
         btn.addEventListener('click', () => {
           const sym = parseInt(btn.dataset.symmetry, 10);
@@ -103,7 +137,7 @@
         });
       });
 
-      // 5. Supernova Action
+      // 6. Supernova Action
       const triggerSupernovaAction = () => {
         const col = this.getNextColor();
         AetheriaFidgets.triggerSupernova(FluidCore, col);
@@ -112,7 +146,7 @@
       if (this.btnQuickSupernova) this.btnQuickSupernova.addEventListener('click', triggerSupernovaAction);
       if (this.btnDrawerSupernova) this.btnDrawerSupernova.addEventListener('click', triggerSupernovaAction);
 
-      // 6. Vortex Action
+      // 7. Vortex Action
       const triggerVortexAction = () => {
         const col = this.getNextColor();
         AetheriaFidgets.triggerVortex(FluidCore, col);
@@ -121,7 +155,7 @@
       if (this.btnQuickVortex) this.btnQuickVortex.addEventListener('click', triggerVortexAction);
       if (this.btnDrawerVortex) this.btnDrawerVortex.addEventListener('click', triggerVortexAction);
 
-      // 7. Gravity Toggle Action
+      // 8. Gravity Toggle Action
       const toggleGravityAction = () => {
         const isGravityOn = AetheriaFidgets.toggleGravity(FluidCore);
         this.updateGravityUI(isGravityOn);
@@ -129,7 +163,7 @@
       if (this.btnQuickGravity) this.btnQuickGravity.addEventListener('click', toggleGravityAction);
       if (this.btnDrawerGravity) this.btnDrawerGravity.addEventListener('click', toggleGravityAction);
 
-      // 8. Cycle Palette
+      // 9. Cycle Palette
       if (this.btnDrawerPalette) {
         this.btnDrawerPalette.addEventListener('click', () => {
           const pal = this.cycleNextPalette();
@@ -139,7 +173,7 @@
         });
       }
 
-      // 9. Pause / Freeze
+      // 10. Pause / Freeze
       if (this.btnDrawerPause) {
         this.btnDrawerPause.addEventListener('click', () => {
           const isPaused = AetheriaFidgets.togglePause(FluidCore);
@@ -150,7 +184,7 @@
         });
       }
 
-      // 10. Clear
+      // 11. Clear
       const clearAction = () => {
         AetheriaFidgets.clear(FluidCore);
         this.showToast('🧹 Lienzo limpio');
@@ -158,7 +192,7 @@
       if (this.btnQuickClear) this.btnQuickClear.addEventListener('click', clearAction);
       if (this.btnDrawerClear) this.btnDrawerClear.addEventListener('click', clearAction);
 
-      // 11. Export PNG
+      // 12. Export PNG
       const exportAction = () => {
         app.exportPNG();
         this.showToast('📸 Captura de arte guardada');
@@ -166,7 +200,7 @@
       if (this.btnQuickExport) this.btnQuickExport.addEventListener('click', exportAction);
       if (this.btnDrawerExport) this.btnDrawerExport.addEventListener('click', exportAction);
 
-      // 12. Sliders
+      // 13. Sliders
       if (this.sliderVorticity) {
         this.sliderVorticity.addEventListener('input', (e) => {
           const val = parseFloat(e.target.value);
@@ -235,6 +269,25 @@
           this.toggleDrawer();
         }
       });
+    }
+
+    setAvatarType(type) {
+      if (typeof AetheriaCursor !== 'undefined') {
+        AetheriaCursor.setCursorType(type);
+      }
+      this.avatarBtns.forEach((b) => {
+        const isActive = b.dataset.avatar === type;
+        b.classList.toggle('active', isActive);
+        b.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      });
+      const names = {
+        nyan: '🐱 Nyan Cat (Estela Arcoíris)',
+        rocket: '🚀 Cohete Espacial',
+        comet: '☄️ Cometa Cósmico',
+        orb: '🔮 Orbe Místico',
+        custom: '🖼️ Avatar Personalizado'
+      };
+      this.showToast(`✨ Puntero: ${names[type] || type}`);
     }
 
     toggleZenMode() {
@@ -416,7 +469,6 @@
 
     showToast(message) {
       if (!this.toastContainer) return;
-      // Cap max simultaneous toasts
       while (this.toastContainer.childNodes.length >= 3) {
         this.toastContainer.removeChild(this.toastContainer.firstChild);
       }

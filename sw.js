@@ -2,7 +2,7 @@
  * AETHERIA | Offline Service Worker (Cache-First Strategy)
  */
 
-const CACHE_NAME = 'aetheria-v1.0.0';
+const CACHE_NAME = 'aetheria-v1.1.0';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -11,6 +11,7 @@ const ASSETS_TO_CACHE = [
   './assets/palettes.js',
   './assets/LDR_LLL1_0.png',
   './js/original/fluidCore.js',
+  './js/extensions/customCursor.js',
   './js/extensions/symmetry.js',
   './js/extensions/fidgets.js',
   './js/extensions/sandMode.js',

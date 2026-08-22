@@ -1,7 +1,7 @@
 /**
- * AETHERIA | Angular Symmetry & Multicursor Engine
+ * AETHERIA | Angular Symmetry & Dynamic Multicursor Engine
  * Handles radial/bilateral symmetry with normalized coordinates, aspect ratio correction,
- * static DOM element pool, and strict splat throttling.
+ * static DOM element pool, and dynamic directional avatar rotation.
  */
 
 (function (root) {
@@ -51,8 +51,11 @@
 
     updateCursorDOM() {
       const activeCount = this.symmetryMode;
+      const avatarHTML = (typeof AetheriaCursor !== 'undefined') ? AetheriaCursor.getAvatarHTML() : '';
+
       for (let i = 0; i < this.mirrorCursorPool.length; i++) {
         const el = this.mirrorCursorPool[i];
+        el.innerHTML = avatarHTML;
         if (i < activeCount) {
           el.style.display = 'block';
           el.style.opacity = '0';
@@ -136,16 +139,23 @@
       return points.slice(0, this.maxSplatsPerFrame);
     }
 
-    renderVisualPoints(normX, normY, width, height, isPointerDown) {
+    renderVisualPoints(normX, normY, width, height, isPointerDown, dx = 0, dy = 0) {
       if (!this.mirrorCursorPool.length) return;
 
-      const points = this.getPoints(normX, normY, 0, 0, width / height);
+      const points = this.getPoints(normX, normY, dx, dy, width / height);
       for (let i = 0; i < this.mirrorCursorPool.length; i++) {
         const el = this.mirrorCursorPool[i];
         if (points[i] && i < this.symmetryMode) {
           el.style.left = `${points[i].x * width}px`;
           el.style.top = `${(1.0 - points[i].y) * height}px`;
-          el.style.opacity = isPointerDown ? '1' : '0.35';
+          el.style.opacity = isPointerDown ? '1' : '0.45';
+
+          // Directional avatar rotation
+          if (typeof AetheriaCursor !== 'undefined') {
+            const rot = AetheriaCursor.calculateRotation(points[i].dx, points[i].dy);
+            const scale = isPointerDown ? 1.25 : 0.95;
+            el.style.transform = `translate(-50%, -50%) rotate(${rot}deg) scale(${scale})`;
+          }
         } else {
           el.style.opacity = '0';
         }
