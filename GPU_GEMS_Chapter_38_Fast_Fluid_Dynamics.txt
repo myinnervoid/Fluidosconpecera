@@ -1,0 +1,126 @@
+Chapter 38. Fast Fluid Dynamics Simulation on the GPU
+Mark J. Harris
+University of North Carolina at Chapel Hill
+
+This chapter describes a method for fast, stable fluid simulation that runs entirely on the GPU. It introduces fluid dynamics and the associated mathematics, and it describes in detail the techniques to perform the simulation on the GPU. After reading this chapter, you should have a basic understanding of fluid dynamics and know how to simulate fluids using the GPU. The source code accompanying this book demonstrates the techniques described in this chapter.
+
+38.1 Introduction
+Fluids are everywhere: water passing between riverbanks, smoke curling from a glowing cigarette, steam rushing from a teapot, water vapor forming into clouds, and paint being mixed in a can. Underlying all of them is the flow of fluids. All are phenomena that we would like to portray realistically in interactive graphics applications. Figure 38-1 shows examples of fluids simulated using the source code provided with this book.
+
+[Figure 38-1] Colored "Dye" Carried by a Swirling Fluid
+Fluid simulation is a useful building block that is the basis for simulating a variety of natural phenomena. Because of the large amount of parallelism in graphics hardware, the simulation we describe runs significantly faster on the GPU than on the CPU. Using an NVIDIA GeForce FX, we have achieved a speedup of up to six times over an equivalent CPU simulation.
+
+38.1.1 Our Goal
+Our goal is to assist you in learning a powerful tool, not just to teach you a new trick. Fluid dynamics is such a useful component of more complex simulations that treating it as a black box would be a mistake. Without understanding the basic physics and mathematics of fluids, using and extending the algorithms we present would be very difficult. For this reason, we did not skimp on the mathematics here. As a result, this chapter contains many potentially daunting equations. Wherever possible, we provide clear explanations and draw connections between the math and its implementation.
+
+38.1.2 Our Assumptions
+The reader is expected to have at least a college-level calculus background, including a basic grasp of differential equations. An understanding of vector calculus principles is helpful, but not required (we will review what we need). Also, experience with finite difference approximations of derivatives is useful. If you have ever implemented any sort of physical simulation, such as projectile motion or rigid body dynamics, many of the concepts we use will be familiar.
+
+38.1.3 Our Approach
+The techniques we describe are based on the "stable fluids" method of Stam 1999. However, while Stam's simulations used a CPU implementation, we choose to implement ours on graphics hardware because GPUs are well suited to the type of computations required by fluid simulation. The simulation we describe is performed on a grid of cells. Programmable GPUs are optimized for performing computations on pixels, which we can consider to be a grid of cells. GPUs achieve high performance through parallelism: they are capable of processing multiple vertices and pixels simultaneously. They are also optimized to perform multiple texture lookups per cycle. Because our simulation grids are stored in textures, this speed and parallelism is just what we need.
+
+This chapter cannot teach you everything about fluid dynamics. The scope of the simulation concepts that we can cover here is necessarily limited. We restrict ourselves to simulation of a continuous volume of fluid on a two-dimensional rectangular domain. Also, we do not simulate free surface boundaries between fluids, such as the interface between sloshing water and air. There are many extensions to these basic techniques. We mention a few of these at the end of the chapter, and we provide pointers to further reading about them.
+
+We use consistent mathematical notation throughout the chapter. In equations, italics are used for variables that represent scalar quantities, such as pressure, p. Boldface is used to represent vector quantities, such as velocity, u. All vectors in this chapter are assumed to be two-dimensional.
+
+Section 38.2 provides a mathematical background, including a discussion of the equations that govern fluid flow and a review of basic vector calculus concepts and notation. It then discusses the approach to solving the equations. Section 38.3 describes implementation of the fluid simulation on the GPU. Section 38.4 describes some applications of the simulation, Section 38.5 presents extensions, and Section 38.6 concludes the chapter.
+
+38.2 Mathematical Background
+To simulate the behavior of a fluid, we must have a mathematical representation of the state of the fluid at any given time. The most important quantity to represent is the velocity of the fluid, because velocity determines how the fluid moves itself and the things that are in it. The fluid's velocity varies in both time and space, so we represent it as a vector field.
+
+A vector field is a mapping of a vector-valued function onto a parameterized space, such as a Cartesian grid. (Other spatial parameterizations are possible, but for purposes of this chapter we assume a two-dimensional Cartesian grid.) The velocity vector field of our fluid is defined such that for every position x = (x, y), there is an associated velocity at time t, u(x, t) = (u(x, t), v(x, t), w(x, t)), as shown in Figure 38-2.
+
+[Figure 38-2] The Fluid Velocity Grid
+The key to fluid simulation is to take steps in time and, at each time step, correctly determine the current velocity field. We can do this by solving a set of equations that describes the evolution of the velocity field over time, under a variety of forces. Once we have the velocity field, we can do interesting things with it, such as using it to move objects, smoke densities, and other quantities that can be displayed in our application.
+
+38.2.1 The Navier-Stokes Equations for Incompressible Flow
+In physics it's common to make simplifying assumptions when modeling complex phenomena. Fluid simulation is no exception. We assume an incompressible, homogeneous fluid.
+
+A fluid is incompressible if the volume of any subregion of the fluid is constant over time. A fluid is homogeneous if its density, rho, is constant in space. The combination of incompressibility and homogeneity means that density is constant in both time and space. These assumptions are common in fluid dynamics, and they do not decrease the applicability of the resulting mathematics to the simulation of real fluids, such as water and air.
+
+We simulate fluid dynamics on a regular Cartesian grid with spatial coordinates x = (x, y) and time variable t. The fluid is represented by its velocity field u(x, t), as described earlier, and a scalar pressure field p(x, t). These fields vary in both space and time. If the velocity and pressure are known for the initial time t = 0, then the state of the fluid over time can be described by the Navier-Stokes equations for incompressible flow:
+
+Equation 1:
+du/dt = -(u . grad)u - (1/rho)*grad(p) + nu*nabla^2(u) + F
+
+Equation 2:
+div(u) = 0
+
+where rho is the (constant) fluid density, nu is the kinematic viscosity, and F = (fx , fy ) represents any external forces that act on the fluid. Notice that Equation 1 is actually two equations, because u is a vector quantity:
+du/dt = -(u . grad)u - (1/rho)*(dp/dx) + nu*nabla^2(u) + fx
+dv/dt = -(u . grad)v - (1/rho)*(dp/dy) + nu*nabla^2(v) + fy
+
+Thus, we have three unknowns (u, v, and p) and three equations.
+
+The Navier-Stokes equations may initially seem daunting, but like many complex concepts, we can better understand them by breaking them into simple pieces. Don't worry if the individual mathematical operations in the equations don't make sense yet. First, we will try to understand the different factors influencing the fluid flow. The four terms on the right-hand side of Equation 1 are accelerations. We'll look at them each in turn.
+
+38.2.2 Terms in the Navier-Stokes Equations
+
+Advection:
+The velocity of a fluid causes the fluid to transport objects, densities, and other quantities along with the flow. Imagine squirting dye into a moving fluid. The dye is transported, or advected, along the fluid's velocity field. In fact, the velocity of a fluid carries itself along just as it carries the dye. The first term on the right-hand side of Equation 1 represents this self-advection of the velocity field and is called the advection term.
+
+Pressure:
+Because the molecules of a fluid can move around each other, they tend to "squish" and "slosh." When force is applied to a fluid, it does not instantly propagate through the entire volume. Instead, the molecules close to the force push on those farther away, and pressure builds up. Because pressure is force per unit area, any pressure in the fluid naturally leads to acceleration. (Think of Newton's second law, F = m a.) The second term, called the pressure term, represents this acceleration.
+
+Diffusion:
+From experience with real fluids, you know that some fluids are "thicker" than others. For example, molasses and maple syrup flow slowly, but rubbing alcohol flows quickly. We say that thick fluids have a high viscosity. Viscosity is a measure of how resistive a fluid is to flow. This resistance results in diffusion of the momentum (and therefore velocity), so we call the third term the diffusion term.
+
+External Forces:
+The fourth term encapsulates acceleration due to external forces applied to the fluid. These forces may be either local forces or body forces. Local forces are applied to a specific region of the fluid—for example, the force of a fan blowing air. Body forces, such as the force of gravity, apply evenly to the entire fluid.
+
+38.2.3 A Brief Review of Vector Calculus
+Equations 1 and 2 contain three different uses of the symbol nabla (grad, div, Laplacian).
+- Gradient: grad(p) = (dp/dx, dp/dy) -> vector field
+- Divergence: div(u) = du/dx + dv/dy -> scalar field
+- Laplacian: nabla^2(p) = d^2p/dx^2 + d^2p/dy^2
+
+In discrete grid coordinates:
+- grad(p)_(i,j) = ((p_(i+1,j) - p_(i-1,j))/(2*dx), (p_(i,j+1) - p_(i,j-1))/(2*dy))
+- div(u)_(i,j) = (u_(i+1,j) - u_(i-1,j))/(2*dx) + (v_(i,j+1) - v_(i,j-1))/(2*dy)
+- nabla^2(p)_(i,j) = (p_(i+1,j) + p_(i-1,j) + p_(i,j+1) + p_(i,j-1) - 4*p_(i,j)) / (dx^2)
+
+38.2.4 Solving the Navier-Stokes Equations
+
+The Helmholtz-Hodge Decomposition:
+A vector field w on D can be uniquely decomposed in the form:
+w = u + grad(p)
+where u has zero divergence (div(u) = 0) and is parallel to the boundary (u . n = 0).
+
+Applying divergence to both sides:
+div(w) = div(u) + div(grad(p)) = 0 + nabla^2(p)
+=> nabla^2(p) = div(w) (Poisson-pressure equation)
+
+After solving for p, the divergence-free velocity field is recovered by:
+u = w - grad(p)
+
+Algorithm steps per frame:
+1. Advection: w1 = advect(u)
+2. Viscous Diffusion: w2 = diffuse(w1)
+3. Force Application: w3 = addForces(w2)
+4. Projection:
+   a. Compute divergence: div(w3)
+   b. Solve Poisson equation for pressure: nabla^2(p) = div(w3) using Jacobi iterations
+   c. Subtract pressure gradient: u_new = w3 - grad(p)
+
+Implicit Advection (Stam 1999):
+Trace trajectory backward in time:
+x_prev = x - dt * u(x, t)
+q(x, t + dt) = q(x_prev, t) (bilinearly interpolated from 4 nearest neighbors).
+
+Poisson Solver (Jacobi Iteration):
+x^(k+1)_(i,j) = (x^k_(i+1,j) + x^k_(i-1,j) + x^k_(i,j+1) + x^k_(i,j-1) + alpha * b_(i,j)) * beta_reciprocal
+For Poisson-Pressure: alpha = -(dx)^2, beta_reciprocal = 1/4, b = div(w).
+For Viscous Diffusion: alpha = (dx)^2 / (nu * dt), beta_reciprocal = 1 / (4 + alpha), b = u.
+
+Boundary Conditions:
+- No-slip velocity: u_boundary = -u_interior (scale = -1)
+- Pure Neumann pressure: p_boundary = p_interior (scale = 1)
+
+38.5 Extensions:
+- Vorticity Confinement (Fedkiw et al. 2001):
+  vorticity omega = curl(u) = dv/dx - du/dy
+  N = grad(|omega|) / |grad(|omega|)|
+  F_vorticity = eps * (N x omega)
+- 3D Simulations
+- Buoyancy and Thermal Convection for smoke/clouds
+- Arbitrary Boundaries & Obstacles

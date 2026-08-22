@@ -1,0 +1,20 @@
+# Archivos de auditoría interna de roles (no subir al repositorio)
+ACCESSIBILITY.md
+BACKEND_REVIEW.md
+DESIGN_SYSTEM.md
+FRONTEND_REVIEW.md
+LEGAL_PRIVACY.md
+PERFORMANCE.md
+PROJECT_SPEC.md
+QA_REVIEW.md
+RELEASE.md
+SECURITY_REVIEW.md
+UX_REVIEW.md
+
+# Archivos del sistema y temporales
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.zip
+.tempmediaStorage/

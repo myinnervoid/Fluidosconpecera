@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Aetheria | Generative Fluid & Sand Studio</title>
+  <meta name="description" content="Simulación de fluidos en GPU con Navier-Stokes, Arena Granular, Humo Espacial y Simetría Multicursor.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self';">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Lienzo WebGL -->
+  <main id="canvas-container" role="main" aria-label="Lienzo de dibujo interactivo">
+    <canvas id="gl-canvas"></canvas>
+    <div id="cursor-overlay" aria-hidden="true"></div>
+  </main>
+
+  <!-- Barra Superior Minimalista -->
+  <nav id="top-bar" aria-label="Navegación principal">
+    <!-- Logotipo y Modo Activo -->
+    <div class="top-bar-left">
+      <div class="brand-capsule">
+        <span class="brand-icon" aria-hidden="true">✨</span>
+        <span class="brand-title">AETHERIA</span>
+        <span class="mode-pill" id="current-mode-badge" aria-live="polite">💧 Fluido 3D</span>
+      </div>
+    </div>
+
+    <!-- Botones de Acción Rápida y Menú Hamburguesa -->
+    <div class="top-bar-right">
+      <button class="icon-btn" id="btn-zen-toggle" title="Modo Zen: Ocultar/Mostrar interfaz (Atajo: H)" aria-label="Alternar Modo Zen">
+        <span aria-hidden="true">👁️</span>
+      </button>
+
+      <button class="icon-btn pulse-glow" id="btn-quick-supernova" title="Supernova: Onda de choque radial instantánea (Atajo: S)" aria-label="Detonar Supernova">
+        <span aria-hidden="true">💥</span>
+        <span class="btn-text-desktop">Supernova</span>
+      </button>
+
+      <button class="icon-btn vortex-glow" id="btn-quick-vortex" title="Vórtice: Inyección de remolino en espiral (Atajo: V)" aria-label="Inyectar Vórtice">
+        <span aria-hidden="true">🌪️</span>
+        <span class="btn-text-desktop">Vórtice</span>
+      </button>
+
+      <button class="icon-btn gravity-glow" id="btn-quick-gravity" title="Gravedad: Flujo continuo en cascada hacia abajo (Atajo: G)" aria-label="Alternar Gravedad" aria-pressed="false">
+        <span aria-hidden="true">🪐</span>
+        <span class="btn-text-desktop">Gravedad</span>
+      </button>
+
+      <button class="icon-btn danger-hover" id="btn-quick-clear" title="Limpiar lienzo (Atajo: Del / Backspace)" aria-label="Limpiar lienzo">
+        <span aria-hidden="true">🧹</span>
+      </button>
+
+      <button class="icon-btn" id="btn-quick-export" title="Guardar imagen PNG en alta resolución" aria-label="Guardar imagen">
+        <span aria-hidden="true">📸</span>
+      </button>
+
+      <!-- Menú Hamburguesa Principal -->
+      <button class="hamburger-btn" id="btn-hamburger" title="Abrir Menú de Control, Modos y Paletas" aria-label="Abrir panel de ajustes" aria-haspopup="true" aria-expanded="false">
+        <span class="hamburger-icon" aria-hidden="true">☰</span>
+        <span>Ajustes</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Overlay para cerrar drawer -->
+  <div id="drawer-overlay" aria-hidden="true"></div>
+
+  <!-- Drawer Lateral de Ajustes y Explicaciones (Menú Hamburguesa) -->
+  <aside id="settings-drawer" aria-label="Panel de Ajustes" role="dialog" aria-modal="true">
+    <div class="drawer-header">
+      <h3>⚙️ Panel de Control</h3>
+      <button class="close-drawer-btn" id="btn-close-drawer" title="Cerrar panel" aria-label="Cerrar panel de ajustes">✕</button>
+    </div>
+
+    <div class="drawer-body">
+      <!-- 1. Selector de Modos de Arte -->
+      <section class="drawer-section">
+        <h4>✨ Modo Sensorial</h4>
+        <div class="mode-grid">
+          <button class="mode-btn active" data-element="fluid" id="mode-fluid" title="Dinámica de Fluidos Navier-Stokes en GPU" aria-pressed="true">
+            <span class="mode-icon" aria-hidden="true">💧</span>
+            <span>Fluido 3D</span>
+          </button>
+          <button class="mode-btn" data-element="sand" id="mode-sand" title="Partículas de Arena Granular estilo Reloj de Arena" aria-pressed="false">
+            <span class="mode-icon" aria-hidden="true">⏳</span>
+            <span>Arena</span>
+          </button>
+          <button class="mode-btn" data-element="gas" id="mode-gas" title="Humo & Gas Espacial de Alta Vorticidad" aria-pressed="false">
+            <span class="mode-icon" aria-hidden="true">💨</span>
+            <span>Gas / Humo</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- 2. Selector de Simetría Angular -->
+      <section class="drawer-section">
+        <h4>🪞 Simetría Radial</h4>
+        <div class="sym-row">
+          <button class="sym-btn" data-symmetry="1" title="Trazo libre sin simetría" aria-pressed="false">1x</button>
+          <button class="sym-btn" data-symmetry="2" title="Espejo horizontal" aria-pressed="false">2x</button>
+          <button class="sym-btn active" data-symmetry="4" title="Cuadrantes radiales 4x" aria-pressed="true">4x</button>
+          <button class="sym-btn" data-symmetry="6" title="Hexágono radial 6x" aria-pressed="false">6x</button>
+          <button class="sym-btn" data-symmetry="8" title="Mandala cósmico 8x" aria-pressed="false">8x</button>
+        </div>
+      </section>
+
+      <!-- 3. Acciones y Fidgets -->
+      <section class="drawer-section">
+        <h4>🎮 Fidgets & Controles</h4>
+        <div class="action-grid">
+          <button class="action-btn" id="drawer-btn-supernova" aria-label="Detonar Supernova">
+            <span aria-hidden="true">💥</span>
+            <span>Supernova (S)</span>
+          </button>
+          <button class="action-btn" id="drawer-btn-vortex" aria-label="Inyectar Vórtice">
+            <span aria-hidden="true">🌪️</span>
+            <span>Vórtice (V)</span>
+          </button>
+          <button class="action-btn" id="drawer-btn-gravity" aria-label="Alternar Gravedad" aria-pressed="false">
+            <span aria-hidden="true">🪐</span>
+            <span>Gravedad: <b id="gravity-status-text">OFF</b></span>
+          </button>
+          <button class="action-btn" id="drawer-btn-palette" aria-label="Cambiar paleta de color">
+            <span aria-hidden="true">🎨</span>
+            <span>Paleta: <b id="palette-status-text">Biolum</b></span>
+          </button>
+          <button class="action-btn" id="drawer-btn-pause" aria-label="Pausar simulación" aria-pressed="false">
+            <span aria-hidden="true">⏸️</span>
+            <span id="pause-status-text">Pausar</span>
+          </button>
+          <button class="action-btn" id="drawer-btn-clear" aria-label="Limpiar lienzo">
+            <span aria-hidden="true">🧹</span>
+            <span>Limpiar</span>
+          </button>
+          <button class="action-btn" id="drawer-btn-export" style="grid-column: span 2;" aria-label="Guardar imagen PNG">
+            <span aria-hidden="true">📸</span>
+            <span>Guardar Captura PNG</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- 4. Sliders de Parámetros Físicos -->
+      <section class="drawer-section">
+        <h4>🌊 Parámetros de Física</h4>
+        
+        <div class="slider-control">
+          <label for="slider-vorticity">Vorticidad / Remolinos <span id="val-vorticity">30</span></label>
+          <input type="range" id="slider-vorticity" min="0" max="60" step="1" value="30">
+        </div>
+
+        <div class="slider-control">
+          <label for="slider-dissipation">Disipación de Densidad <span id="val-dissipation">0.98</span></label>
+          <input type="range" id="slider-dissipation" min="0.1" max="2.0" step="0.05" value="0.98">
+        </div>
+
+        <div class="slider-control">
+          <label for="slider-splat-radius">Radio de Splat <span id="val-splat-radius">0.25</span></label>
+          <input type="range" id="slider-splat-radius" min="0.05" max="1.0" step="0.05" value="0.25">
+        </div>
+
+        <div class="slider-control">
+          <label for="slider-grain-size">Tamaño Grano de Arena <span id="val-grain-size">10px</span></label>
+          <input type="range" id="slider-grain-size" min="4" max="32" step="2" value="10">
+        </div>
+
+        <div class="slider-control">
+          <label for="slider-gravity-force">Fuerza de Gravedad <span id="val-gravity-force">1.8</span></label>
+          <input type="range" id="slider-gravity-force" min="0.5" max="5.0" step="0.2" value="1.8">
+        </div>
+      </section>
+
+      <!-- 5. Selector de Paletas de Color -->
+      <section class="drawer-section">
+        <h4>🎨 Paleta Activa</h4>
+        <div class="palette-grid" id="palette-selector-grid"></div>
+      </section>
+
+      <!-- 6. Guía y Explicación Detallada de Botones -->
+      <section class="drawer-section guide-section">
+        <h4>📖 Guía de Botones y Funciones</h4>
+        
+        <div class="guide-item">
+          <p><strong>💥 Supernova:</strong> Detona una explosión radial instantánea hacia afuera desde el centro con un solo clic.</p>
+        </div>
+        <div class="guide-item">
+          <p><strong>🌪️ Vórtice:</strong> Inyecta un remolino con aceleración angular tangencial (giro en espiral) con un solo clic.</p>
+        </div>
+        <div class="guide-item">
+          <p><strong>🪐 Gravedad:</strong> Activa una aceleración continua hacia abajo. El fluido o los granos de arena caerán hacia el fondo de la pantalla como en una cascada o reloj de arena.</p>
+        </div>
+        <div class="guide-item">
+          <p><strong>⏳ Arena:</strong> Transforma el fluido en miles de granos individuales con bordes sombreados y ruido mineral.</p>
+        </div>
+        <div class="guide-item">
+          <p><strong>🪞 Simetría:</strong> Multiplica tus trazos en 1, 2, 4, 6 u 8 puntos radiales automáticos alrededor del centro.</p>
+        </div>
+        <div class="guide-item">
+          <p><strong>👁️ Modo Zen:</strong> Oculta la barra superior para dibujar con pantalla 100% limpia. Pulsa [H] o toca el borde superior para restaurar.</p>
+        </div>
+        <div class="guide-item">
+          <p><strong>⌨️ Atajos:</strong> [1-3] Modos | [H] Modo Zen | [Espacio] Pausa | [C] Color | [S] Supernova | [V] Vórtice | [G] Gravedad | [Del] Limpiar.</p>
+        </div>
+      </section>
+    </div>
+  </aside>
+
+  <!-- Notificaciones Toast Accesibles -->
+  <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Scripts -->
+  <script src="assets/palettes.js"></script>
+  <script src="js/original/fluidCore.js"></script>
+  <script src="js/extensions/symmetry.js"></script>
+  <script src="js/extensions/fidgets.js"></script>
+  <script src="js/extensions/sandMode.js"></script>
+  <script src="js/extensions/ui.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    // Registro de Service Worker para PWA (solo cuando corre en servidor HTTP/HTTPS)
+    if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>

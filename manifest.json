@@ -1,0 +1,17 @@
+{
+  "name": "Aetheria Fluid & Sand Studio",
+  "short_name": "Aetheria",
+  "description": "Estudio interactivo de arte generativo, física de fluidos en GPU y arena granular.",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#07090e",
+  "theme_color": "#07090e",
+  "icons": [
+    {
+      "src": "assets/LDR_LLL1_0.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    }
+  ]
+}
