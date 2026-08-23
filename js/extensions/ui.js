@@ -1,6 +1,7 @@
 /**
  * AETHERIA | UI & Interaction Controller
- * Coordinates Floating Top Navigation, Hamburger Menu Drawer, Avatar Selector, Zen Mode, and Custom Image Upload.
+ * Coordinates Floating Top Navigation, Hamburger Menu Drawer, Avatar Selector,
+ * Audio Reactivity, Autonomous Swarm Boids, and Custom Image Upload.
  */
 
 (function (root) {
@@ -32,6 +33,7 @@
       this.btnQuickSupernova = document.getElementById('btn-quick-supernova');
       this.btnQuickVortex = document.getElementById('btn-quick-vortex');
       this.btnQuickGravity = document.getElementById('btn-quick-gravity');
+      this.btnQuickSwarm = document.getElementById('btn-quick-swarm');
       this.btnQuickClear = document.getElementById('btn-quick-clear');
       this.btnQuickExport = document.getElementById('btn-quick-export');
 
@@ -47,6 +49,18 @@
       this.avatarBtns = document.querySelectorAll('.avatar-btn');
       this.customAvatarInput = document.getElementById('custom-avatar-input');
       this.btnUploadAvatar = document.getElementById('btn-upload-avatar');
+
+      // Audio Reactivity Elements
+      this.btnAudioMic = document.getElementById('btn-audio-mic');
+      this.btnAudioFile = document.getElementById('btn-audio-file');
+      this.audioFileInput = document.getElementById('audio-file-input');
+      this.btnAudioSynth = document.getElementById('btn-audio-synth');
+      this.btnAudioOff = document.getElementById('btn-audio-off');
+      this.audioStatusText = document.getElementById('audio-status-text');
+
+      // Swarm Auto-pilot Elements
+      this.btnDrawerSwarm = document.getElementById('drawer-btn-swarm');
+      this.swarmStatusText = document.getElementById('swarm-status-text');
 
       // Symmetry Buttons
       this.symmetryBtns = document.querySelectorAll('.sym-btn');
@@ -129,7 +143,60 @@
         });
       }
 
-      // 5. Symmetry Selectors
+      // 5. Audio Reactivity Bindings
+      if (this.btnAudioMic) {
+        this.btnAudioMic.addEventListener('click', async () => {
+          const ok = await AetheriaAudio.startMic();
+          this.updateAudioUI(ok ? '🎤 Micrófono Activo' : '❌ Micrófono no disponible');
+        });
+      }
+
+      if (this.btnAudioFile && this.audioFileInput) {
+        this.btnAudioFile.addEventListener('click', () => this.audioFileInput.click());
+        this.audioFileInput.addEventListener('change', (e) => {
+          const file = e.target.files[0];
+          if (file) {
+            AetheriaAudio.playAudioFile(file);
+            this.updateAudioUI(`🎵 Música: ${file.name.slice(0, 16)}...`);
+          }
+        });
+      }
+
+      if (this.btnAudioSynth) {
+        this.btnAudioSynth.addEventListener('click', () => {
+          AetheriaAudio.startCosmicSynth();
+          this.updateAudioUI('🎶 Melodía Cósmica Lo-Fi Activa');
+        });
+      }
+
+      if (this.btnAudioOff) {
+        this.btnAudioOff.addEventListener('click', () => {
+          AetheriaAudio.stop();
+          this.updateAudioUI('🔇 Audio Desactivado');
+        });
+      }
+
+      // 6. Swarm Auto-Pilot Bindings
+      const toggleSwarmAction = () => {
+        const isSwarmOn = AetheriaSwarm.toggle();
+        if (this.btnQuickSwarm) {
+          this.btnQuickSwarm.classList.toggle('active-swarm', isSwarmOn);
+          this.btnQuickSwarm.setAttribute('aria-pressed', isSwarmOn ? 'true' : 'false');
+        }
+        if (this.btnDrawerSwarm) {
+          this.btnDrawerSwarm.classList.toggle('active', isSwarmOn);
+          this.btnDrawerSwarm.setAttribute('aria-pressed', isSwarmOn ? 'true' : 'false');
+        }
+        if (this.swarmStatusText) {
+          this.swarmStatusText.textContent = isSwarmOn ? 'ON' : 'OFF';
+        }
+        this.showToast(isSwarmOn ? '🐟 Auto-Piloto Boids Swarm ACTIVO' : '🛑 Auto-Piloto Swarm Desactivado');
+      };
+
+      if (this.btnQuickSwarm) this.btnQuickSwarm.addEventListener('click', toggleSwarmAction);
+      if (this.btnDrawerSwarm) this.btnDrawerSwarm.addEventListener('click', toggleSwarmAction);
+
+      // 7. Symmetry Selectors
       this.symmetryBtns.forEach((btn) => {
         btn.addEventListener('click', () => {
           const sym = parseInt(btn.dataset.symmetry, 10);
@@ -137,7 +204,7 @@
         });
       });
 
-      // 6. Supernova Action
+      // 8. Supernova Action
       const triggerSupernovaAction = () => {
         const col = this.getNextColor();
         AetheriaFidgets.triggerSupernova(FluidCore, col);
@@ -146,7 +213,7 @@
       if (this.btnQuickSupernova) this.btnQuickSupernova.addEventListener('click', triggerSupernovaAction);
       if (this.btnDrawerSupernova) this.btnDrawerSupernova.addEventListener('click', triggerSupernovaAction);
 
-      // 7. Vortex Action
+      // 9. Vortex Action
       const triggerVortexAction = () => {
         const col = this.getNextColor();
         AetheriaFidgets.triggerVortex(FluidCore, col);
@@ -155,7 +222,7 @@
       if (this.btnQuickVortex) this.btnQuickVortex.addEventListener('click', triggerVortexAction);
       if (this.btnDrawerVortex) this.btnDrawerVortex.addEventListener('click', triggerVortexAction);
 
-      // 8. Gravity Toggle Action
+      // 10. Gravity Toggle Action
       const toggleGravityAction = () => {
         const isGravityOn = AetheriaFidgets.toggleGravity(FluidCore);
         this.updateGravityUI(isGravityOn);
@@ -163,7 +230,7 @@
       if (this.btnQuickGravity) this.btnQuickGravity.addEventListener('click', toggleGravityAction);
       if (this.btnDrawerGravity) this.btnDrawerGravity.addEventListener('click', toggleGravityAction);
 
-      // 9. Cycle Palette
+      // 11. Cycle Palette
       if (this.btnDrawerPalette) {
         this.btnDrawerPalette.addEventListener('click', () => {
           const pal = this.cycleNextPalette();
@@ -173,7 +240,7 @@
         });
       }
 
-      // 10. Pause / Freeze
+      // 12. Pause / Freeze
       if (this.btnDrawerPause) {
         this.btnDrawerPause.addEventListener('click', () => {
           const isPaused = AetheriaFidgets.togglePause(FluidCore);
@@ -184,7 +251,7 @@
         });
       }
 
-      // 11. Clear
+      // 13. Clear
       const clearAction = () => {
         AetheriaFidgets.clear(FluidCore);
         this.showToast('🧹 Lienzo limpio');
@@ -192,7 +259,7 @@
       if (this.btnQuickClear) this.btnQuickClear.addEventListener('click', clearAction);
       if (this.btnDrawerClear) this.btnDrawerClear.addEventListener('click', clearAction);
 
-      // 12. Export PNG
+      // 14. Export PNG
       const exportAction = () => {
         app.exportPNG();
         this.showToast('📸 Captura de arte guardada');
@@ -200,7 +267,7 @@
       if (this.btnQuickExport) this.btnQuickExport.addEventListener('click', exportAction);
       if (this.btnDrawerExport) this.btnDrawerExport.addEventListener('click', exportAction);
 
-      // 13. Sliders
+      // 15. Sliders
       if (this.sliderVorticity) {
         this.sliderVorticity.addEventListener('input', (e) => {
           const val = parseFloat(e.target.value);
@@ -251,6 +318,8 @@
           if (this.btnDrawerPalette) this.btnDrawerPalette.click();
         } else if (e.key === 'h' || e.key === 'H') {
           this.toggleZenMode();
+        } else if (e.key === 'a' || e.key === 'A') {
+          toggleSwarmAction();
         } else if (e.key === 's' || e.key === 'S') {
           triggerSupernovaAction();
         } else if (e.key === 'v' || e.key === 'V') {
@@ -269,6 +338,13 @@
           this.toggleDrawer();
         }
       });
+    }
+
+    updateAudioUI(msg) {
+      if (this.audioStatusText) {
+        this.audioStatusText.textContent = msg;
+      }
+      this.showToast(msg);
     }
 
     setAvatarType(type) {

@@ -136,6 +136,9 @@
       if (typeof AetheriaSymmetry !== 'undefined') {
         AetheriaSymmetry.updateCursorDOM();
       }
+      if (typeof AetheriaSwarm !== 'undefined') {
+        AetheriaSwarm.updateAvatarHTML();
+      }
     }
 
     getAvatarHTML() {
@@ -152,7 +155,6 @@
         return col;
       }
       if (this.currentType === 'rocket') {
-        // Fiery thruster gradient
         const rocketTones = [
           [1.0, 0.15, 0.0],
           [1.0, 0.65, 0.0],
@@ -165,25 +167,34 @@
     }
 
     calculateRotation(dx, dy) {
-      if (Math.hypot(dx, dy) < 0.001) return 0;
-      // Invert Y because canvas Y is flipped relative to cartesian
+      if (Math.hypot(dx, dy) < 0.0001) return 0;
       const angleRad = Math.atan2(-dy, dx);
       let deg = angleRad * (180 / Math.PI);
 
-      // Adjust default facing direction based on sprite orientation
       if (this.currentType === 'nyan') {
-        // Nyan sprite faces right by default
         return deg;
       }
       if (this.currentType === 'rocket') {
-        // Rocket points up (90deg offset)
         return deg + 90;
       }
       if (this.currentType === 'comet') {
-        // Comet points up-right (45deg offset)
         return deg + 45;
       }
       return deg;
+    }
+
+    getEmitterOffsetPoint(normX, normY, dx, dy) {
+      const speed = Math.hypot(dx, dy);
+      if (speed < 0.001) return { x: normX, y: normY };
+
+      const normVx = dx / speed;
+      const normVy = dy / speed;
+      const offsetDistance = 0.022; // Distance from center to rear exhaust/tail
+
+      return {
+        x: normX - normVx * offsetDistance,
+        y: normY - normVy * offsetDistance
+      };
     }
   }
 

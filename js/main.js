@@ -1,7 +1,7 @@
 /**
  * AETHERIA | Main Application Orchestrator
  * Coordinates FluidCore (PavelDoGreat Navier-Stokes), Sand Particle Post-Process,
- * Symmetrical Multi-cursor with Thematic Avatars (Nyan, Rocket, Comet), Fidgets, and UI.
+ * Symmetrical Multi-cursor with Thematic Avatars, Particle Sparks, Swarm Boids, and Adaptive Audio.
  */
 
 (function (root) {
@@ -10,6 +10,7 @@
   class AetheriaApp {
     constructor() {
       this.glCanvas = document.getElementById('gl-canvas');
+      this.canvasContainer = document.getElementById('canvas-container');
       this.cursorOverlay = document.getElementById('cursor-overlay');
 
       this.pointers = new Map();
@@ -26,19 +27,23 @@
       // 2. Initialize Sand Particle Post-Process Shader
       AetheriaSandMode.init(FluidCore.getGL());
 
-      // 3. Initialize Symmetry Controller
+      // 3. Initialize Particle FX (Sparks, Embers & Stardust)
+      AetheriaParticles.init(this.canvasContainer);
+
+      // 4. Initialize Symmetry Controller
       AetheriaSymmetry.init(this.cursorOverlay);
 
-      // 4. Initialize UI Controller
+      // 5. Initialize Autonomous Swarm Controller (Boids)
+      AetheriaSwarm.init(this.cursorOverlay);
+
+      // 6. Initialize UI Controller
       AetheriaUI.init(this);
 
-      // 5. Bind Resizing
+      // 7. Bind Resizing & Interactions
       window.addEventListener('resize', () => this.onResize());
-
-      // 6. Bind Pointer & Touch Interactions
       this.bindInteractions();
 
-      // 7. Start Smooth Animation Loop
+      // 8. Start Smooth Animation Loop
       this.loop();
     }
 
@@ -120,7 +125,21 @@
         if (typeof AetheriaCursor !== 'undefined') {
           col = AetheriaCursor.getSpecialTrailColor(col);
         }
-        FluidCore.splat(pt.x, pt.y, pt.dx, pt.dy, col);
+
+        // Calculate Rear Tobera / Tail Offset position
+        let emitterPt = { x: pt.x, y: pt.y };
+        if (typeof AetheriaCursor !== 'undefined') {
+          emitterPt = AetheriaCursor.getEmitterOffsetPoint(pt.x, pt.y, pt.dx, pt.dy);
+        }
+
+        FluidCore.splat(emitterPt.x, emitterPt.y, pt.dx, pt.dy, col);
+
+        // Emit Sparks / Stardust from rear tail
+        if (AetheriaParticles) {
+          const hexCol = `rgb(${Math.round(col[0] * 255)}, ${Math.round(col[1] * 255)}, ${Math.round(col[2] * 255)})`;
+          const sparkType = (AetheriaCursor && AetheriaCursor.currentType === 'rocket') ? 'fire' : 'star';
+          AetheriaParticles.emit(emitterPt.x * window.innerWidth, (1.0 - emitterPt.y) * window.innerHeight, pt.dx * 0.05, pt.dy * 0.05, hexCol, sparkType, 2);
+        }
       }
 
       AetheriaSymmetry.renderVisualPoints(normX, normY, window.innerWidth, window.innerHeight, true, dx, dy);
@@ -147,6 +166,11 @@
       // Draw WebGL layer
       ctx.drawImage(this.glCanvas, 0, 0, w, h);
 
+      // Draw Particle layer
+      if (AetheriaParticles && AetheriaParticles.canvas) {
+        ctx.drawImage(AetheriaParticles.canvas, 0, 0, w, h);
+      }
+
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
       const filename = `Aetheria-Art-${timestamp}.png`;
 
@@ -165,27 +189,35 @@
       const dt = Math.min((now - this.lastTime) / 1000.0, 0.033);
       this.lastTime = now;
 
-      // Watchdog: detect frame freeze without gl.readPixels
-      if (dt > 0.15) {
-        this.lagFrameCount++;
-        if (this.lagFrameCount > 3) {
-          console.warn('Watchdog: Recuperación de fluidez automática.');
-          FluidCore.reset();
-          this.lagFrameCount = 0;
+      // 1. Audio Processing & Adaptive Beat Shockwave
+      if (typeof AetheriaAudio !== 'undefined' && AetheriaAudio.isListening) {
+        AetheriaAudio.update();
+        if (AetheriaAudio.isBeatDetected) {
+          const col = AetheriaUI.getNextColor();
+          // Gentle shockwave ripple in center on beat drops
+          FluidCore.splat(0.5, 0.5, (Math.random() - 0.5) * 800, (Math.random() - 0.5) * 800, col);
         }
-      } else {
-        this.lagFrameCount = 0;
       }
 
-      // 1. Step Navier-Stokes GPU Physics
+      // 2. Autonomous Swarm Boids (Auto-Pilot / Screensaver)
+      if (typeof AetheriaSwarm !== 'undefined' && AetheriaSwarm.isEnabled) {
+        AetheriaSwarm.updateAndEmit(dt, FluidCore, AetheriaAudio, AetheriaParticles);
+      }
+
+      // 3. Step Navier-Stokes GPU Physics
       FluidCore.step(dt);
 
-      // 2. Render Screen Pass
+      // 4. Render Screen Pass
       if (AetheriaSandMode.isEnabled) {
         const pal = AetheriaUI.getCurrentPalette();
         AetheriaSandMode.render(FluidCore.getDensityTexture(), pal.colors);
       } else {
         FluidCore.render(null);
+      }
+
+      // 5. Render Particle Sparks Overlay
+      if (AetheriaParticles) {
+        AetheriaParticles.updateAndRender(dt);
       }
 
       requestAnimationFrame(() => this.loop());
