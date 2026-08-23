@@ -2,10 +2,19 @@
  * AETHERIA | Dynamic Custom Cursor & Thematic Avatars
  * Supports Nyan Cat (Rainbow trail), Cosmic Rocket, Comet, Energy Orb,
  * and user-uploaded local avatars persisted via localStorage.
+ * Configures narrow ribbon trails (estelas delgadas) for each avatar type.
  */
 
 (function (root) {
   'use strict';
+
+  const TRAIL_CONFIGS = {
+    orb: { radiusScale: 1.0, sparkType: 'star', sparkCount: 1 },
+    nyan: { radiusScale: 0.36, sparkType: 'star', sparkCount: 2 }, // Franja arcoíris delgada
+    rocket: { radiusScale: 0.30, sparkType: 'fire', sparkCount: 3 }, // Chorro de fuego cónico
+    comet: { radiusScale: 0.26, sparkType: 'star', sparkCount: 2 },  // Haz plateado de plasma
+    custom: { radiusScale: 0.45, sparkType: 'star', sparkCount: 2 }
+  };
 
   // Crisp, lightweight inline SVG avatars
   const AVATAR_SVGS = {
@@ -80,15 +89,15 @@
         <defs>
           <linearGradient id="cometTail" x1="0%" y1="100%" x2="100%" y2="0%">
             <stop offset="0%" stop-color="transparent"/>
-            <stop offset="60%" stop-color="#00f2fe" stop-opacity="0.6"/>
+            <stop offset="60%" stop-color="#b0c4de" stop-opacity="0.7"/>
             <stop offset="100%" stop-color="#ffffff"/>
           </linearGradient>
         </defs>
         <!-- Trail -->
         <polygon points="4,32 18,18 32,4 18,14 8,24" fill="url(#cometTail)"/>
         <!-- Comet Core -->
-        <circle cx="28" cy="8" r="5" fill="#ffffff" filter="drop-shadow(0 0 10px #00f2fe)"/>
-        <circle cx="28" cy="8" r="2.5" fill="#00f2fe"/>
+        <circle cx="28" cy="8" r="5" fill="#ffffff" filter="drop-shadow(0 0 10px #e0f2fe)"/>
+        <circle cx="28" cy="8" r="2.5" fill="#b0c4de"/>
       </svg>
     `
   };
@@ -148,6 +157,10 @@
       return AVATAR_SVGS[this.currentType] || AVATAR_SVGS.orb;
     }
 
+    getTrailConfig() {
+      return TRAIL_CONFIGS[this.currentType] || TRAIL_CONFIGS.orb;
+    }
+
     getSpecialTrailColor(baseColor) {
       if (this.currentType === 'nyan') {
         const col = this.nyanColors[this.nyanRainbowIndex % this.nyanColors.length];
@@ -158,10 +171,19 @@
         const rocketTones = [
           [1.0, 0.15, 0.0],
           [1.0, 0.65, 0.0],
-          [1.0, 0.95, 0.3],
-          [1.0, 0.0, 0.5]
+          [1.0, 0.95, 0.2],
+          [1.0, 0.0, 0.4]
         ];
         return rocketTones[Math.floor(Math.random() * rocketTones.length)];
+      }
+      if (this.currentType === 'comet') {
+        const cometTones = [
+          [0.92, 0.96, 1.0],   // Blanco brillante
+          [0.72, 0.82, 0.92],  // Plata metálica
+          [0.45, 0.52, 0.65],  // Titanio gris
+          [0.35, 0.75, 0.95]   // Plasma hielo
+        ];
+        return cometTones[Math.floor(Math.random() * cometTones.length)];
       }
       return baseColor;
     }

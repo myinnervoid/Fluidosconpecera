@@ -2,6 +2,7 @@
  * AETHERIA | Autonomous Swarm Engine (Boids / Flocking Multi-Avatar Auto-Pilot)
  * Inspired by Craig Reynolds Boids & RippleAquarium.
  * Ultra-lightweight: 3 agents with separation, alignment, cohesion, and audio reaction.
+ * Implements Dynamic Dissipation and Narrow Ribbon Trail Splats.
  */
 
 (function (root) {
@@ -97,10 +98,11 @@
   class SwarmController {
     constructor() {
       this.isEnabled = false;
-      this.boidsCount = 3; // Ultra low-overhead default
+      this.boidsCount = 3;
       this.boids = [];
       this.domContainer = null;
       this.domElements = [];
+      this.prevDissipation = 0.98;
       this.initBoids();
     }
 
@@ -141,6 +143,17 @@
 
     toggle(forceState = null) {
       this.isEnabled = forceState !== null ? forceState : !this.isEnabled;
+      
+      // Dynamic Dissipation Adjustment (Anti-Whiteout for infinite auto-pilot loops)
+      if (typeof FluidCore !== 'undefined') {
+        if (this.isEnabled) {
+          this.prevDissipation = FluidCore.config.DENSITY_DISSIPATION;
+          FluidCore.config.DENSITY_DISSIPATION = 1.35; // Accelerate fade to preserve rich contrast
+        } else {
+          FluidCore.config.DENSITY_DISSIPATION = this.prevDissipation || 0.98;
+        }
+      }
+
       for (const el of this.domElements) {
         el.style.display = this.isEnabled ? 'block' : 'none';
         el.style.opacity = this.isEnabled ? '1' : '0';
@@ -156,6 +169,8 @@
       const aspect = w / h;
       const bass = audioEngine ? audioEngine.bassEnergy : 0;
       const isBeat = audioEngine ? audioEngine.isBeatDetected : false;
+
+      const trailCfg = (typeof AetheriaCursor !== 'undefined') ? AetheriaCursor.getTrailConfig() : { radiusScale: 0.35, sparkType: 'star', sparkCount: 2 };
 
       for (let i = 0; i < this.boids.length; i++) {
         const b = this.boids[i];
@@ -175,23 +190,23 @@
         const speed = Math.hypot(b.vx, b.vy);
         const normVx = speed > 0.0001 ? b.vx / speed : 1.0;
         const normVy = speed > 0.0001 ? b.vy / speed : 0.0;
-        const tailOffset = 0.025; // Emitter is behind avatar
+        const tailOffset = 0.022; // Behind avatar
         const tailX = b.x - normVx * tailOffset;
         const tailY = b.y - normVy * tailOffset;
 
-        // Fluid Trail Injection
+        // Fluid Trail Injection (with narrow ribbon scaling)
         let color = AetheriaUI ? AetheriaUI.getColorForAngle(b.colorIndex, 6) : [0.0, 0.95, 1.0];
         if (typeof AetheriaCursor !== 'undefined') {
           color = AetheriaCursor.getSpecialTrailColor(color);
         }
 
-        const splatForce = (FluidCore.config.SPLAT_FORCE || 6000) * 0.45 * (1.0 + bass * 1.5);
-        fluidCore.splat(tailX, tailY, b.vx * splatForce, b.vy * splatForce, color);
+        const splatForce = (FluidCore.config.SPLAT_FORCE || 6000) * 0.42 * (1.0 + bass * 1.5);
+        fluidCore.splat(tailX, tailY, b.vx * splatForce, b.vy * splatForce, color, trailCfg.radiusScale);
 
         // Particles Emission from Thruster/Tail
         if (particlesEngine) {
           const hexCol = `rgb(${Math.round(color[0] * 255)}, ${Math.round(color[1] * 255)}, ${Math.round(color[2] * 255)})`;
-          particlesEngine.emit(tailX * w, (1.0 - tailY) * h, b.vx * 150, b.vy * 150, hexCol, 'star', isBeat ? 4 : 1);
+          particlesEngine.emit(tailX * w, (1.0 - tailY) * h, b.vx * 150, b.vy * 150, hexCol, trailCfg.sparkType, isBeat ? 3 : trailCfg.sparkCount);
         }
       }
     }

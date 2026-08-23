@@ -1,7 +1,7 @@
 /**
  * AETHERIA | UI & Interaction Controller
  * Coordinates Floating Top Navigation, Hamburger Menu Drawer, Avatar Selector,
- * Audio Reactivity, Autonomous Swarm Boids, and Custom Image Upload.
+ * System/Mic Audio Reactivity, Autonomous Swarm Boids, and Custom Image Upload.
  */
 
 (function (root) {
@@ -11,7 +11,7 @@
     constructor() {
       this.app = null;
       this.activeElement = 'fluid'; // 'fluid', 'sand', 'gas'
-      this.currentPaletteKey = 'biolum';
+      this.currentPaletteKey = 'aurora';
       this.colorIndex = 0;
       this.isZenMode = false;
     }
@@ -52,6 +52,7 @@
 
       // Audio Reactivity Elements
       this.btnAudioMic = document.getElementById('btn-audio-mic');
+      this.btnAudioSystem = document.getElementById('btn-audio-system');
       this.btnAudioFile = document.getElementById('btn-audio-file');
       this.audioFileInput = document.getElementById('audio-file-input');
       this.btnAudioSynth = document.getElementById('btn-audio-synth');
@@ -143,11 +144,19 @@
         });
       }
 
-      // 5. Audio Reactivity Bindings
+      // 5. Audio Reactivity Bindings (Mic, System/Tab, File, Synth, Off)
       if (this.btnAudioMic) {
         this.btnAudioMic.addEventListener('click', async () => {
           const ok = await AetheriaAudio.startMic();
           this.updateAudioUI(ok ? '🎤 Micrófono Activo' : '❌ Micrófono no disponible');
+        });
+      }
+
+      if (this.btnAudioSystem) {
+        this.btnAudioSystem.addEventListener('click', async () => {
+          this.showToast('ℹ️ Selecciona la pestaña/app con audio activo');
+          const ok = await AetheriaAudio.startSystemAudio();
+          this.updateAudioUI(ok ? '🖥️ Audio de Sistema / Pestaña Activo' : '⚠️ Audio de sistema no seleccionado');
         });
       }
 
@@ -234,7 +243,7 @@
       if (this.btnDrawerPalette) {
         this.btnDrawerPalette.addEventListener('click', () => {
           const pal = this.cycleNextPalette();
-          this.paletteStatusText.textContent = pal.name.split(' ')[0];
+          this.paletteStatusText.textContent = pal.name.split(' ')[1] || pal.name;
           this.updatePaletteActiveCard();
           this.showToast(`🎨 Paleta: ${pal.name}`);
         });
@@ -357,9 +366,9 @@
         b.setAttribute('aria-pressed', isActive ? 'true' : 'false');
       });
       const names = {
-        nyan: '🐱 Nyan Cat (Estela Arcoíris)',
-        rocket: '🚀 Cohete Espacial',
-        comet: '☄️ Cometa Cósmico',
+        nyan: '🐱 Nyan Cat (Arcoíris)',
+        rocket: '🚀 Cohete (Fuego)',
+        comet: '☄️ Cometa (Plata & Plasma)',
         orb: '🔮 Orbe Místico',
         custom: '🖼️ Avatar Personalizado'
       };
@@ -438,7 +447,7 @@
 
       const currPal = this.getCurrentPalette();
       if (this.paletteStatusText) {
-        this.paletteStatusText.textContent = currPal.name.split(' ')[0];
+        this.paletteStatusText.textContent = currPal.name.split(' ')[1] || currPal.name;
       }
       this.showToast(`✨ Modo: ${this.currentModeBadge.textContent}`);
     }
@@ -528,7 +537,7 @@
           this.setPalette(key);
           this.updatePaletteActiveCard();
           if (this.paletteStatusText) {
-            this.paletteStatusText.textContent = pal.name.split(' ')[0];
+            this.paletteStatusText.textContent = pal.name.split(' ')[1] || pal.name;
           }
           this.showToast(`🎨 Paleta: ${pal.name}`);
         });

@@ -7,7 +7,7 @@
   <meta name="description" content="Simulación de fluidos en GPU con Navier-Stokes, Arena Granular, Humo Espacial, Audio Reactivo, Swarm Boids y Punteros Temáticos.">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'self';">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=2.0">
 </head>
 <body>
 
@@ -102,17 +102,17 @@
 
       <!-- 2. Selector de Avatar de Puntero -->
       <section class="drawer-section">
-        <h4>🐱 Puntero Temático</h4>
+        <h4>🐱 Puntero Temático & Estela</h4>
         <div class="avatar-grid">
-          <button class="avatar-btn active" data-avatar="nyan" title="Nyan Cat con estela arcoíris" aria-pressed="true">
+          <button class="avatar-btn active" data-avatar="nyan" title="Nyan Cat con estela arcoíris delgada" aria-pressed="true">
             <span class="avatar-icon" aria-hidden="true">🐱</span>
             <span>Nyan</span>
           </button>
-          <button class="avatar-btn" data-avatar="rocket" title="Cohete espacial rotatorio con fuego" aria-pressed="false">
+          <button class="avatar-btn" data-avatar="rocket" title="Cohete con chorro de fuego cónico" aria-pressed="false">
             <span class="avatar-icon" aria-hidden="true">🚀</span>
             <span>Cohete</span>
           </button>
-          <button class="avatar-btn" data-avatar="comet" title="Cometa con estela de plasma" aria-pressed="false">
+          <button class="avatar-btn" data-avatar="comet" title="Cometa con haz plateado y plasma" aria-pressed="false">
             <span class="avatar-icon" aria-hidden="true">☄️</span>
             <span>Cometa</span>
           </button>
@@ -133,6 +133,10 @@
         <h4>🎵 Audio Reactivo & Beat Drops</h4>
         <div class="audio-status-pill" id="audio-status-text">🔇 Audio Desactivado</div>
         <div class="action-grid">
+          <button class="action-btn" id="btn-audio-system" title="Capturar audio limpio de la computadora, pestaña o Spotify/YouTube">
+            <span aria-hidden="true">🖥️</span>
+            <span>Audio Sistema</span>
+          </button>
           <button class="action-btn" id="btn-audio-mic" title="Reaccionar al sonido en vivo de tu micrófono">
             <span aria-hidden="true">🎤</span>
             <span>Micrófono</span>
@@ -187,7 +191,7 @@
           </button>
           <button class="action-btn" id="drawer-btn-palette" aria-label="Cambiar paleta de color">
             <span aria-hidden="true">🎨</span>
-            <span>Paleta: <b id="palette-status-text">Biolum</b></span>
+            <span>Paleta: <b id="palette-status-text">Aurora</b></span>
           </button>
           <button class="action-btn" id="drawer-btn-pause" aria-label="Pausar simulación" aria-pressed="false">
             <span aria-hidden="true">⏸️</span>
@@ -236,7 +240,7 @@
 
       <!-- 7. Selector de Paletas de Color -->
       <section class="drawer-section">
-        <h4>🎨 Paleta Activa</h4>
+        <h4>🎨 Paletas de Color & Ambiente</h4>
         <div class="palette-grid" id="palette-selector-grid"></div>
       </section>
 
@@ -245,13 +249,13 @@
         <h4>📖 Guía de Botones y Funciones</h4>
         
         <div class="guide-item">
-          <p><strong>🎵 Audio Reactivo:</strong> El fluido y las chispas se sincronizan con los bajos y agudos de tu música o micrófono.</p>
+          <p><strong>🖥️ Audio del Sistema:</strong> Captura el sonido digital de tu pestaña, Spotify o YouTube sin ruidos de micrófono.</p>
         </div>
         <div class="guide-item">
-          <p><strong>🐟 Auto-Piloto:</strong> Bandada de avatares que vuelan y rebotan solos creando estelas infinitas para grabar videos.</p>
+          <p><strong>🐟 Auto-Piloto:</strong> Bandada de avatares con disipación dinámica y sin saturación a blanco para videos de horas.</p>
         </div>
         <div class="guide-item">
-          <p><strong>🐱 Punteros:</strong> Nyan Cat expulsa arcoíris de su cola y el Cohete expulsa fuego de su tobera.</p>
+          <p><strong>🐱 Estelas Delgadas:</strong> Nyan Cat deja un arcoíris compacto, el Cohete un chorro de fuego y el Cometa un haz plateado.</p>
         </div>
         <div class="guide-item">
           <p><strong>🪐 Gravedad:</strong> Cascada continua hacia abajo.</p>
@@ -269,22 +273,22 @@
   <!-- Notificaciones Toast Accesibles -->
   <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
 
-  <!-- Scripts -->
-  <script src="assets/palettes.js"></script>
-  <script src="js/original/fluidCore.js"></script>
-  <script src="js/extensions/particleFx.js"></script>
-  <script src="js/extensions/audioEngine.js"></script>
-  <script src="js/extensions/customCursor.js"></script>
-  <script src="js/extensions/swarmEngine.js"></script>
-  <script src="js/extensions/symmetry.js"></script>
-  <script src="js/extensions/fidgets.js"></script>
-  <script src="js/extensions/sandMode.js"></script>
-  <script src="js/extensions/ui.js"></script>
-  <script src="js/main.js"></script>
+  <!-- Scripts con Cache Busting -->
+  <script src="assets/palettes.js?v=2.1"></script>
+  <script src="js/original/fluidCore.js?v=2.1"></script>
+  <script src="js/extensions/particleFx.js?v=2.1"></script>
+  <script src="js/extensions/audioEngine.js?v=2.1"></script>
+  <script src="js/extensions/customCursor.js?v=2.1"></script>
+  <script src="js/extensions/swarmEngine.js?v=2.1"></script>
+  <script src="js/extensions/symmetry.js?v=2.1"></script>
+  <script src="js/extensions/fidgets.js?v=2.1"></script>
+  <script src="js/extensions/sandMode.js?v=2.1"></script>
+  <script src="js/extensions/ui.js?v=2.1"></script>
+  <script src="js/main.js?v=2.1"></script>
   <script>
     if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(() => {});
+        navigator.serviceWorker.register('./sw.js?v=2.1').catch(() => {});
       });
     }
   </script>

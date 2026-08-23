@@ -1,7 +1,7 @@
 /**
  * AETHERIA | Adaptive Audio-Reactive Engine (Web Audio API)
- * Implements Adaptive Beat Detection with energy history buffer (artef4kt)
- * Supports Live Microphone, Local MP3/WAV playback, and Cosmic Synth Demo.
+ * Implements Adaptive Beat Detection with energy history buffer (artef4kt).
+ * Supports System/Tab Audio Capture (getDisplayMedia), Live Microphone, Local MP3/WAV, and Synth.
  */
 
 (function (root) {
@@ -12,16 +12,16 @@
       this.audioCtx = null;
       this.analyser = null;
       this.sourceNode = null;
-      this.micStream = null;
+      this.stream = null;
       this.audioElement = null;
       this.synthOscillator = null;
 
       this.isListening = false;
-      this.mode = 'off'; // 'off', 'mic', 'file', 'synth'
+      this.mode = 'off'; // 'off', 'mic', 'system', 'file', 'synth'
 
       this.fftSize = 128; // 64 bins (optimized for ultra-low CPU)
       this.freqData = new Uint8Array(64);
-      this.energyHistory = new Float32Array(43); // ~1 second history buffer at 45-60fps
+      this.energyHistory = new Float32Array(43); // ~1 second history buffer
       this.historyIndex = 0;
 
       this.bassEnergy = 0;
@@ -29,7 +29,7 @@
       this.highEnergy = 0;
       this.isBeatDetected = false;
       this.lastBeatTime = 0;
-      this.beatCooldownMs = 280; // Minimum interval between beat shocks
+      this.beatCooldownMs = 280;
     }
 
     ensureContext() {
@@ -52,14 +52,52 @@
       this.ensureContext();
 
       try {
-        this.micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-        this.sourceNode = this.audioCtx.createMediaStreamSource(this.micStream);
+        this.stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        this.sourceNode = this.audioCtx.createMediaStreamSource(this.stream);
         this.sourceNode.connect(this.analyser);
         this.isListening = true;
         this.mode = 'mic';
         return true;
       } catch (err) {
         console.warn('Acceso al micrófono no concedido o no disponible:', err);
+        return false;
+      }
+    }
+
+    async startSystemAudio() {
+      this.stop();
+      this.ensureContext();
+
+      try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+          console.warn('getDisplayMedia no soportado en este entorno.');
+          return false;
+        }
+
+        // Request display media with audio enabled
+        const displayStream = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: true
+        });
+
+        const audioTracks = displayStream.getAudioTracks();
+        if (!audioTracks || audioTracks.length === 0) {
+          console.warn('No se seleccionó la casilla "Compartir audio de pestaña/sistema".');
+          displayStream.getTracks().forEach((t) => t.stop());
+          return false;
+        }
+
+        // Stop video tracks immediately to preserve 100% GPU/CPU power for simulation
+        displayStream.getVideoTracks().forEach((vt) => vt.stop());
+
+        this.stream = displayStream;
+        this.sourceNode = this.audioCtx.createMediaStreamSource(displayStream);
+        this.sourceNode.connect(this.analyser);
+        this.isListening = true;
+        this.mode = 'system';
+        return true;
+      } catch (err) {
+        console.warn('Captura de audio del sistema cancelada:', err);
         return false;
       }
     }
@@ -75,7 +113,7 @@
 
       this.sourceNode = this.audioCtx.createMediaElementSource(this.audioElement);
       this.sourceNode.connect(this.analyser);
-      this.analyser.connect(this.audioCtx.destination); // Play to speakers
+      this.analyser.connect(this.audioCtx.destination);
 
       this.audioElement.play();
       this.isListening = true;
@@ -86,17 +124,15 @@
       this.stop();
       this.ensureContext();
 
-      // Lightweight rhythmic lo-fi generative chord pulse for ambient videos
       const masterGain = this.audioCtx.createGain();
       masterGain.gain.setValueAtTime(0.12, this.audioCtx.currentTime);
 
       const osc = this.audioCtx.createOscillator();
       osc.type = 'triangle';
-      osc.frequency.setValueAtTime(55, this.audioCtx.currentTime); // A1 note bass
+      osc.frequency.setValueAtTime(55, this.audioCtx.currentTime); // A1 bass
 
-      // LFO modulation for pulse rhythm
       const lfo = this.audioCtx.createOscillator();
-      lfo.frequency.setValueAtTime(2.0, this.audioCtx.currentTime); // 120 BPM pulse
+      lfo.frequency.setValueAtTime(2.0, this.audioCtx.currentTime);
       const lfoGain = this.audioCtx.createGain();
       lfoGain.gain.setValueAtTime(25, this.audioCtx.currentTime);
       lfo.connect(lfoGain);
@@ -115,9 +151,9 @@
     }
 
     stop() {
-      if (this.micStream) {
-        this.micStream.getTracks().forEach((t) => t.stop());
-        this.micStream = null;
+      if (this.stream) {
+        this.stream.getTracks().forEach((t) => t.stop());
+        this.stream = null;
       }
       if (this.audioElement) {
         this.audioElement.pause();
@@ -146,7 +182,6 @@
 
       this.analyser.getByteFrequencyData(this.freqData);
 
-      // 1. Calculate Sub-bands
       // Bass: bins 1 to 6 (~20Hz to 180Hz)
       let bassSum = 0;
       for (let i = 1; i <= 6; i++) bassSum += this.freqData[i];
@@ -162,13 +197,12 @@
       for (let i = 25; i <= 55; i++) highSum += this.freqData[i];
       this.highEnergy = highSum / (31 * 255.0);
 
-      // 2. Adaptive Beat Detection (Energy History Comparison)
+      // Adaptive Beat Detection
       const instantEnergy = this.bassEnergy;
       let historySum = 0;
       for (let i = 0; i < 43; i++) historySum += this.energyHistory[i];
       const avgEnergy = historySum / 43.0;
 
-      // Variance calculation
       let varianceSum = 0;
       for (let i = 0; i < 43; i++) {
         const diff = this.energyHistory[i] - avgEnergy;
@@ -185,7 +219,6 @@
         this.isBeatDetected = false;
       }
 
-      // Update circular history buffer
       this.energyHistory[this.historyIndex] = instantEnergy;
       this.historyIndex = (this.historyIndex + 1) % 43;
     }

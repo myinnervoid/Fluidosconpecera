@@ -1,8 +1,8 @@
 /**
- * AETHERIA | Offline Service Worker (Cache-First Strategy)
+ * AETHERIA | Offline Service Worker (Network-First with Offline Cache Fallback)
  */
 
-const CACHE_NAME = 'aetheria-v1.2.0';
+const CACHE_NAME = 'aetheria-v1.3.0';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -48,8 +48,16 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      return cachedResponse || fetch(event.request);
-    })
+    fetch(event.request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+        }
+        return networkResponse;
+      })
+      .catch(() => caches.match(event.request))
   );
 });

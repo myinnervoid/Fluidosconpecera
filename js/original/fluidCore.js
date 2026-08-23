@@ -1,8 +1,8 @@
 /**
- * AETHERIA | FluidCore (Navier-Stokes GPU Simulation Engine)
- * Extracted and encapsulated from PavelDoGreat's WebGL-Fluid-Simulation & GPU Gems 38.
- * Pure WebGL physics engine: GUI decoupled, u_gravity pre-Poisson support, velocity clamping,
- * WebGL context loss recovery, and full VRAM disposal lifecycle.
+ * AETHERIA | Pure WebGL Navier-Stokes Fluid Simulation Engine (FluidCore)
+ * Based on Fast Fluid Dynamics on GPU (Mark Harris / NVIDIA GPU Gems 38) & PavelDoGreat WebGL Fluid.
+ * Features Bounded FBO Feedback Clamping, Dynamic Luminance Limiting, and Directional Splats.
+ * License: MIT
  */
 
 (function (root) {
@@ -13,109 +13,56 @@
       this.canvas = null;
       this.gl = null;
       this.ext = null;
-      this.isInitialized = false;
 
-      // Default configuration parameters
       this.config = {
         SIM_RESOLUTION: 128,
-        DYE_RESOLUTION: 1024,
-        CAPTURE_RESOLUTION: 512,
+        DYE_RESOLUTION: 512,
         DENSITY_DISSIPATION: 0.98,
-        VELOCITY_DISSIPATION: 0.2,
+        VELOCITY_DISSIPATION: 0.99,
         PRESSURE: 0.8,
         PRESSURE_ITERATIONS: 20,
-        CURL: 30.0,
+        CURL: 30,
         SPLAT_RADIUS: 0.25,
         SPLAT_FORCE: 6000,
         SHADING: true,
         COLORFUL: true,
-        COLOR_UPDATE_SPEED: 10,
         PAUSED: false,
-        BACK_COLOR: { r: 0, g: 0, b: 0 },
+        BACK_COLOR: { r: 7, g: 9, b: 14 },
         TRANSPARENT: false,
-        BLOOM: true,
-        BLOOM_ITERATIONS: 8,
-        BLOOM_RESOLUTION: 256,
-        BLOOM_INTENSITY: 0.8,
-        BLOOM_THRESHOLD: 0.6,
-        BLOOM_SOFT_KNEE: 0.7,
-        SUNRAYS: true,
-        SUNRAYS_RESOLUTION: 196,
-        SUNRAYS_WEIGHT: 1.0,
+        BLOOM: false,
+        SUNRAYS: false,
         GRAVITY: { x: 0.0, y: 0.0 }
       };
 
-      this.pointers = [];
-      this.splatStack = [];
-      this.lastUpdateTime = performance.now();
-      this.colorUpdateTimer = 0.0;
+      this.isInitialized = false;
+      this.quadBuffer = null;
+      this.programs = {};
+
+      this.density = null;
+      this.velocity = null;
+      this.divergence = null;
+      this.curlFBO = null;
+      this.pressure = null;
       this.ditheringTexture = null;
-      this.boundContextLost = null;
-      this.boundContextRestored = null;
     }
 
     init(canvas) {
       this.canvas = canvas;
-      this.resizeCanvas();
-
-      const contextData = this.getWebGLContext(this.canvas);
-      this.gl = contextData.gl;
-      this.ext = contextData.ext;
-
-      if (!this.ext.supportLinearFiltering) {
-        this.config.DYE_RESOLUTION = 512;
-        this.config.SHADING = false;
-        this.config.BLOOM = false;
-        this.config.SUNRAYS = false;
+      const { gl, ext } = this.getWebGLContext(canvas);
+      if (!gl) {
+        console.error('Aetheria: WebGL no está soportado en este dispositivo.');
+        return false;
       }
+      this.gl = gl;
+      this.ext = ext;
 
-      this.initDitheringTexture();
       this.initShaders();
       this.initFramebuffers();
-      this.bindContextLossEvents();
+      this.initDitheringTexture();
 
       this.isInitialized = true;
-    }
-
-    bindContextLossEvents() {
-      if (!this.canvas) return;
-
-      if (!this.boundContextLost) {
-        this.boundContextLost = (e) => {
-          e.preventDefault();
-          console.warn('FluidCore: WebGL Context Lost.');
-          this.isInitialized = false;
-        };
-        this.canvas.addEventListener('webglcontextlost', this.boundContextLost, false);
-      }
-
-      if (!this.boundContextRestored) {
-        this.boundContextRestored = () => {
-          console.info('FluidCore: WebGL Context Restored. Reconstruyendo recursos GPU...');
-          this.init(this.canvas);
-        };
-        this.canvas.addEventListener('webglcontextrestored', this.boundContextRestored, false);
-      }
-    }
-
-    resizeCanvas() {
-      const width = this.canvas.clientWidth || window.innerWidth;
-      const height = this.canvas.clientHeight || window.innerHeight;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-
-      if (this.canvas.width !== Math.floor(width * dpr) || this.canvas.height !== Math.floor(height * dpr)) {
-        this.canvas.width = Math.floor(width * dpr);
-        this.canvas.height = Math.floor(height * dpr);
-        return true;
-      }
-      return false;
-    }
-
-    resize() {
-      if (!this.isInitialized) return;
-      if (this.resizeCanvas()) {
-        this.initFramebuffers();
-      }
+      this.resize();
+      return true;
     }
 
     getWebGLContext(canvas) {
@@ -129,27 +76,26 @@
 
       let gl = canvas.getContext('webgl2', params);
       const isWebGL2 = !!gl;
-      if (!gl) {
+      if (!isWebGL2) {
         gl = canvas.getContext('webgl', params) || canvas.getContext('experimental-webgl', params);
       }
 
-      if (!gl) {
-        throw new Error('WebGL no está disponible en este dispositivo.');
-      }
+      if (!gl) return { gl: null, ext: null };
 
       let halfFloat;
       let supportLinearFiltering;
+
       if (isWebGL2) {
         gl.getExtension('EXT_color_buffer_float');
-        supportLinearFiltering = gl.getExtension('OES_texture_float_linear');
+        supportLinearFiltering = !!gl.getExtension('OES_texture_float_linear');
       } else {
         halfFloat = gl.getExtension('OES_texture_half_float');
-        supportLinearFiltering = gl.getExtension('OES_texture_half_float_linear');
+        supportLinearFiltering = !!gl.getExtension('OES_texture_half_float_linear');
       }
 
       gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
-      const halfFloatTexType = isWebGL2 ? gl.HALF_FLOAT : (halfFloat ? halfFloat.HALF_FLOAT_OES : gl.FLOAT);
+      const halfFloatTexType = isWebGL2 ? gl.HALF_FLOAT : (halfFloat ? halfFloat.HALF_FLOAT_OES : gl.UNSIGNED_BYTE);
       let formatRGBA, formatRG, formatR;
 
       if (isWebGL2) {
@@ -202,27 +148,9 @@
       gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 
       const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+      gl.deleteTexture(texture);
+      gl.deleteFramebuffer(fbo);
       return status === gl.FRAMEBUFFER_COMPLETE;
-    }
-
-    initDitheringTexture() {
-      const gl = this.gl;
-      this.ditheringTexture = gl.createTexture();
-      gl.bindTexture(gl.TEXTURE_2D, this.ditheringTexture);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
-
-      // Default 1x1 neutral noise until PNG loads
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([128, 128, 128, 255]));
-
-      const image = new Image();
-      image.onload = () => {
-        gl.bindTexture(gl.TEXTURE_2D, this.ditheringTexture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-      };
-      image.src = 'assets/LDR_LLL1_0.png';
     }
 
     initShaders() {
@@ -275,11 +203,11 @@
           p.x *= aspectRatio;
           vec3 splat = exp(-dot(p, p) / max(radius, 0.00001)) * color;
           vec3 base = texture2D(uTarget, vUv).xyz;
-          gl_FragColor = vec4(clamp(base + splat, -3000.0, 3000.0), 1.0);
+          gl_FragColor = vec4(clamp(base + splat, -2500.0, 2500.0), 1.0);
         }
       `;
 
-      // Advection shader with u_gravity pre-Poisson injection and manual bilinear interpolation
+      // Advection shader with u_gravity pre-Poisson injection and Bounded FBO feedback clamping
       const advectionShader = `
         precision highp float;
         precision highp sampler2D;
@@ -312,11 +240,18 @@
           
           if (isVelocity == 1) {
             result.xy += u_gravity * dt;
-            result.xy = clamp(result.xy, -3000.0, 3000.0);
+            result.xy = clamp(result.xy, -2500.0, 2500.0);
           }
 
           float decay = 1.0 + dissipation * dt;
-          gl_FragColor = result / decay;
+          vec4 decayed = result / decay;
+          
+          // Bounded FBO Feedback Clamping for infinite runtimes
+          if (isVelocity == 0) {
+            decayed = clamp(decayed, 0.0, 3.0);
+          }
+          
+          gl_FragColor = decayed;
         }
       `;
 
@@ -394,7 +329,7 @@
 
           vec2 velocity = texture2D(uVelocity, vUv).xy;
           velocity += force * dt;
-          velocity = clamp(velocity, -3000.0, 3000.0);
+          velocity = clamp(velocity, -2500.0, 2500.0);
           gl_FragColor = vec4(velocity, 0.0, 1.0);
         }
       `;
@@ -443,7 +378,7 @@
         }
       `;
 
-      // 3D Specular Shading and Tone-Mapping
+      // 3D Specular Shading with Soft Luminance Limiting (Anti-Whiteout Tone-Mapping)
       const displayShader = `
         precision highp float;
         precision highp sampler2D;
@@ -485,18 +420,21 @@
             c *= diffuse;
           }
 
-          vec3 bloom = texture2D(uBloom, vUv).rgb;
-          vec3 sunrays = texture2D(uSunrays, vUv).rgb;
-          c += bloom;
-          c += sunrays * 0.4;
+          // Anti-Whiteout Vibrancy Preservation (Luminance Limiter)
+          float lum = dot(c, vec3(0.299, 0.587, 0.114));
+          if (lum > 1.15) {
+            // Compress luminance gently while retaining deep saturation
+            float targetLum = 1.0 + 0.22 * (1.0 - exp(-(lum - 1.15)));
+            c = (c / lum) * targetLum;
+          }
 
           vec2 ditherUv = vUv * ditherScale;
           float noise = texture2D(uDithering, ditherUv).r * 2.0 - 1.0;
           c += noise / 255.0;
 
           // Mix with deep background
-          float lum = max(c.r, max(c.g, c.b));
-          vec3 finalColor = mix(uBgColor, c, clamp(lum * 1.5, 0.0, 1.0));
+          float maxC = max(c.r, max(c.g, c.b));
+          vec3 finalColor = mix(uBgColor, c, clamp(maxC * 1.5, 0.0, 1.0));
 
           gl_FragColor = vec4(linearToGamma(finalColor), 1.0);
         }
@@ -560,6 +498,27 @@
         return null;
       }
       return shader;
+    }
+
+    initDitheringTexture() {
+      const gl = this.gl;
+      const size = 128;
+      const buffer = new Uint8Array(size * size * 4);
+      for (let i = 0; i < size * size * 4; i += 4) {
+        const val = Math.floor(Math.random() * 255);
+        buffer[i] = val;
+        buffer[i + 1] = val;
+        buffer[i + 2] = val;
+        buffer[i + 3] = 255;
+      }
+
+      this.ditheringTexture = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, this.ditheringTexture);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.UNSIGNED_BYTE, buffer);
     }
 
     createTexture(width, height, formatObj, minFilter, magFilter) {
@@ -650,6 +609,18 @@
       }
     }
 
+    resize() {
+      if (!this.canvas) return;
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+
+      if (this.canvas.width !== width || this.canvas.height !== height) {
+        this.canvas.width = width;
+        this.canvas.height = height;
+        this.initFramebuffers();
+      }
+    }
+
     blit(targetFBO = null) {
       const gl = this.gl;
       gl.bindBuffer(gl.ARRAY_BUFFER, this.quadBuffer);
@@ -667,14 +638,14 @@
       gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
     }
 
-    splat(x, y, dx, dy, color) {
+    splat(x, y, dx, dy, color, radiusScale = 1.0) {
       if (!this.isInitialized) return;
       const gl = this.gl;
       const p = this.programs.splat;
       p.bind();
 
       const aspectRatio = gl.drawingBufferWidth / gl.drawingBufferHeight;
-      const rad = (this.config.SPLAT_RADIUS / 100.0) * (aspectRatio > 1 ? aspectRatio : 1.0);
+      const rad = (this.config.SPLAT_RADIUS / 100.0) * (aspectRatio > 1 ? aspectRatio : 1.0) * radiusScale;
 
       // Splat Velocity
       gl.uniform1i(p.uniforms.uTarget, this.velocity.read.attach(0));
@@ -822,7 +793,6 @@
       if (!this.gl) return;
       const gl = this.gl;
 
-      // Free double FBOs
       [this.density, this.velocity, this.pressure].forEach((dfbo) => {
         if (dfbo) {
           gl.deleteTexture(dfbo.read.texture);
@@ -832,7 +802,6 @@
         }
       });
 
-      // Free single FBOs
       if (this.divergence) {
         gl.deleteTexture(this.divergence.texture);
         gl.deleteFramebuffer(this.divergence.fbo);
@@ -845,17 +814,11 @@
         gl.deleteTexture(this.ditheringTexture);
       }
 
-      // Free Buffers & Programs
       if (this.quadBuffer) gl.deleteBuffer(this.quadBuffer);
       if (this.programs) {
         Object.values(this.programs).forEach((p) => {
           if (p && p.program) gl.deleteProgram(p.program);
         });
-      }
-
-      if (this.canvas) {
-        if (this.boundContextLost) this.canvas.removeEventListener('webglcontextlost', this.boundContextLost);
-        if (this.boundContextRestored) this.canvas.removeEventListener('webglcontextrestored', this.boundContextRestored);
       }
 
       this.isInitialized = false;

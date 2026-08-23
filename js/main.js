@@ -15,7 +15,6 @@
 
       this.pointers = new Map();
       this.lastTime = performance.now();
-      this.lagFrameCount = 0;
 
       this.init();
     }
@@ -79,6 +78,7 @@
 
       const aspect = window.innerWidth / window.innerHeight;
       const symPoints = AetheriaSymmetry.getPoints(normX, normY, 0, 0, aspect);
+      const trailCfg = (typeof AetheriaCursor !== 'undefined') ? AetheriaCursor.getTrailConfig() : { radiusScale: 1.0 };
 
       for (let i = 0; i < symPoints.length; i++) {
         const pt = symPoints[i];
@@ -86,7 +86,7 @@
         if (typeof AetheriaCursor !== 'undefined') {
           col = AetheriaCursor.getSpecialTrailColor(col);
         }
-        FluidCore.splat(pt.x, pt.y, 0, 0, col);
+        FluidCore.splat(pt.x, pt.y, 0, 0, col, trailCfg.radiusScale);
       }
 
       AetheriaSymmetry.renderVisualPoints(normX, normY, window.innerWidth, window.innerHeight, true, 0, 0);
@@ -118,6 +118,7 @@
       pointer.y = normY;
 
       const symPoints = AetheriaSymmetry.getPoints(normX, normY, dx, dy, aspect);
+      const trailCfg = (typeof AetheriaCursor !== 'undefined') ? AetheriaCursor.getTrailConfig() : { radiusScale: 1.0, sparkType: 'star', sparkCount: 2 };
 
       for (let i = 0; i < symPoints.length; i++) {
         const pt = symPoints[i];
@@ -132,13 +133,13 @@
           emitterPt = AetheriaCursor.getEmitterOffsetPoint(pt.x, pt.y, pt.dx, pt.dy);
         }
 
-        FluidCore.splat(emitterPt.x, emitterPt.y, pt.dx, pt.dy, col);
+        // Narrow ribbon splat
+        FluidCore.splat(emitterPt.x, emitterPt.y, pt.dx, pt.dy, col, trailCfg.radiusScale);
 
         // Emit Sparks / Stardust from rear tail
         if (AetheriaParticles) {
           const hexCol = `rgb(${Math.round(col[0] * 255)}, ${Math.round(col[1] * 255)}, ${Math.round(col[2] * 255)})`;
-          const sparkType = (AetheriaCursor && AetheriaCursor.currentType === 'rocket') ? 'fire' : 'star';
-          AetheriaParticles.emit(emitterPt.x * window.innerWidth, (1.0 - emitterPt.y) * window.innerHeight, pt.dx * 0.05, pt.dy * 0.05, hexCol, sparkType, 2);
+          AetheriaParticles.emit(emitterPt.x * window.innerWidth, (1.0 - emitterPt.y) * window.innerHeight, pt.dx * 0.05, pt.dy * 0.05, hexCol, trailCfg.sparkType, trailCfg.sparkCount);
         }
       }
 
@@ -195,7 +196,7 @@
         if (AetheriaAudio.isBeatDetected) {
           const col = AetheriaUI.getNextColor();
           // Gentle shockwave ripple in center on beat drops
-          FluidCore.splat(0.5, 0.5, (Math.random() - 0.5) * 800, (Math.random() - 0.5) * 800, col);
+          FluidCore.splat(0.5, 0.5, (Math.random() - 0.5) * 800, (Math.random() - 0.5) * 800, col, 0.5);
         }
       }
 
