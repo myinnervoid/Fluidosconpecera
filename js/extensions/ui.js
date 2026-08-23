@@ -366,6 +366,7 @@
         b.setAttribute('aria-pressed', isActive ? 'true' : 'false');
       });
       const names = {
+        none: '🚫 Ninguno (Solo Fluido)',
         nyan: '🐱 Nyan Cat (Arcoíris)',
         rocket: '🚀 Cohete (Fuego)',
         comet: '☄️ Cometa (Plata & Plasma)',

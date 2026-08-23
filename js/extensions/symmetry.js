@@ -50,13 +50,14 @@
     }
 
     updateCursorDOM() {
+      const isNone = (typeof AetheriaCursor !== 'undefined' && AetheriaCursor.currentType === 'none');
       const activeCount = this.symmetryMode;
       const avatarHTML = (typeof AetheriaCursor !== 'undefined') ? AetheriaCursor.getAvatarHTML() : '';
 
       for (let i = 0; i < this.mirrorCursorPool.length; i++) {
         const el = this.mirrorCursorPool[i];
         el.innerHTML = avatarHTML;
-        if (i < activeCount) {
+        if (!isNone && i < activeCount) {
           el.style.display = 'block';
           el.style.opacity = '0';
         } else {
@@ -141,6 +142,10 @@
 
     renderVisualPoints(normX, normY, width, height, isPointerDown, dx = 0, dy = 0) {
       if (!this.mirrorCursorPool.length) return;
+      if (typeof AetheriaCursor !== 'undefined' && AetheriaCursor.currentType === 'none') {
+        this.hideVisualPoints();
+        return;
+      }
 
       const points = this.getPoints(normX, normY, dx, dy, width / height);
       for (let i = 0; i < this.mirrorCursorPool.length; i++) {
