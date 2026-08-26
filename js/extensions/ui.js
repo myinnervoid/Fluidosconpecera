@@ -1,7 +1,8 @@
 /**
- * AETHERIA | UI & Interaction Controller
- * Coordinates Floating Top Navigation, Hamburger Menu Drawer, Avatar Selector,
- * System/Mic Audio Reactivity, Autonomous Swarm Boids, and Custom Image Upload.
+ * AETHERIA | User Interface & Interaction Controller
+ * Manages Drawer Navigation, Physical Sliders, Thematic Avatars,
+ * Adaptive Backgrounds Selector, Radial Symmetry, and Action Fidgets.
+ * License: MIT
  */
 
 (function (root) {
@@ -10,7 +11,7 @@
   class UIController {
     constructor() {
       this.app = null;
-      this.activeElement = 'fluid'; // 'fluid', 'sand', 'gas'
+      this.activeElement = 'fluid';
       this.currentPaletteKey = 'aurora';
       this.colorIndex = 0;
       this.isZenMode = false;
@@ -21,21 +22,20 @@
       this.initDOM();
       this.bindEvents();
       this.renderPaletteGrid();
+      this.syncBackgroundButtons();
     }
 
     initDOM() {
-      this.topBar = document.getElementById('top-bar');
-
       // Top Bar Elements
+      this.topBar = document.getElementById('top-bar');
       this.btnHamburger = document.getElementById('btn-hamburger');
-      this.currentModeBadge = document.getElementById('current-mode-badge');
       this.btnZenToggle = document.getElementById('btn-zen-toggle');
+      this.currentModeBadge = document.getElementById('current-mode-badge');
       this.btnQuickSupernova = document.getElementById('btn-quick-supernova');
       this.btnQuickVortex = document.getElementById('btn-quick-vortex');
       this.btnQuickGravity = document.getElementById('btn-quick-gravity');
       this.btnQuickSwarm = document.getElementById('btn-quick-swarm');
       this.btnQuickClear = document.getElementById('btn-quick-clear');
-      this.btnQuickExport = document.getElementById('btn-quick-export');
 
       // Drawer Elements
       this.settingsDrawer = document.getElementById('settings-drawer');
@@ -50,14 +50,8 @@
       this.customAvatarInput = document.getElementById('custom-avatar-input');
       this.btnUploadAvatar = document.getElementById('btn-upload-avatar');
 
-      // Audio Reactivity Elements
-      this.btnAudioMic = document.getElementById('btn-audio-mic');
-      this.btnAudioSystem = document.getElementById('btn-audio-system');
-      this.btnAudioFile = document.getElementById('btn-audio-file');
-      this.audioFileInput = document.getElementById('audio-file-input');
-      this.btnAudioSynth = document.getElementById('btn-audio-synth');
-      this.btnAudioOff = document.getElementById('btn-audio-off');
-      this.audioStatusText = document.getElementById('audio-status-text');
+      // Background Buttons
+      this.bgBtns = document.querySelectorAll('.bg-btn');
 
       // Swarm Auto-pilot Elements
       this.btnDrawerSwarm = document.getElementById('drawer-btn-swarm');
@@ -90,6 +84,11 @@
       this.sliderGravityForce = document.getElementById('slider-gravity-force');
       this.valGravityForce = document.getElementById('val-gravity-force');
 
+      this.sliderBoidsCount = document.getElementById('slider-boids-count');
+      this.valBoidsCount = document.getElementById('val-boids-count');
+      this.boidslimitBadge = document.getElementById('boids-limit-badge');
+      this.toggleDevMode = document.getElementById('toggle-dev-mode');
+
       this.paletteSelectorGrid = document.getElementById('palette-selector-grid');
       this.toastContainer = document.getElementById('toast-container');
     }
@@ -115,7 +114,7 @@
         });
       });
 
-      // 4. Avatar Cursor Selectors (Nyan, Rocket, Comet, Orb)
+      // 4. Avatar Cursor Selectors (None, Nyan, Rocket, Comet, Clownfish, Miku)
       this.avatarBtns.forEach((btn) => {
         btn.addEventListener('click', () => {
           const type = btn.dataset.avatar;
@@ -144,46 +143,13 @@
         });
       }
 
-      // 5. Audio Reactivity Bindings (Mic, System/Tab, File, Synth, Off)
-      if (this.btnAudioMic) {
-        this.btnAudioMic.addEventListener('click', async () => {
-          const ok = await AetheriaAudio.startMic();
-          this.updateAudioUI(ok ? '🎤 Micrófono Activo' : '❌ Micrófono no disponible');
+      // 5. Background Selectors
+      this.bgBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const bg = btn.dataset.bg;
+          this.setBackground(bg);
         });
-      }
-
-      if (this.btnAudioSystem) {
-        this.btnAudioSystem.addEventListener('click', async () => {
-          this.showToast('ℹ️ Selecciona la pestaña/app con audio activo');
-          const ok = await AetheriaAudio.startSystemAudio();
-          this.updateAudioUI(ok ? '🖥️ Audio de Sistema / Pestaña Activo' : '⚠️ Audio de sistema no seleccionado');
-        });
-      }
-
-      if (this.btnAudioFile && this.audioFileInput) {
-        this.btnAudioFile.addEventListener('click', () => this.audioFileInput.click());
-        this.audioFileInput.addEventListener('change', (e) => {
-          const file = e.target.files[0];
-          if (file) {
-            AetheriaAudio.playAudioFile(file);
-            this.updateAudioUI(`🎵 Música: ${file.name.slice(0, 16)}...`);
-          }
-        });
-      }
-
-      if (this.btnAudioSynth) {
-        this.btnAudioSynth.addEventListener('click', () => {
-          AetheriaAudio.startCosmicSynth();
-          this.updateAudioUI('🎶 Melodía Cósmica Lo-Fi Activa');
-        });
-      }
-
-      if (this.btnAudioOff) {
-        this.btnAudioOff.addEventListener('click', () => {
-          AetheriaAudio.stop();
-          this.updateAudioUI('🔇 Audio Desactivado');
-        });
-      }
+      });
 
       // 6. Swarm Auto-Pilot Bindings
       const toggleSwarmAction = () => {
@@ -239,65 +205,69 @@
       if (this.btnQuickGravity) this.btnQuickGravity.addEventListener('click', toggleGravityAction);
       if (this.btnDrawerGravity) this.btnDrawerGravity.addEventListener('click', toggleGravityAction);
 
-      // 11. Cycle Palette
+      // 11. Cycle Palette Action
       if (this.btnDrawerPalette) {
         this.btnDrawerPalette.addEventListener('click', () => {
-          const pal = this.cycleNextPalette();
-          this.paletteStatusText.textContent = pal.name.split(' ')[1] || pal.name;
+          const nextPal = this.cycleNextPalette();
           this.updatePaletteActiveCard();
-          this.showToast(`🎨 Paleta: ${pal.name}`);
+          if (this.paletteStatusText) {
+            this.paletteStatusText.textContent = nextPal.name.split(' ')[1] || nextPal.name;
+          }
+          this.showToast(`🎨 Paleta: ${nextPal.name}`);
         });
       }
 
-      // 12. Pause / Freeze
+      // 12. Pause / Resume Simulation
       if (this.btnDrawerPause) {
         this.btnDrawerPause.addEventListener('click', () => {
           const isPaused = AetheriaFidgets.togglePause(FluidCore);
-          this.pauseStatusText.textContent = isPaused ? 'Reanudar' : 'Pausar';
           this.btnDrawerPause.classList.toggle('active', isPaused);
           this.btnDrawerPause.setAttribute('aria-pressed', isPaused ? 'true' : 'false');
-          this.showToast(isPaused ? '⏸️ Tiempo congelado' : '▶️ Flujo reanudado');
+          if (this.pauseStatusText) {
+            this.pauseStatusText.textContent = isPaused ? 'Reanudar' : 'Pausar';
+          }
+          this.showToast(isPaused ? '⏸️ Simulación pausada' : '▶️ Simulación reanudada');
         });
       }
 
-      // 13. Clear
+      // 13. Clear Canvas Action
       const clearAction = () => {
-        AetheriaFidgets.clear(FluidCore);
+        AetheriaFidgets.clearCanvas(FluidCore, AetheriaParticles);
         this.showToast('🧹 Lienzo limpio');
       };
       if (this.btnQuickClear) this.btnQuickClear.addEventListener('click', clearAction);
       if (this.btnDrawerClear) this.btnDrawerClear.addEventListener('click', clearAction);
 
-      // 14. Export PNG
-      const exportAction = () => {
-        app.exportPNG();
-        this.showToast('📸 Captura de arte guardada');
-      };
-      if (this.btnQuickExport) this.btnQuickExport.addEventListener('click', exportAction);
-      if (this.btnDrawerExport) this.btnDrawerExport.addEventListener('click', exportAction);
+      // 14. Export High-Res PNG
+      if (this.btnDrawerExport) {
+        this.btnDrawerExport.addEventListener('click', () => {
+          this.app.exportPNG();
+          this.showToast('📸 Captura PNG guardada en tu dispositivo');
+        });
+      }
 
-      // 15. Sliders
+      // 15. Physical Parameters Sliders
       if (this.sliderVorticity) {
         this.sliderVorticity.addEventListener('input', (e) => {
           const val = parseFloat(e.target.value);
           this.valVorticity.textContent = val;
-          FluidCore.setConfig('CURL', val);
+          FluidCore.config.CURL = val;
         });
       }
 
       if (this.sliderDissipation) {
         this.sliderDissipation.addEventListener('input', (e) => {
           const val = parseFloat(e.target.value);
-          this.valDissipation.textContent = val;
-          FluidCore.setConfig('DENSITY_DISSIPATION', val);
+          this.valDissipation.textContent = val.toFixed(2);
+          FluidCore.config.DENSITY_DISSIPATION = val;
         });
       }
 
       if (this.sliderSplatRadius) {
         this.sliderSplatRadius.addEventListener('input', (e) => {
           const val = parseFloat(e.target.value);
-          this.valSplatRadius.textContent = val;
-          FluidCore.setConfig('SPLAT_RADIUS', val);
+          this.valSplatRadius.textContent = val.toFixed(2);
+          FluidCore.config.SPLAT_RADIUS = val;
         });
       }
 
@@ -305,7 +275,9 @@
         this.sliderGrainSize.addEventListener('input', (e) => {
           const val = parseFloat(e.target.value);
           this.valGrainSize.textContent = `${val}px`;
-          AetheriaSandMode.grainSize = val;
+          if (typeof AetheriaSandMode !== 'undefined') {
+            AetheriaSandMode.setGrainSize(val);
+          }
         });
       }
 
@@ -313,93 +285,152 @@
         this.sliderGravityForce.addEventListener('input', (e) => {
           const val = parseFloat(e.target.value);
           this.valGravityForce.textContent = val.toFixed(1);
-          AetheriaFidgets.setGravityMagnitude(FluidCore, -val);
+          if (typeof AetheriaFidgets !== 'undefined') {
+            AetheriaFidgets.setGravityMagnitude(val);
+          }
         });
       }
 
-      // Keyboard Shortcuts
+      // 16. Boids Count Slider & Dev Mode
+      if (this.sliderBoidsCount) {
+        this.sliderBoidsCount.addEventListener('input', (e) => {
+          const val = parseInt(e.target.value, 10);
+          this.valBoidsCount.textContent = val;
+          if (typeof AetheriaState !== 'undefined') {
+            AetheriaState.swarmCount = val;
+          }
+          if (typeof AetheriaSwarm !== 'undefined') {
+            AetheriaSwarm.setBoidsCount(val);
+          }
+        });
+      }
+
+      if (this.toggleDevMode) {
+        this.toggleDevMode.addEventListener('change', (e) => {
+          const isDev = e.target.checked;
+          if (typeof AetheriaState !== 'undefined') {
+            AetheriaState.devMode = isDev;
+          }
+          if (isDev) {
+            this.sliderBoidsCount.max = 50;
+            if (this.boidslimitBadge) {
+              this.boidslimitBadge.textContent = 'dev: máx. 50';
+              this.boidslimitBadge.style.color = 'var(--accent-magenta)';
+            }
+            this.showToast('🛠️ Modo Dev: Boids desbloqueados hasta 50');
+          } else {
+            this.sliderBoidsCount.max = 10;
+            if (parseInt(this.sliderBoidsCount.value, 10) > 10) {
+              this.sliderBoidsCount.value = 10;
+              this.valBoidsCount.textContent = 10;
+              if (typeof AetheriaSwarm !== 'undefined') AetheriaSwarm.setBoidsCount(10);
+            }
+            if (this.boidslimitBadge) {
+              this.boidslimitBadge.textContent = 'máx. 10';
+              this.boidslimitBadge.style.color = 'var(--accent-cyan)';
+            }
+            this.showToast('🔒 Modo Normal: Límite 10 boids');
+          }
+        });
+      }
+
+      // 17. Keyboard Shortcuts Map
       window.addEventListener('keydown', (e) => {
-        if (e.target.tagName === 'INPUT') return;
-        if (e.code === 'Space') {
-          e.preventDefault();
-          if (this.btnDrawerPause) this.btnDrawerPause.click();
-        } else if (e.key === 'c' || e.key === 'C') {
-          if (this.btnDrawerPalette) this.btnDrawerPalette.click();
-        } else if (e.key === 'h' || e.key === 'H') {
-          this.toggleZenMode();
-        } else if (e.key === 'a' || e.key === 'A') {
-          toggleSwarmAction();
-        } else if (e.key === 's' || e.key === 'S') {
-          triggerSupernovaAction();
-        } else if (e.key === 'v' || e.key === 'V') {
-          triggerVortexAction();
-        } else if (e.key === 'g' || e.key === 'G') {
-          toggleGravityAction();
-        } else if (e.key === 'Delete' || e.key === 'Backspace') {
-          clearAction();
-        } else if (e.key === '1') {
-          this.setElement('fluid');
-        } else if (e.key === '2') {
-          this.setElement('sand');
-        } else if (e.key === '3') {
-          this.setElement('gas');
-        } else if (e.key === 'm' || e.key === 'M') {
-          this.toggleDrawer();
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+        switch (e.key.toLowerCase()) {
+          case '1': this.setElement('fluid'); break;
+          case '2': this.setElement('lava'); break;
+          case '3': this.setElement('sand'); break;
+          case '4': this.setElement('gas'); break;
+          case 'h': this.toggleZenMode(); break;
+          case 'm': this.toggleDrawer(); break;
+          case 'a': toggleSwarmAction(); break;
+          case 's': triggerSupernovaAction(); break;
+          case 'v': triggerVortexAction(); break;
+          case 'g': toggleGravityAction(); break;
+          case 'c':
+            const pal = this.cycleNextPalette();
+            this.updatePaletteActiveCard();
+            if (this.paletteStatusText) {
+              this.paletteStatusText.textContent = pal.name.split(' ')[1] || pal.name;
+            }
+            this.showToast(`🎨 Paleta: ${pal.name}`);
+            break;
+          case ' ':
+            e.preventDefault();
+            const paused = AetheriaFidgets.togglePause(FluidCore);
+            if (this.btnDrawerPause) {
+              this.btnDrawerPause.classList.toggle('active', paused);
+              this.btnDrawerPause.setAttribute('aria-pressed', paused ? 'true' : 'false');
+            }
+            if (this.pauseStatusText) {
+              this.pauseStatusText.textContent = paused ? 'Reanudar' : 'Pausar';
+            }
+            this.showToast(paused ? '⏸️ Simulación pausada' : '▶️ Simulación reanudada');
+            break;
+          case 'delete':
+          case 'backspace':
+            clearAction();
+            break;
         }
       });
     }
 
-    updateAudioUI(msg) {
-      if (this.audioStatusText) {
-        this.audioStatusText.textContent = msg;
+    toggleDrawer(forceState = null) {
+      const isOpen = forceState !== null ? forceState : !this.settingsDrawer.classList.contains('open');
+      this.settingsDrawer.classList.toggle('open', isOpen);
+      this.drawerOverlay.classList.toggle('open', isOpen);
+      this.settingsDrawer.setAttribute('aria-hidden', (!isOpen).toString());
+      this.btnHamburger.setAttribute('aria-expanded', isOpen.toString());
+    }
+
+    toggleZenMode() {
+      this.isZenMode = !this.isZenMode;
+      this.topBar.classList.toggle('zen-hidden', this.isZenMode);
+      if (this.settingsDrawer.classList.contains('open')) {
+        this.toggleDrawer(false);
       }
-      this.showToast(msg);
+      this.showToast(this.isZenMode ? '👁️ Modo Zen ACTIVO (Pulsa [H] para salir)' : '👁️ Interfaz visible');
     }
 
     setAvatarType(type) {
-      if (typeof AetheriaCursor !== 'undefined') {
-        AetheriaCursor.setCursorType(type);
-      }
       this.avatarBtns.forEach((b) => {
         const isActive = b.dataset.avatar === type;
         b.classList.toggle('active', isActive);
         b.setAttribute('aria-pressed', isActive ? 'true' : 'false');
       });
-      const names = {
-        none: '🚫 Ninguno (Solo Fluido)',
-        nyan: '🐱 Nyan Cat (Arcoíris)',
-        rocket: '🚀 Cohete (Fuego)',
-        comet: '☄️ Cometa (Plata & Plasma)',
-        orb: '🔮 Orbe Místico',
-        custom: '🖼️ Avatar Personalizado'
-      };
-      this.showToast(`✨ Puntero: ${names[type] || type}`);
+
+      if (typeof AetheriaCursor !== 'undefined') {
+        AetheriaCursor.setAvatar(type);
+      }
+      if (typeof AetheriaState !== 'undefined') {
+        AetheriaState.setUserAvatar(type);
+      }
+      this.showToast(`✨ Puntero: ${type.toUpperCase()}`);
     }
 
-    toggleZenMode() {
-      this.isZenMode = !this.isZenMode;
-      if (this.topBar) {
-        this.topBar.classList.toggle('zen-hidden', this.isZenMode);
+    setBackground(bgName) {
+      if (typeof AetheriaBackground !== 'undefined') {
+        AetheriaBackground.setBackground(bgName);
       }
-      if (this.btnZenToggle) {
-        this.btnZenToggle.setAttribute('aria-pressed', this.isZenMode ? 'true' : 'false');
-      }
-      this.showToast(this.isZenMode ? '👁️ Modo Zen (Pulsa H o toca arriba para mostrar)' : '✨ Interfaz visible');
+
+      this.syncBackgroundButtons();
+
+      const bgInfo = (typeof AetheriaBackground !== 'undefined' && AetheriaBackground.backgrounds[bgName])
+        ? AetheriaBackground.backgrounds[bgName].name
+        : bgName;
+
+      this.showToast(`🖼️ Fondo: ${bgInfo}`);
     }
 
-    toggleDrawer(forceState = null) {
-      const isCurrentlyOpen = this.settingsDrawer.classList.contains('open');
-      const shouldOpen = forceState !== null ? forceState : !isCurrentlyOpen;
-
-      if (shouldOpen) {
-        this.settingsDrawer.classList.add('open');
-        this.drawerOverlay.classList.add('open');
-        this.btnHamburger.setAttribute('aria-expanded', 'true');
-      } else {
-        this.settingsDrawer.classList.remove('open');
-        this.drawerOverlay.classList.remove('open');
-        this.btnHamburger.setAttribute('aria-expanded', 'false');
-      }
+    syncBackgroundButtons() {
+      const activeBg = (typeof AetheriaBackground !== 'undefined') ? AetheriaBackground.getCurrentBackground() : 'universe';
+      this.bgBtns.forEach((b) => {
+        const isActive = b.dataset.bg === activeBg;
+        b.classList.toggle('active', isActive);
+        b.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      });
     }
 
     updateGravityUI(isGravityOn) {
@@ -435,12 +466,18 @@
       } else if (elem === 'sand') {
         AetheriaFidgets.applyElementProfile(FluidCore, 'sand');
         this.currentModeBadge.textContent = '⏳ Arena Granular';
+      } else if (elem === 'lava') {
+        AetheriaFidgets.applyElementProfile(FluidCore, 'lava');
+        this.currentModeBadge.textContent = '🔴 Lava Lamp';
       } else {
         AetheriaFidgets.applyElementProfile(FluidCore, 'fluid');
         this.currentModeBadge.textContent = '💧 Fluido 3D';
       }
 
-      // Sync Palettes
+      // Sync Palettes & Global State
+      if (typeof AetheriaState !== 'undefined') {
+        AetheriaState.setElement(elem);
+      }
       const palettes = this.getPalettesForActiveElement();
       this.currentPaletteKey = Object.keys(palettes)[0];
       this.colorIndex = 0;
@@ -460,13 +497,24 @@
         b.setAttribute('aria-pressed', isActive ? 'true' : 'false');
       });
       AetheriaSymmetry.setSymmetry(sym);
-      this.showToast(`🪞 Simetría: ${sym}x`);
+
+      // Auto-regulación de Boids si simetría es alta (> 4)
+      if (sym > 4 && typeof AetheriaState !== 'undefined' && AetheriaState.swarmCount > 3 && !AetheriaState.devMode) {
+        AetheriaState.swarmCount = 3;
+        if (this.sliderBoidsCount) this.sliderBoidsCount.value = 3;
+        if (this.valBoidsCount) this.valBoidsCount.textContent = 3;
+        if (typeof AetheriaSwarm !== 'undefined') AetheriaSwarm.setBoidsCount(3);
+        this.showToast(`🪞 Simetría ${sym}x (Boids ajustados a 3 para 60 FPS)`);
+      } else {
+        this.showToast(`🪞 Simetría: ${sym}x`);
+      }
     }
 
     getPalettesForActiveElement() {
       const p = AetheriaPalettes;
       if (this.activeElement === 'sand') return p.sand;
       if (this.activeElement === 'gas') return p.gas;
+      if (this.activeElement === 'lava') return p.lava;
       return p.fluid;
     }
 
@@ -480,6 +528,9 @@
       if (palettes[key]) {
         this.currentPaletteKey = key;
         this.colorIndex = 0;
+        if (typeof AetheriaState !== 'undefined') {
+          AetheriaState.setPalette(key);
+        }
       }
     }
 

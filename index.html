@@ -4,12 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Aetheria | Generative Fluid & Sand Studio</title>
-  <meta name="description" content="Simulación de fluidos en GPU con Navier-Stokes, Arena Granular, Humo Espacial, Audio Reactivo, Swarm Boids y Punteros Temáticos.">
+  <meta name="description" content="Simulación de fluidos en GPU con Navier-Stokes, Arena Granular, Humo Espacial, Fondos Inmersivos, Swarm Boids y Punteros Temáticos.">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'self';">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="css/style.css?v=2.0">
+  <link rel="stylesheet" href="css/style.css?v=1.6">
 </head>
 <body>
+
+  <!-- Capa de Fondo Inmersivo Adaptativo (16:9 PC / 9:16 Móvil) -->
+  <div id="background-layer" aria-hidden="true"></div>
 
   <!-- Lienzo WebGL y Capa de Partículas -->
   <main id="canvas-container" role="main" aria-label="Lienzo de dibujo interactivo">
@@ -58,71 +61,77 @@
         <span aria-hidden="true">🧹</span>
       </button>
 
-      <button class="icon-btn" id="btn-quick-export" title="Guardar imagen PNG en alta resolución" aria-label="Guardar imagen">
-        <span aria-hidden="true">📸</span>
-      </button>
-
-      <!-- Menú Hamburguesa Principal -->
-      <button class="hamburger-btn" id="btn-hamburger" title="Abrir Menú de Control, Modos y Paletas" aria-label="Abrir panel de ajustes" aria-haspopup="true" aria-expanded="false">
+      <button class="hamburger-btn" id="btn-hamburger" title="Abrir panel de ajustes avanzados" aria-label="Abrir panel de ajustes" aria-expanded="false" aria-controls="settings-drawer">
         <span class="hamburger-icon" aria-hidden="true">☰</span>
-        <span>Ajustes</span>
+        <span class="hamburger-text">Ajustes</span>
       </button>
     </div>
   </nav>
 
-  <!-- Overlay para cerrar drawer -->
+  <!-- Overlay para cerrar el Drawer al hacer clic fuera -->
   <div id="drawer-overlay" aria-hidden="true"></div>
 
-  <!-- Drawer Lateral de Ajustes (Menú Hamburguesa) -->
-  <aside id="settings-drawer" aria-label="Panel de Ajustes" role="dialog" aria-modal="true">
+  <!-- Cajón Lateral de Ajustes Completos (Drawer) -->
+  <aside id="settings-drawer" aria-label="Panel de configuración avanzada" aria-hidden="true">
     <div class="drawer-header">
-      <h3>⚙️ Panel de Control</h3>
-      <button class="close-drawer-btn" id="btn-close-drawer" title="Cerrar panel" aria-label="Cerrar panel de ajustes">✕</button>
+      <div class="drawer-title">
+        <span aria-hidden="true">⚙️</span>
+        <h3>Configuración de Estudio</h3>
+      </div>
+      <button class="close-drawer-btn" id="btn-close-drawer" aria-label="Cerrar panel de ajustes">✕</button>
     </div>
 
     <div class="drawer-body">
-      <!-- 1. Selector de Modos de Arte -->
+      <!-- 1. Selector de Modos de Elemento -->
       <section class="drawer-section">
-        <h4>✨ Modo Sensorial</h4>
+        <h4>✨ Elemento de Física</h4>
         <div class="mode-grid">
-          <button class="mode-btn active" data-element="fluid" id="mode-fluid" title="Dinámica de Fluidos Navier-Stokes en GPU" aria-pressed="true">
+          <button class="mode-btn active" data-element="fluid" aria-pressed="true">
             <span class="mode-icon" aria-hidden="true">💧</span>
             <span>Fluido 3D</span>
           </button>
-          <button class="mode-btn" data-element="sand" id="mode-sand" title="Partículas de Arena Granular estilo Reloj de Arena" aria-pressed="false">
+          <button class="mode-btn" data-element="lava" aria-pressed="false">
+            <span class="mode-icon" aria-hidden="true">🔴</span>
+            <span>Lava Lamp</span>
+          </button>
+          <button class="mode-btn" data-element="sand" aria-pressed="false">
             <span class="mode-icon" aria-hidden="true">⏳</span>
             <span>Arena</span>
           </button>
-          <button class="mode-btn" data-element="gas" id="mode-gas" title="Humo & Gas Espacial de Alta Vorticidad" aria-pressed="false">
+          <button class="mode-btn" data-element="gas" aria-pressed="false">
             <span class="mode-icon" aria-hidden="true">💨</span>
             <span>Gas / Humo</span>
           </button>
         </div>
       </section>
 
-      <!-- 2. Selector de Avatar de Puntero -->
+      <!-- 2. Punteros Temáticos y Avatares de Simulación -->
       <section class="drawer-section">
-        <h4>🐱 Puntero Temático & Estela</h4>
+        <h4>🐱 Puntero Temático (Usuario & Pecera)</h4>
         <div class="avatar-grid">
-          <button class="avatar-btn active" data-avatar="none" title="Sin avatar visual (Solo trazo limpio de fluido)" aria-pressed="true">
+          <button class="avatar-btn active" data-avatar="none" title="Puntero estándar de sistema (Solo fluido)" aria-pressed="true">
             <span class="avatar-icon" aria-hidden="true">🚫</span>
             <span>Ninguno</span>
           </button>
-          <button class="avatar-btn" data-avatar="nyan" title="Nyan Cat con estela arcoíris delgada" aria-pressed="false">
+          <button class="avatar-btn" data-avatar="nyan" title="Nyan Cat (Color sólido en clic / Arcoíris en automático)" aria-pressed="false">
             <span class="avatar-icon" aria-hidden="true">🐱</span>
             <span>Nyan</span>
           </button>
-          <button class="avatar-btn" data-avatar="rocket" title="Cohete con chorro de fuego cónico" aria-pressed="false">
+          <button class="avatar-btn" data-avatar="rocket" title="Cohete Espacial (Orientación dinámica 360° con tobera de fuego)" aria-pressed="false">
             <span class="avatar-icon" aria-hidden="true">🚀</span>
             <span>Cohete</span>
           </button>
-          <button class="avatar-btn" data-avatar="comet" title="Cometa con haz plateado y plasma" aria-pressed="false">
+          <button class="avatar-btn" data-avatar="comet" title="Cometa Cósmico (Haz de plasma plateado y polvo estelar)" aria-pressed="false">
             <span class="avatar-icon" aria-hidden="true">☄️</span>
             <span>Cometa</span>
           </button>
-          <button class="avatar-btn" data-avatar="orb" title="Orbe clásico de energía" aria-pressed="false">
-            <span class="avatar-icon" aria-hidden="true">🔮</span>
-            <span>Orbe</span>
+          <button class="avatar-btn" data-avatar="clownfish" title="Pez Payaso Nemo (Nado suave con estela de burbujas)" aria-pressed="false">
+            <span class="avatar-icon" aria-hidden="true">🐠</span>
+            <span>Pez</span>
+          </button>
+          <button class="avatar-btn" data-avatar="miku" title="Hatsune Miku (Estela Techno Pop cian y magenta)" aria-pressed="false">
+            <span class="avatar-icon" aria-hidden="true">🩵</span>
+            <span>Miku</span>
           </button>
         </div>
         <input type="file" id="custom-avatar-input" accept="image/*" style="display: none;">
@@ -132,31 +141,54 @@
         </button>
       </section>
 
-      <!-- 3. Reactividad de Audio & Música (Videos de Ambiente) -->
+      <!-- 3. Fondos de Pantalla Inmersivos (Ambiente Adaptativo 16:9 / 9:16) -->
       <section class="drawer-section">
-        <h4>🎵 Audio Reactivo & Beat Drops</h4>
-        <div class="audio-status-pill" id="audio-status-text">🔇 Audio Desactivado</div>
-        <div class="action-grid">
-          <button class="action-btn" id="btn-audio-system" title="Capturar audio limpio de la computadora, pestaña o Spotify/YouTube">
-            <span aria-hidden="true">🖥️</span>
-            <span>Audio Sistema</span>
+        <h4>🖼️ Fondos de Pantalla (Ambiente)</h4>
+        <div class="bg-grid" id="bg-selector-grid">
+          <!-- 1. Vacío / Negro -->
+          <button class="bg-btn" data-bg="none" title="Fondo negro puro para máxima concentración y contraste" aria-pressed="false">
+            <span class="bg-icon" aria-hidden="true">🌑</span>
+            <span>Vacío</span>
           </button>
-          <button class="action-btn" id="btn-audio-mic" title="Reaccionar al sonido en vivo de tu micrófono">
-            <span aria-hidden="true">🎤</span>
-            <span>Micrófono</span>
+          <!-- 2. Universo -->
+          <button class="bg-btn active" data-bg="universe" title="Universo profundo con nebulosas violetas y cian" aria-pressed="true">
+            <span class="bg-icon" aria-hidden="true">🌌</span>
+            <span>Universo</span>
           </button>
-          <button class="action-btn" id="btn-audio-synth" title="Generar melodía ambiental lo-fi continua">
-            <span aria-hidden="true">🎶</span>
-            <span>Melodía Lo-Fi</span>
+          <!-- 3. Galaxia -->
+          <button class="bg-btn" data-bg="galaxy" title="Espiral de galaxia cósmica luminosa" aria-pressed="false">
+            <span class="bg-icon" aria-hidden="true">🌀</span>
+            <span>Galaxia</span>
           </button>
-          <input type="file" id="audio-file-input" accept="audio/*" style="display: none;">
-          <button class="action-btn" id="btn-audio-file" title="Cargar archivo MP3/WAV desde tu equipo">
-            <span aria-hidden="true">📂</span>
-            <span>Subir MP3</span>
+          <!-- 4. Alberca -->
+          <button class="bg-btn" data-bg="pool" title="Piscina cristalina con cáusticas solares bajo el agua" aria-pressed="false">
+            <span class="bg-icon" aria-hidden="true">🏊</span>
+            <span>Alberca</span>
           </button>
-          <button class="action-btn" id="btn-audio-off" title="Desactivar análisis de audio">
-            <span aria-hidden="true">🔇</span>
-            <span>Silenciar</span>
+          <!-- 5. Cubeta -->
+          <button class="bg-btn" data-bg="bucket" title="Interior de cubeta con agua pura y reflejos metálicos" aria-pressed="false">
+            <span class="bg-icon" aria-hidden="true">🪣</span>
+            <span>Cubeta</span>
+          </button>
+          <!-- 6. Mar Caribe -->
+          <button class="bg-btn" data-bg="caribbean" title="Aguas turquesas del Mar Caribe con arena blanca" aria-pressed="false">
+            <span class="bg-icon" aria-hidden="true">🏝️</span>
+            <span>Caribe</span>
+          </button>
+          <!-- 7. Río -->
+          <button class="bg-btn" data-bg="river" title="Río de montaña cristalino corriendo entre piedras lisas" aria-pressed="false">
+            <span class="bg-icon" aria-hidden="true">🏞️</span>
+            <span>Río</span>
+          </button>
+          <!-- 8. Laguna -->
+          <button class="bg-btn" data-bg="lagoon" title="Laguna mística bioluminiscente con vegetación tropical" aria-pressed="false">
+            <span class="bg-icon" aria-hidden="true">🌿</span>
+            <span>Laguna</span>
+          </button>
+          <!-- 9. Cenote -->
+          <button class="bg-btn" data-bg="cenote" title="Cenote sagrado maya con rayo de sol penetrando el agua" aria-pressed="false">
+            <span class="bg-icon" aria-hidden="true">🕳️</span>
+            <span>Cenote</span>
           </button>
         </div>
       </section>
@@ -240,6 +272,21 @@
           <label for="slider-gravity-force">Fuerza de Gravedad <span id="val-gravity-force">1.8</span></label>
           <input type="range" id="slider-gravity-force" min="0.5" max="5.0" step="0.2" value="1.8">
         </div>
+
+        <div class="slider-control">
+          <label for="slider-boids-count">
+            Auto-Piloto: Cantidad de Boids <span id="val-boids-count">3</span>
+            <span style="font-size:0.65rem;color:var(--accent-cyan);margin-left:4px;" id="boids-limit-badge">máx. 10</span>
+          </label>
+          <input type="range" id="slider-boids-count" min="1" max="10" step="1" value="3">
+        </div>
+
+        <div class="slider-control" style="margin-top:4px;">
+          <label for="toggle-dev-mode" style="cursor:pointer;gap:8px;">
+            <span>🛠️ Modo Desarrollador (Boids ilimitados)</span>
+            <input type="checkbox" id="toggle-dev-mode" style="width:16px;height:16px;cursor:pointer;accent-color:var(--accent-cyan);">
+          </label>
+        </div>
       </section>
 
       <!-- 7. Selector de Paletas de Color -->
@@ -248,27 +295,33 @@
         <div class="palette-grid" id="palette-selector-grid"></div>
       </section>
 
-      <!-- 8. Guía y Explicación Detallada de Botones -->
+      <!-- 8. Guía y Explicación Detallada de Parámetros Físicos y Fondos -->
       <section class="drawer-section guide-section">
-        <h4>📖 Guía de Botones y Funciones</h4>
+        <h4>📖 Guía de Parámetros Físicos & Fondos</h4>
         
         <div class="guide-item">
-          <p><strong>🖥️ Audio del Sistema:</strong> Captura el sonido digital de tu pestaña, Spotify o YouTube sin ruidos de micrófono.</p>
+          <p><strong>🖼️ Fondos de Pantalla:</strong> Fondos inmersivos que se adaptan automáticamente a PC (16:9) y Móvil (9:16). El fluido se superpone con transparencia creando una experiencia ambiental completa.</p>
         </div>
         <div class="guide-item">
-          <p><strong>🐟 Auto-Piloto:</strong> Bandada de avatares con disipación dinámica y sin saturación a blanco para videos de horas.</p>
+          <p><strong>🌪️ Vorticidad (Remolinos):</strong> Controla la intensidad de los torbellinos. A mayor valor, el fluido se retuerce más y las estelas se vuelven más caóticas y vivas.</p>
         </div>
         <div class="guide-item">
-          <p><strong>🐱 Estelas Delgadas:</strong> Nyan Cat deja un arcoíris compacto, el Cohete un chorro de fuego y el Cometa un haz plateado.</p>
+          <p><strong>💨 Disipación de Densidad:</strong> Es la velocidad de desvanecimiento del color. Un valor bajo (0.1) hace que el color permanezca mucho tiempo; un valor alto (2.0) lo desvanece casi al instante, dando sensación de humo ligero.</p>
         </div>
         <div class="guide-item">
-          <p><strong>🪐 Gravedad:</strong> Cascada continua hacia abajo.</p>
+          <p><strong>🎯 Radio de Splat:</strong> Tamaño del chorro que sale del cursor o de los Boids. A mayor radio, el impacto es más amplio y difuso.</p>
         </div>
         <div class="guide-item">
-          <p><strong>👁️ Modo Zen:</strong> Pulsa [H] o toca arriba para ocultar o mostrar toda la interfaz.</p>
+          <p><strong>⏳ Tamaño de Grano (Modo Arena):</strong> Ajusta el tamaño aparente de las partículas de arena. Más grande = granos más gruesos; más pequeño = textura fina y definida.</p>
         </div>
         <div class="guide-item">
-          <p><strong>⌨️ Atajos:</strong> [1-3] Modos | [H] Zen | [A] Auto-Piloto | [Espacio] Pausa | [C] Color | [S] Supernova | [V] Vórtice | [G] Gravedad | [Del] Limpiar.</p>
+          <p><strong>🪐 Fuerza de Gravedad:</strong> Aceleración vertical hacia abajo. A mayor valor, el fluido cae más rápido creando cascadas continuas.</p>
+        </div>
+        <div class="guide-item">
+          <p><strong>🐟 Cantidad de Boids (Auto-Piloto):</strong> Número de avatares autónomos de la pecera. Más boids = más actividad visual.</p>
+        </div>
+        <div class="guide-item">
+          <p><strong>⌨️ Atajos de Teclado:</strong> [1-4] Modos | [H] Zen | [A] Auto-Piloto | [Espacio] Pausa | [C] Color | [S] Supernova | [V] Vórtice | [G] Gravedad | [Del] Limpiar.</p>
         </div>
       </section>
     </div>
@@ -278,21 +331,23 @@
   <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
 
   <!-- Scripts con Cache Busting -->
-  <script src="assets/palettes.js?v=2.1"></script>
-  <script src="js/original/fluidCore.js?v=2.1"></script>
-  <script src="js/extensions/particleFx.js?v=2.1"></script>
-  <script src="js/extensions/audioEngine.js?v=2.1"></script>
-  <script src="js/extensions/customCursor.js?v=2.1"></script>
-  <script src="js/extensions/swarmEngine.js?v=2.1"></script>
-  <script src="js/extensions/symmetry.js?v=2.1"></script>
-  <script src="js/extensions/fidgets.js?v=2.1"></script>
-  <script src="js/extensions/sandMode.js?v=2.1"></script>
-  <script src="js/extensions/ui.js?v=2.1"></script>
-  <script src="js/main.js?v=2.1"></script>
+  <script src="assets/palettes.js?v=1.6"></script>
+  <script src="js/state.js?v=1.6"></script>
+  <script src="js/extensions/backgrounds.js?v=1.6"></script>
+  <script src="js/original/fluidCore.js?v=1.6"></script>
+  <script src="js/extensions/particleFx.js?v=1.6"></script>
+  <script src="js/extensions/customCursor.js?v=1.6"></script>
+  <script src="js/extensions/swarmEngine.js?v=1.6"></script>
+  <script src="js/extensions/swarmRenderer.js?v=1.6"></script>
+  <script src="js/extensions/symmetry.js?v=1.6"></script>
+  <script src="js/extensions/fidgets.js?v=1.6"></script>
+  <script src="js/extensions/sandMode.js?v=1.6"></script>
+  <script src="js/extensions/ui.js?v=1.6"></script>
+  <script src="js/main.js?v=1.6"></script>
   <script>
     if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=2.1').catch(() => {});
+        navigator.serviceWorker.register('./sw.js?v=1.6').catch(() => {});
       });
     }
   </script>

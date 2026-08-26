@@ -1,7 +1,7 @@
 /**
  * AETHERIA | Pure WebGL Navier-Stokes Fluid Simulation Engine (FluidCore)
- * Based on Fast Fluid Dynamics on GPU (Mark Harris / NVIDIA GPU Gems 38) & PavelDoGreat WebGL Fluid.
- * Features Bounded FBO Feedback Clamping, Dynamic Luminance Limiting, and Directional Splats.
+ * Features ACES Filmic Tonemapping, Dynamic Splat Density Compensation,
+ * and Bounded FBO Feedback Clamping.
  * License: MIT
  */
 
@@ -68,6 +68,7 @@
     getWebGLContext(canvas) {
       const params = {
         alpha: true,
+        premultipliedAlpha: false,
         depth: false,
         stencil: false,
         antialias: false,
@@ -207,7 +208,6 @@
         }
       `;
 
-      // Advection shader with u_gravity pre-Poisson injection and Bounded FBO feedback clamping
       const advectionShader = `
         precision highp float;
         precision highp sampler2D;
@@ -246,7 +246,6 @@
           float decay = 1.0 + dissipation * dt;
           vec4 decayed = result / decay;
           
-          // Bounded FBO Feedback Clamping for infinite runtimes
           if (isVelocity == 0) {
             decayed = clamp(decayed, 0.0, 3.0);
           }
@@ -378,7 +377,8 @@
         }
       `;
 
-      // 3D Specular Shading with Soft Luminance Limiting (Anti-Whiteout Tone-Mapping)
+      // 3D Specular Shading with ACES Filmic Tone Mapping (Preserves High-Vibrancy Contrast)
+      // Background Blending: outputs transparent alpha when no fluid is present and uTransparent is active.
       const displayShader = `
         precision highp float;
         precision highp sampler2D;
@@ -394,15 +394,33 @@
         uniform vec2 ditherScale;
         uniform vec2 texelSize;
         uniform int uShading;
-        uniform vec3 uBgColor;
+        uniform int uTransparent;
 
         vec3 linearToGamma (vec3 color) {
           color = max(color, vec3(0.0));
           return max(1.055 * pow(color, vec3(0.416666667)) - 0.055, vec3(0.0));
         }
 
+        // ACES Filmic Tone Mapping — only compresses bright highlights, leaves blacks at 0
+        vec3 ACESFilm(vec3 x) {
+          float a = 2.51;
+          float b = 0.03;
+          float c = 2.43;
+          float d = 0.59;
+          float e = 0.14;
+          return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
+        }
+
         void main () {
           vec3 c = texture2D(uTexture, vUv).rgb;
+          c = max(c, vec3(0.0));
+
+          // When transparent mode is active, early-return transparent pixel if no fluid is present
+          float lum = dot(c, vec3(0.299, 0.587, 0.114));
+          if (lum < 0.002) {
+            gl_FragColor = (uTransparent == 1) ? vec4(0.0, 0.0, 0.0, 0.0) : vec4(0.0, 0.0, 0.0, 1.0);
+            return;
+          }
 
           if (uShading == 1) {
             vec3 lc = texture2D(uTexture, vL).rgb;
@@ -416,27 +434,20 @@
             vec3 n = normalize(vec3(dx, dy, length(texelSize)));
             vec3 l = vec3(0.0, 0.0, 1.0);
 
-            float diffuse = clamp(dot(n, l) + 0.7, 0.7, 1.0);
+            float diffuse = clamp(dot(n, l) + 0.65, 0.65, 1.0);
             c *= diffuse;
           }
 
-          // Anti-Whiteout Vibrancy Preservation (Luminance Limiter)
-          float lum = dot(c, vec3(0.299, 0.587, 0.114));
-          if (lum > 1.15) {
-            // Compress luminance gently while retaining deep saturation
-            float targetLum = 1.0 + 0.22 * (1.0 - exp(-(lum - 1.15)));
-            c = (c / lum) * targetLum;
-          }
+          // Apply ACES Filmic compression (only affects bright colours, not blacks)
+          c = ACESFilm(c * 1.35);
 
+          // Subtle dither to prevent colour banding
           vec2 ditherUv = vUv * ditherScale;
           float noise = texture2D(uDithering, ditherUv).r * 2.0 - 1.0;
           c += noise / 255.0;
 
-          // Mix with deep background
-          float maxC = max(c.r, max(c.g, c.b));
-          vec3 finalColor = mix(uBgColor, c, clamp(maxC * 1.5, 0.0, 1.0));
-
-          gl_FragColor = vec4(linearToGamma(finalColor), 1.0);
+          float a = (uTransparent == 1) ? clamp(lum * 3.5, 0.0, 1.0) : 1.0;
+          gl_FragColor = vec4(linearToGamma(max(c, vec3(0.0))), a);
         }
       `;
 
@@ -656,9 +667,10 @@
       this.blit(this.velocity.write);
       this.velocity.swap();
 
-      // Splat Dye Color
+      // Splat Dye Color with area-compensated intensity (Prevents white-hot dense blobs)
+      const intensity = 0.28 * Math.sqrt(Math.max(0.1, radiusScale));
       gl.uniform1i(p.uniforms.uTarget, this.density.read.attach(0));
-      gl.uniform3f(p.uniforms.color, color[0] * 0.3, color[1] * 0.3, color[2] * 0.3);
+      gl.uniform3f(p.uniforms.color, color[0] * intensity, color[1] * intensity, color[2] * intensity);
       this.blit(this.density.write);
       this.density.swap();
     }
@@ -766,7 +778,7 @@
       }
 
       gl.uniform1i(p.uniforms.uShading, this.config.SHADING ? 1 : 0);
-      gl.uniform3f(p.uniforms.uBgColor, this.config.BACK_COLOR.r / 255.0, this.config.BACK_COLOR.g / 255.0, this.config.BACK_COLOR.b / 255.0);
+      gl.uniform1i(p.uniforms.uTransparent, this.config.TRANSPARENT ? 1 : 0);
 
       this.blit(targetFBO);
     }

@@ -1,7 +1,9 @@
 /**
  * AETHERIA | Main Application Orchestrator
- * Coordinates FluidCore (PavelDoGreat Navier-Stokes), Sand Particle Post-Process,
- * Symmetrical Multi-cursor with Thematic Avatars, Particle Sparks, Swarm Boids, and Adaptive Audio.
+ * Coordinates FluidCore (PavelDoGreat Navier-Stokes), Adaptive Backgrounds (16:9 / 9:16),
+ * Sand Particle Post-Process, Symmetrical Multi-cursor with Thematic Avatars,
+ * Swarm Visual Renderer (Canvas 2D), Particle Sparks, and Swarm Boids.
+ * License: MIT
  */
 
 (function (root) {
@@ -20,29 +22,55 @@
     }
 
     init() {
-      // 1. Initialize Fluid Core
+      // 1. Initialize Adaptive Backgrounds Engine
+      if (typeof AetheriaBackground !== 'undefined') {
+        AetheriaBackground.init();
+      }
+
+      // 2. Initialize Fluid Core
       FluidCore.init(this.glCanvas);
 
-      // 2. Initialize Sand Particle Post-Process Shader
+      // 3. Initialize Sand Particle Post-Process Shader
       AetheriaSandMode.init(FluidCore.getGL());
 
-      // 3. Initialize Particle FX (Sparks, Embers & Stardust)
+      // 4. Initialize Particle FX (Sparks, Embers, Bubbles & Stardust)
       AetheriaParticles.init(this.canvasContainer);
 
-      // 4. Initialize Symmetry Controller
+      // 5. Initialize Symmetry Controller
       AetheriaSymmetry.init(this.cursorOverlay);
 
-      // 5. Initialize Autonomous Swarm Controller (Boids)
-      AetheriaSwarm.init(this.cursorOverlay);
+      // 6. Initialize Autonomous Swarm Controller (Boids)
+      AetheriaSwarm.init();
 
-      // 6. Initialize UI Controller
+      // 7. Initialize Swarm Visual Renderer (2D Canvas superpuesto)
+      if (typeof AetheriaSwarmRenderer !== 'undefined') {
+        AetheriaSwarmRenderer.init(this.canvasContainer);
+      }
+
+      // 8. Initialize UI Controller
       AetheriaUI.init(this);
 
-      // 7. Bind Resizing & Interactions
+      // 9. Bind Resizing & Interactions
       window.addEventListener('resize', () => this.onResize());
       this.bindInteractions();
 
-      // 8. Start Smooth Animation Loop
+      // 10. WebGL Context Loss Guard (prevents silent freeze on GPU driver reset)
+      this.glCanvas.addEventListener('webglcontextlost', (e) => {
+        e.preventDefault();
+        if (this._rafId) cancelAnimationFrame(this._rafId);
+        console.warn('[Aetheria] WebGL context lost — reloading in 3s...');
+        if (typeof AetheriaUI !== 'undefined') {
+          AetheriaUI.showToast('⚠️ GPU context perdido — recargando en 3s...');
+        }
+        setTimeout(() => location.reload(), 3000);
+      });
+      this.glCanvas.addEventListener('webglcontextrestored', () => {
+        console.info('[Aetheria] WebGL context restored — reinitializing...');
+        FluidCore.init(this.glCanvas);
+        this.loop();
+      });
+
+      // 11. Start Smooth Animation Loop
       this.loop();
     }
 
@@ -72,21 +100,19 @@
         prevX: normX,
         prevY: normY,
         down: true,
-        color: AetheriaUI.getNextColor()
+        color: (typeof AetheriaCursor !== 'undefined') ? AetheriaCursor.getUserSplatColor(0) : [0.0, 0.95, 1.0]
       };
       this.pointers.set(e.pointerId, pointer);
 
       const aspect = window.innerWidth / window.innerHeight;
-      const symPoints = AetheriaSymmetry.getPoints(normX, normY, 0, 0, aspect);
-      const trailCfg = (typeof AetheriaCursor !== 'undefined') ? AetheriaCursor.getTrailConfig() : { radiusScale: 1.0 };
+      const trailCfg = (typeof AetheriaCursor !== 'undefined') ? AetheriaCursor.getTrailConfig() : { radiusScale: 1.0, impulse: 1.0 };
+      const col = pointer.color;
 
-      for (let i = 0; i < symPoints.length; i++) {
-        const pt = symPoints[i];
-        let col = AetheriaUI.getColorForAngle(pt.angleIndex, symPoints.length);
-        if (typeof AetheriaCursor !== 'undefined') {
-          col = AetheriaCursor.getSpecialTrailColor(col);
-        }
-        FluidCore.splat(pt.x, pt.y, 0, 0, col, trailCfg.radiusScale);
+      // Inyección unificada con simetría
+      if (typeof AetheriaSymmetry !== 'undefined') {
+        AetheriaSymmetry.injectSplat(normX, normY, 0, 0, col, trailCfg.radiusScale, aspect);
+      } else {
+        FluidCore.splat(normX, normY, 0, 0, col, trailCfg.radiusScale);
       }
 
       AetheriaSymmetry.renderVisualPoints(normX, normY, window.innerWidth, window.innerHeight, true, 0, 0);
@@ -100,6 +126,7 @@
       const aspect = window.innerWidth / window.innerHeight;
 
       if (!pointer) {
+        // Movimiento flotante previo a clic: orientar avatar en pantalla
         AetheriaSymmetry.renderVisualPoints(normX, normY, window.innerWidth, window.innerHeight, false, 0, 0);
         return;
       }
@@ -117,30 +144,27 @@
       pointer.x = normX;
       pointer.y = normY;
 
-      const symPoints = AetheriaSymmetry.getPoints(normX, normY, dx, dy, aspect);
-      const trailCfg = (typeof AetheriaCursor !== 'undefined') ? AetheriaCursor.getTrailConfig() : { radiusScale: 1.0, sparkType: 'star', sparkCount: 2 };
+      const trailCfg = (typeof AetheriaCursor !== 'undefined') ? AetheriaCursor.getTrailConfig() : { radiusScale: 1.0, sparkType: 'star', sparkCount: 2, impulse: 1.0 };
+      const col = (typeof AetheriaCursor !== 'undefined') ? AetheriaCursor.getUserSplatColor(0) : [0.0, 0.95, 1.0];
 
-      for (let i = 0; i < symPoints.length; i++) {
-        const pt = symPoints[i];
-        let col = AetheriaUI.getColorForAngle(pt.angleIndex, symPoints.length);
-        if (typeof AetheriaCursor !== 'undefined') {
-          col = AetheriaCursor.getSpecialTrailColor(col);
-        }
+      // Posición de emisión trasera (Tobera/Cola)
+      let emitterPt = { x: normX, y: normY };
+      if (typeof AetheriaCursor !== 'undefined') {
+        emitterPt = AetheriaCursor.getEmitterOffsetPoint(normX, normY, dx, dy);
+      }
 
-        // Calculate Rear Tobera / Tail Offset position
-        let emitterPt = { x: pt.x, y: pt.y };
-        if (typeof AetheriaCursor !== 'undefined') {
-          emitterPt = AetheriaCursor.getEmitterOffsetPoint(pt.x, pt.y, pt.dx, pt.dy);
-        }
+      // Inyección de fluido con simetría unificada
+      const impulse = trailCfg.impulse || 1.0;
+      if (typeof AetheriaSymmetry !== 'undefined') {
+        AetheriaSymmetry.injectSplat(emitterPt.x, emitterPt.y, dx * impulse, dy * impulse, col, trailCfg.radiusScale, aspect);
+      } else {
+        FluidCore.splat(emitterPt.x, emitterPt.y, dx * impulse, dy * impulse, col, trailCfg.radiusScale);
+      }
 
-        // Narrow ribbon splat
-        FluidCore.splat(emitterPt.x, emitterPt.y, pt.dx, pt.dy, col, trailCfg.radiusScale);
-
-        // Emit Sparks / Stardust from rear tail
-        if (AetheriaParticles) {
-          const hexCol = `rgb(${Math.round(col[0] * 255)}, ${Math.round(col[1] * 255)}, ${Math.round(col[2] * 255)})`;
-          AetheriaParticles.emit(emitterPt.x * window.innerWidth, (1.0 - emitterPt.y) * window.innerHeight, pt.dx * 0.05, pt.dy * 0.05, hexCol, trailCfg.sparkType, trailCfg.sparkCount);
-        }
+      // Emisión de partículas desde la tobera
+      if (AetheriaParticles) {
+        const hexCol = `rgb(${Math.round(col[0] * 255)}, ${Math.round(col[1] * 255)}, ${Math.round(col[2] * 255)})`;
+        AetheriaParticles.emit(emitterPt.x * window.innerWidth, (1.0 - emitterPt.y) * window.innerHeight, dx * 0.05, dy * 0.05, hexCol, trailCfg.sparkType, trailCfg.sparkCount);
       }
 
       AetheriaSymmetry.renderVisualPoints(normX, normY, window.innerWidth, window.innerHeight, true, dx, dy);
@@ -164,8 +188,17 @@
       exportCanvas.height = h;
       const ctx = exportCanvas.getContext('2d');
 
+      // Draw Background Color
+      ctx.fillStyle = '#07090e';
+      ctx.fillRect(0, 0, w, h);
+
       // Draw WebGL layer
       ctx.drawImage(this.glCanvas, 0, 0, w, h);
+
+      // Draw Swarm visual layer
+      if (AetheriaSwarmRenderer && AetheriaSwarmRenderer.canvas) {
+        ctx.drawImage(AetheriaSwarmRenderer.canvas, 0, 0, w, h);
+      }
 
       // Draw Particle layer
       if (AetheriaParticles && AetheriaParticles.canvas) {
@@ -190,19 +223,15 @@
       const dt = Math.min((now - this.lastTime) / 1000.0, 0.033);
       this.lastTime = now;
 
-      // 1. Audio Processing & Adaptive Beat Shockwave
-      if (typeof AetheriaAudio !== 'undefined' && AetheriaAudio.isListening) {
-        AetheriaAudio.update();
-        if (AetheriaAudio.isBeatDetected) {
-          const col = AetheriaUI.getNextColor();
-          // Gentle shockwave ripple in center on beat drops
-          FluidCore.splat(0.5, 0.5, (Math.random() - 0.5) * 800, (Math.random() - 0.5) * 800, col, 0.5);
-        }
+      // 1. Autonomous Swarm Boids (Auto-Pilot "Pecera" con oscilación armónica suave)
+      if (typeof AetheriaSwarm !== 'undefined' && AetheriaSwarm.isEnabled) {
+        AetheriaSwarm.updateAndEmit(dt, FluidCore, AetheriaParticles);
       }
 
-      // 2. Autonomous Swarm Boids (Auto-Pilot / Screensaver)
-      if (typeof AetheriaSwarm !== 'undefined' && AetheriaSwarm.isEnabled) {
-        AetheriaSwarm.updateAndEmit(dt, FluidCore, AetheriaAudio, AetheriaParticles);
+      // 2. Render Swarm Visual Layer
+      if (typeof AetheriaSwarmRenderer !== 'undefined' && typeof AetheriaSwarm !== 'undefined') {
+        const swarmAvatar = (typeof AetheriaState !== 'undefined') ? AetheriaState.swarmAvatar : 'nyan';
+        AetheriaSwarmRenderer.render(AetheriaSwarm.boids, swarmAvatar, AetheriaSwarm.isEnabled);
       }
 
       // 3. Step Navier-Stokes GPU Physics
@@ -221,7 +250,7 @@
         AetheriaParticles.updateAndRender(dt);
       }
 
-      requestAnimationFrame(() => this.loop());
+      this._rafId = requestAnimationFrame(() => this.loop());
     }
   }
 

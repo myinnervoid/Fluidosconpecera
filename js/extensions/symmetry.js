@@ -1,5 +1,6 @@
 /**
  * AETHERIA | Angular Symmetry & Dynamic Multicursor Engine
+ * Centralized Unified Splat Injection Engine for User & Autonomous Swarm.
  * Handles radial/bilateral symmetry with normalized coordinates, aspect ratio correction,
  * static DOM element pool, and dynamic directional avatar rotation.
  */
@@ -42,16 +43,22 @@
 
     setSymmetry(mode) {
       this.symmetryMode = parseInt(mode, 10) || 1;
+      if (typeof AetheriaState !== 'undefined') {
+        AetheriaState.symmetry = this.symmetryMode;
+      }
       this.updateCursorDOM();
     }
 
     getSymmetry() {
+      if (typeof AetheriaState !== 'undefined') {
+        return AetheriaState.symmetry || this.symmetryMode;
+      }
       return this.symmetryMode;
     }
 
     updateCursorDOM() {
       const isNone = (typeof AetheriaCursor !== 'undefined' && AetheriaCursor.currentType === 'none');
-      const activeCount = this.symmetryMode;
+      const activeCount = this.getSymmetry();
       const avatarHTML = (typeof AetheriaCursor !== 'undefined') ? AetheriaCursor.getAvatarHTML() : '';
 
       for (let i = 0; i < this.mirrorCursorPool.length; i++) {
@@ -83,7 +90,7 @@
 
     getPoints(normX, normY, normDx, normDy, aspectRatio = 1.0) {
       const points = [];
-      const mode = this.symmetryMode;
+      const mode = this.getSymmetry();
 
       if (mode === 1) {
         points.push({ x: normX, y: normY, dx: normDx, dy: normDy, angleIndex: 0 });
@@ -140,6 +147,28 @@
       return points.slice(0, this.maxSplatsPerFrame);
     }
 
+    /**
+     * Función MAESTRA de Inyección Unificada de Splats con Simetría activa.
+     * Llamada tanto por UserCursorController como por AutoSwarmController.
+     */
+    injectSplat(baseX, baseY, dx, dy, color, radius, aspect = null) {
+      if (typeof FluidCore === 'undefined') return;
+
+      const aspectRatio = aspect || (window.innerWidth / window.innerHeight);
+      const mode = this.getSymmetry();
+
+      if (mode === 1) {
+        FluidCore.splat(baseX, baseY, dx, dy, color, radius);
+        return;
+      }
+
+      const points = this.getPoints(baseX, baseY, dx, dy, aspectRatio);
+      for (let i = 0; i < points.length; i++) {
+        const pt = points[i];
+        FluidCore.splat(pt.x, pt.y, pt.dx, pt.dy, color, radius);
+      }
+    }
+
     renderVisualPoints(normX, normY, width, height, isPointerDown, dx = 0, dy = 0) {
       if (!this.mirrorCursorPool.length) return;
       if (typeof AetheriaCursor !== 'undefined' && AetheriaCursor.currentType === 'none') {
@@ -148,9 +177,11 @@
       }
 
       const points = this.getPoints(normX, normY, dx, dy, width / height);
+      const mode = this.getSymmetry();
+
       for (let i = 0; i < this.mirrorCursorPool.length; i++) {
         const el = this.mirrorCursorPool[i];
-        if (points[i] && i < this.symmetryMode) {
+        if (points[i] && i < mode) {
           el.style.left = `${points[i].x * width}px`;
           el.style.top = `${(1.0 - points[i].y) * height}px`;
           el.style.opacity = isPointerDown ? '1' : '0.45';

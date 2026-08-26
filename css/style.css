@@ -61,8 +61,24 @@ input[type="range"]:focus-visible {
 }
 
 /* ==========================================================================
-   CANVAS LAYERS (CURSOR HIDDEN ON DRAWING AREA)
+   CANVAS & BACKGROUND LAYERS
    ========================================================================== */
+
+#background-layer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+  background-color: var(--bg-dark);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: opacity 0.35s ease-in-out;
+  will-change: opacity, background-image;
+}
 
 #canvas-container {
   position: absolute;
@@ -72,7 +88,7 @@ input[type="range"]:focus-visible {
   height: 100%;
   z-index: 1;
   overflow: hidden;
-  cursor: none !important; /* Hide OS pointer so only the Avatar floats */
+  cursor: crosshair; /* Visible crosshair by default when no avatar is selected */
 }
 
 #gl-canvas {
@@ -84,7 +100,7 @@ input[type="range"]:focus-visible {
   display: block;
   z-index: 1;
   touch-action: none;
-  cursor: none !important;
+  cursor: crosshair;
 }
 
 #particle-canvas {
@@ -105,6 +121,12 @@ input[type="range"]:focus-visible {
   height: 100%;
   z-index: 3;
   pointer-events: none;
+}
+
+/* Hide OS pointer ONLY when a custom floating avatar is active */
+body.avatar-active #canvas-container,
+body.avatar-active #gl-canvas,
+body.avatar-active #cursor-overlay {
   cursor: none !important;
 }
 
@@ -156,6 +178,30 @@ input[type="range"]:focus-visible {
   width: 36px;
   height: 36px;
   filter: drop-shadow(0 0 10px rgba(0, 242, 254, 0.9));
+}
+
+.clownfish-svg {
+  width: 36px;
+  height: 28px;
+  filter: drop-shadow(0 0 8px rgba(255, 107, 0, 0.85));
+  animation: fishWiggle 0.45s infinite alternate ease-in-out;
+}
+
+@keyframes fishWiggle {
+  0% { transform: scaleY(0.96) rotate(-2deg); }
+  100% { transform: scaleY(1.04) rotate(2deg); }
+}
+
+.miku-svg {
+  width: 34px;
+  height: 34px;
+  filter: drop-shadow(0 0 10px rgba(57, 197, 187, 0.9)) drop-shadow(0 0 4px rgba(255, 0, 127, 0.6));
+  animation: mikuFloat 0.6s infinite alternate ease-in-out;
+}
+
+@keyframes mikuFloat {
+  0% { transform: translateY(-1.5px); }
+  100% { transform: translateY(1.5px); }
 }
 
 .cursor-custom-img {
@@ -435,11 +481,11 @@ button {
   margin-bottom: 12px;
 }
 
-/* Mode Button Grid */
+/* Mode Button Grid (4 Sensory Modes) */
 .mode-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
 }
 
 .mode-btn {
@@ -479,7 +525,7 @@ button {
 /* Avatar Buttons Grid */
 .avatar-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 6px;
   margin-bottom: 8px;
 }
@@ -539,17 +585,46 @@ button {
   color: #ffffff;
 }
 
-/* Audio Reactivity Section */
-.audio-status-pill {
+/* Background Selector Grid */
+.bg-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.bg-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 8px 4px;
+  min-height: 50px;
+  background: var(--bg-btn);
+  border: 1px solid var(--border-glass);
+  border-radius: 10px;
+  color: var(--text-main);
   font-size: 0.72rem;
   font-weight: 700;
-  padding: 6px 12px;
-  background: rgba(0, 242, 254, 0.1);
-  border: 1px solid rgba(0, 242, 254, 0.25);
-  border-radius: 10px;
-  color: var(--accent-cyan);
-  margin-bottom: 10px;
-  text-align: center;
+  transition: all 0.2s;
+}
+
+.bg-btn .bg-icon {
+  font-size: 1.2rem;
+}
+
+.bg-btn:hover {
+  background: var(--bg-btn-hover);
+  border-color: var(--border-glow);
+  transform: translateY(-1px);
+}
+
+.bg-btn.active {
+  background: var(--bg-btn-active);
+  border-color: var(--border-glow-active);
+  color: #ffffff;
+  box-shadow: var(--shadow-active);
 }
 
 /* Symmetry Row */

@@ -60,9 +60,9 @@
           vec3 src = texture2D(uTexture, sampleUv).rgb;
           float density = max(src.r, max(src.g, src.b));
 
-          // If no fluid in cell, render background
+          // If no fluid in cell, render transparent background
           if (density < 0.02) {
-            gl_FragColor = vec4(0.027, 0.035, 0.055, 1.0);
+            gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
             return;
           }
 

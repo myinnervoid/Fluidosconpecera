@@ -1,71 +1,62 @@
 /**
  * AETHERIA | Dynamic Custom Cursor & Thematic Avatars
- * Supports:
- * - 'none': Sin avatar visual (trazo puro y limpio)
- * - 'orb': Orbe místico
- * - 'nyan': Nyan Cat con estela arcoíris
- * - 'rocket': Cohete con chorro de fuego
- * - 'comet': Cometa con haz plateado
- * - 'custom': Imagen propia local
+ * 6 Punteros Principales + Avatar Personalizado:
+ * - 0: 'none' (Predeterminado / Sistema / Trazo limpio)
+ * - 1: 'nyan' (Nyan Cat clásico)
+ * - 2: 'rocket' (Cohete Aeroespacial orientado 360°)
+ * - 3: 'comet' (Cometa Cósmico con haz de plasma)
+ * - 4: 'clownfish' (Pez Payaso / Nemo de Arrecife)
+ * - 5: 'miku' (Hatsune Miku con estela cian/techno)
+ * - 6: 'custom' (Imagen PNG/GIF cargada en local)
  */
 
 (function (root) {
   'use strict';
 
-  const TRAIL_CONFIGS = {
-    none: { radiusScale: 1.0, sparkType: 'star', sparkCount: 0 },
-    orb: { radiusScale: 1.0, sparkType: 'star', sparkCount: 1 },
-    nyan: { radiusScale: 0.36, sparkType: 'star', sparkCount: 2 },
-    rocket: { radiusScale: 0.30, sparkType: 'fire', sparkCount: 3 },
-    comet: { radiusScale: 0.26, sparkType: 'star', sparkCount: 2 },
-    custom: { radiusScale: 0.45, sparkType: 'star', sparkCount: 2 }
+  const AVATAR_CONFIGS = {
+    none:      { radiusScale: 1.00, sparkType: 'star',    impulse: 1.00, offset: 0.000, angleCorrection: 0 },
+    nyan:      { radiusScale: 0.38, sparkType: 'pixel',   impulse: 0.85, offset: -0.024, angleCorrection: 0 },
+    rocket:    { radiusScale: 0.32, sparkType: 'fire',    impulse: 1.25, offset: -0.028, angleCorrection: 90 },
+    comet:     { radiusScale: 0.28, sparkType: 'dust',    impulse: 1.10, offset: -0.025, angleCorrection: 45 },
+    clownfish: { radiusScale: 0.34, sparkType: 'bubbles', impulse: 0.75, offset: -0.022, angleCorrection: 0 },
+    miku:      { radiusScale: 0.36, sparkType: 'neon',    impulse: 0.90, offset: -0.020, angleCorrection: 0 },
+    custom:    { radiusScale: 0.40, sparkType: 'star',    impulse: 1.00, offset: 0.000, angleCorrection: 0 }
   };
 
   const AVATAR_SVGS = {
-    orb: `
-      <svg viewBox="0 0 32 32" class="cursor-svg orb-svg">
-        <circle cx="16" cy="16" r="10" fill="url(#orbGrad)" filter="drop-shadow(0 0 8px #00f2fe)"/>
-        <defs>
-          <radialGradient id="orbGrad" cx="35%" cy="35%">
-            <stop offset="0%" stop-color="#ffffff"/>
-            <stop offset="50%" stop-color="#00f2fe"/>
-            <stop offset="100%" stop-color="#ff007f"/>
-          </radialGradient>
-        </defs>
-      </svg>
-    `,
-
+    // 1. Nyan Cat
     nyan: `
-      <svg viewBox="0 0 48 32" class="cursor-svg nyan-svg">
-        <path d="M0 8h8v16H0z" fill="#ff0000" opacity="0.8"/>
-        <path d="M0 11h8v10H0z" fill="#ff9900" opacity="0.8"/>
-        <path d="M0 14h8v4H0z" fill="#ffff00" opacity="0.8"/>
-        <path d="M0 16h8v4H0z" fill="#33ff00" opacity="0.8"/>
-        <path d="M0 18h8v4H0z" fill="#0099ff" opacity="0.8"/>
-        <path d="M0 20h8v4H0z" fill="#6633ff" opacity="0.8"/>
-        <rect x="10" y="6" width="24" height="20" rx="3" fill="#ffd199" stroke="#000" stroke-width="1.5"/>
+      <svg viewBox="0 0 48 32" class="cursor-svg nyan-svg" aria-hidden="true">
+        <path d="M0 8h8v16H0z" fill="#ff0000" opacity="0.85"/>
+        <path d="M0 11h8v10H0z" fill="#ff9900" opacity="0.85"/>
+        <path d="M0 14h8v4H0z" fill="#ffff00" opacity="0.85"/>
+        <path d="M0 16h8v4H0z" fill="#33ff00" opacity="0.85"/>
+        <path d="M0 18h8v4H0z" fill="#0099ff" opacity="0.85"/>
+        <path d="M0 20h8v4H0z" fill="#6633ff" opacity="0.85"/>
+        <rect x="10" y="6" width="24" height="20" rx="3" fill="#ffd199" stroke="#111" stroke-width="1.2"/>
         <rect x="13" y="9" width="18" height="14" rx="2" fill="#ff99bb"/>
         <circle cx="16" cy="12" r="1" fill="#ff0055"/>
         <circle cx="22" cy="11" r="1" fill="#9900cc"/>
         <circle cx="27" cy="14" r="1" fill="#ff0055"/>
         <circle cx="17" cy="18" r="1" fill="#9900cc"/>
         <circle cx="24" cy="19" r="1" fill="#ff0055"/>
-        <rect x="26" y="10" width="16" height="14" rx="3" fill="#999999" stroke="#000" stroke-width="1.5"/>
-        <polygon points="27,10 31,4 33,10" fill="#999999" stroke="#000" stroke-width="1.2"/>
-        <polygon points="37,10 39,4 41,10" fill="#999999" stroke="#000" stroke-width="1.2"/>
+        <rect x="26" y="10" width="16" height="14" rx="3" fill="#999999" stroke="#111" stroke-width="1.2"/>
+        <polygon points="27,10 31,4 33,10" fill="#999999" stroke="#111" stroke-width="1"/>
+        <polygon points="37,10 39,4 41,10" fill="#999999" stroke="#111" stroke-width="1"/>
         <circle cx="31" cy="15" r="1.5" fill="#000"/>
         <circle cx="37" cy="15" r="1.5" fill="#000"/>
         <circle cx="34" cy="17" r="1" fill="#ff6699"/>
         <circle cx="28" cy="17" r="1.5" fill="#ff9999"/>
         <circle cx="40" cy="17" r="1.5" fill="#ff9999"/>
-        <rect x="6" y="14" width="5" height="3" rx="1.5" fill="#999999" stroke="#000" stroke-width="1"/>
-        <rect x="14" y="25" width="4" height="4" rx="2" fill="#999999" stroke="#000" stroke-width="1"/>
-        <rect x="26" y="25" width="4" height="4" rx="2" fill="#999999" stroke="#000" stroke-width="1"/>
+        <rect x="6" y="14" width="5" height="3" rx="1.5" fill="#999999" stroke="#111" stroke-width="1"/>
+        <rect x="14" y="25" width="4" height="4" rx="2" fill="#999999" stroke="#111" stroke-width="1"/>
+        <rect x="26" y="25" width="4" height="4" rx="2" fill="#999999" stroke="#111" stroke-width="1"/>
       </svg>
     `,
 
+    // 2. Cohete Espacial
     rocket: `
-      <svg viewBox="0 0 36 36" class="cursor-svg rocket-svg">
+      <svg viewBox="0 0 36 36" class="cursor-svg rocket-svg" aria-hidden="true">
         <polygon points="18,34 13,24 23,24" fill="#ffbe0b" filter="drop-shadow(0 0 6px #ff007f)"/>
         <polygon points="18,30 15,24 21,24" fill="#ff007f"/>
         <path d="M18 2 Q27 12 24 25 L12 25 Q9 12 18 2 Z" fill="#f8fafc" stroke="#0f172a" stroke-width="1.5"/>
@@ -77,36 +68,95 @@
       </svg>
     `,
 
+    // 3. Cometa Cósmico
     comet: `
-      <svg viewBox="0 0 36 36" class="cursor-svg comet-svg">
+      <svg viewBox="0 0 36 36" class="cursor-svg comet-svg" aria-hidden="true">
         <defs>
-          <linearGradient id="cometTail" x1="0%" y1="100%" x2="100%" y2="0%">
+          <linearGradient id="cometTailGrad" x1="0%" y1="100%" x2="100%" y2="0%">
             <stop offset="0%" stop-color="transparent"/>
-            <stop offset="60%" stop-color="#b0c4de" stop-opacity="0.7"/>
+            <stop offset="60%" stop-color="#38bdf8" stop-opacity="0.8"/>
             <stop offset="100%" stop-color="#ffffff"/>
           </linearGradient>
         </defs>
-        <polygon points="4,32 18,18 32,4 18,14 8,24" fill="url(#cometTail)"/>
-        <circle cx="28" cy="8" r="5" fill="#ffffff" filter="drop-shadow(0 0 10px #e0f2fe)"/>
-        <circle cx="28" cy="8" r="2.5" fill="#b0c4de"/>
+        <polygon points="4,32 18,18 32,4 18,14 8,24" fill="url(#cometTailGrad)"/>
+        <circle cx="28" cy="8" r="5" fill="#ffffff" filter="drop-shadow(0 0 10px #38bdf8)"/>
+        <circle cx="28" cy="8" r="2.5" fill="#7dd3fc"/>
+      </svg>
+    `,
+
+    // 4. Pez Payaso (Nemo)
+    clownfish: `
+      <svg viewBox="0 0 38 28" class="cursor-svg clownfish-svg" aria-hidden="true">
+        <defs>
+          <linearGradient id="fishBodyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#ff4500"/>
+            <stop offset="60%" stop-color="#ff7a00"/>
+            <stop offset="100%" stop-color="#ff9e1b"/>
+          </linearGradient>
+        </defs>
+        <!-- Aleta Caudal (Cola) -->
+        <path d="M6 14 L0 8 Q3 14 0 20 Z" fill="#ff4500" stroke="#111" stroke-width="1"/>
+        <path d="M5 14 L2 10 Q3 14 2 18 Z" fill="#ffffff"/>
+        <!-- Aleta Dorsal -->
+        <path d="M18 4 Q24 0 28 6 Z" fill="#ff5e00" stroke="#111" stroke-width="0.8"/>
+        <!-- Aleta Ventral -->
+        <path d="M20 23 Q25 28 27 22 Z" fill="#ff5e00" stroke="#111" stroke-width="0.8"/>
+        <!-- Cuerpo Principal -->
+        <path d="M6 14 Q10 4 26 6 Q36 10 37 14 Q36 18 26 22 Q10 24 6 14 Z" fill="url(#fishBodyGrad)" stroke="#111" stroke-width="1.2"/>
+        <!-- Franjas Blancas con bordes negros -->
+        <path d="M24 6 Q27 14 24 22 Q21 14 24 6 Z" fill="#ffffff" stroke="#111" stroke-width="0.8"/>
+        <path d="M14 8 Q17 14 14 20 Q12 14 14 8 Z" fill="#ffffff" stroke="#111" stroke-width="0.8"/>
+        <!-- Ojo -->
+        <circle cx="32" cy="11" r="2.8" fill="#ffffff" stroke="#111" stroke-width="0.8"/>
+        <circle cx="33" cy="11" r="1.5" fill="#000000"/>
+        <circle cx="33.6" cy="10.4" r="0.6" fill="#ffffff"/>
+        <!-- Aleta Pectoral -->
+        <ellipse cx="22" cy="15" rx="3.5" ry="2.2" transform="rotate(-15 22 15)" fill="#ffa726" stroke="#111" stroke-width="0.8"/>
+      </svg>
+    `,
+
+    // 5. Hatsune Miku
+    miku: `
+      <svg viewBox="0 0 36 36" class="cursor-svg miku-svg" aria-hidden="true">
+        <defs>
+          <linearGradient id="mikuHairGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#39C5BB"/>
+            <stop offset="100%" stop-color="#00838f"/>
+          </linearGradient>
+        </defs>
+        <!-- Coleta Izquierda (dinámica) -->
+        <path d="M10 14 C4 18 2 28 4 34 C6 30 10 24 12 18 Z" fill="url(#mikuHairGrad)" filter="drop-shadow(0 0 4px #39C5BB)"/>
+        <!-- Coleta Derecha (dinámica) -->
+        <path d="M26 14 C32 18 34 28 32 34 C30 30 26 24 24 18 Z" fill="url(#mikuHairGrad)" filter="drop-shadow(0 0 4px #39C5BB)"/>
+        <!-- Lazos de Coleta Rosa/Magenta -->
+        <rect x="9" y="13" width="3.5" height="3.5" rx="1" fill="#ff007f" stroke="#111" stroke-width="0.6"/>
+        <rect x="23.5" y="13" width="3.5" height="3.5" rx="1" fill="#ff007f" stroke="#111" stroke-width="0.6"/>
+        <!-- Auriculares / Headset -->
+        <path d="M11 15 C11 7 25 7 25 15" fill="none" stroke="#222" stroke-width="2"/>
+        <rect x="9" y="13" width="3" height="5" rx="1.5" fill="#e91e63"/>
+        <rect x="24" y="13" width="3" height="5" rx="1.5" fill="#e91e63"/>
+        <!-- Rostro -->
+        <ellipse cx="18" cy="18" rx="7.5" ry="7" fill="#ffe0bd"/>
+        <!-- Flequillo Miku -->
+        <path d="M11 15 C12 11 24 11 25 15 C23 17 21 16 18 18 C15 16 13 17 11 15 Z" fill="#39C5BB"/>
+        <!-- Ojos Grandes Manga Teal -->
+        <ellipse cx="15" cy="18" rx="1.6" ry="2.2" fill="#00838f"/>
+        <circle cx="15.4" cy="17.4" r="0.7" fill="#ffffff"/>
+        <ellipse cx="21" cy="18" rx="1.6" ry="2.2" fill="#00838f"/>
+        <circle cx="21.4" cy="17.4" r="0.7" fill="#ffffff"/>
+        <!-- Sonrisa & Rubor -->
+        <circle cx="13.5" cy="20.5" r="1" fill="#ff80ab" opacity="0.7"/>
+        <circle cx="22.5" cy="20.5" r="1" fill="#ff80ab" opacity="0.7"/>
+        <path d="M17 21 Q18 22.5 19 21" fill="none" stroke="#e91e63" stroke-width="0.8" stroke-linecap="round"/>
       </svg>
     `
   };
 
   class CustomCursorController {
     constructor() {
-      this.currentType = 'none'; // 'none', 'orb', 'nyan', 'rocket', 'comet', 'custom'
+      this.currentType = 'none'; // 'none', 'nyan', 'rocket', 'comet', 'clownfish', 'miku', 'custom'
       this.customDataUrl = null;
-      this.nyanRainbowIndex = 0;
-      this.nyanColors = [
-        [1.0, 0.0, 0.25],
-        [1.0, 0.55, 0.0],
-        [1.0, 0.95, 0.1],
-        [0.1, 0.95, 0.2],
-        [0.0, 0.75, 1.0],
-        [0.65, 0.1, 1.0]
-      ];
-
+      this.avatarConfig = AVATAR_CONFIGS;
       this.loadStoredCustomAvatar();
     }
 
@@ -132,12 +182,15 @@
     }
 
     setCursorType(type) {
-      this.currentType = type;
+      this.currentType = AVATAR_CONFIGS[type] ? type : 'none';
+      if (typeof AetheriaState !== 'undefined') {
+        AetheriaState.setUserAvatar(this.currentType);
+      }
+      if (typeof document !== 'undefined' && document.body) {
+        document.body.classList.toggle('avatar-active', this.currentType !== 'none');
+      }
       if (typeof AetheriaSymmetry !== 'undefined') {
         AetheriaSymmetry.updateCursorDOM();
-      }
-      if (typeof AetheriaSwarm !== 'undefined') {
-        AetheriaSwarm.updateAvatarHTML();
       }
     }
 
@@ -152,49 +205,39 @@
     }
 
     getTrailConfig() {
-      return TRAIL_CONFIGS[this.currentType] || TRAIL_CONFIGS.none;
+      return AVATAR_CONFIGS[this.currentType] || AVATAR_CONFIGS.none;
     }
 
-    getSpecialTrailColor(baseColor) {
-      if (this.currentType === 'nyan') {
-        const col = this.nyanColors[this.nyanRainbowIndex % this.nyanColors.length];
-        this.nyanRainbowIndex++;
-        return col;
+    /**
+     * Obtiene el color para splat de usuario:
+     * Al hacer click o arrastrar el usuario, respeta fielmente la paleta activa
+     * consultando el estado centralizado AetheriaState.
+     */
+    getUserSplatColor(index = 0) {
+      if (typeof AetheriaState !== 'undefined') {
+        return AetheriaState.getUserColor(index);
       }
-      if (this.currentType === 'rocket') {
-        const rocketTones = [
-          [1.0, 0.15, 0.0],
-          [1.0, 0.65, 0.0],
-          [1.0, 0.95, 0.2],
-          [1.0, 0.0, 0.4]
-        ];
-        return rocketTones[Math.floor(Math.random() * rocketTones.length)];
-      }
-      if (this.currentType === 'comet') {
-        const cometTones = [
-          [0.92, 0.96, 1.0],
-          [0.72, 0.82, 0.92],
-          [0.45, 0.52, 0.65],
-          [0.35, 0.75, 0.95]
-        ];
-        return cometTones[Math.floor(Math.random() * cometTones.length)];
-      }
-      return baseColor;
+      return [0.0, 0.95, 1.0];
     }
 
+    /**
+     * Calcula la rotación angular precisa en grados según el vector de movimiento (dx, dy).
+     */
     calculateRotation(dx, dy) {
       if (Math.hypot(dx, dy) < 0.0001) return 0;
       const angleRad = Math.atan2(-dy, dx);
       let deg = angleRad * (180 / Math.PI);
 
-      if (this.currentType === 'nyan') return deg;
-      if (this.currentType === 'rocket') return deg + 90;
-      if (this.currentType === 'comet') return deg + 45;
-      return deg;
+      const cfg = AVATAR_CONFIGS[this.currentType] || AVATAR_CONFIGS.none;
+      return deg + (cfg.angleCorrection || 0);
     }
 
+    /**
+     * Calcula la posición de emisión trasera (tobera o cola) según el vector de avance.
+     */
     getEmitterOffsetPoint(normX, normY, dx, dy) {
-      if (this.currentType === 'none') {
+      const cfg = AVATAR_CONFIGS[this.currentType] || AVATAR_CONFIGS.none;
+      if (this.currentType === 'none' || !cfg.offset) {
         return { x: normX, y: normY };
       }
 
@@ -203,7 +246,7 @@
 
       const normVx = dx / speed;
       const normVy = dy / speed;
-      const offsetDistance = 0.022;
+      const offsetDistance = Math.abs(cfg.offset);
 
       return {
         x: normX - normVx * offsetDistance,
