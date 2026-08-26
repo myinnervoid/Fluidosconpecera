@@ -214,27 +214,38 @@ body.avatar-active #cursor-overlay {
 }
 
 /* ==========================================================================
-   TOP BAR (CLEAN & MINIMAL WITH ZEN MODE TRANSITION)
+   TOP BAR (CLEAN, 3-ZONE RESPONSIVE WITH TOUCH SCROLL & DOCKING)
    ========================================================================== */
 
 #top-bar {
   position: fixed;
-  top: 14px;
-  left: 14px;
-  right: 14px;
+  top: 12px;
+  left: 12px;
+  right: 12px;
   z-index: 100;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   pointer-events: none;
-  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), top 0.3s ease, bottom 0.3s ease;
   cursor: default !important;
+  contain: layout style;
+}
+
+#top-bar.pos-bottom {
+  top: auto !important;
+  bottom: 12px !important;
 }
 
 #top-bar.zen-hidden {
   opacity: 0;
-  transform: translateY(-20px);
+  transform: translateY(-24px);
   pointer-events: none !important;
+}
+
+#top-bar.pos-bottom.zen-hidden {
+  transform: translateY(24px);
 }
 
 #top-bar.zen-hidden:hover {
@@ -243,10 +254,11 @@ body.avatar-active #cursor-overlay {
   pointer-events: auto !important;
 }
 
-.top-bar-left, .top-bar-right {
+/* 1. Left Zone: Brand Capsule */
+.top-bar-left {
   display: flex;
   align-items: center;
-  gap: 8px;
+  flex-shrink: 0;
   pointer-events: auto;
 }
 
@@ -254,32 +266,62 @@ body.avatar-active #cursor-overlay {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 14px;
+  padding: 6px 12px;
   background: var(--bg-panel);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid var(--border-glass);
   border-radius: 18px;
   box-shadow: var(--shadow-glass);
+  cursor: pointer;
 }
 
 .brand-title {
   font-weight: 800;
-  font-size: 0.9rem;
-  letter-spacing: 2px;
+  font-size: 0.88rem;
+  letter-spacing: 1.5px;
   background: linear-gradient(135deg, #ffffff 0%, var(--accent-cyan) 60%, var(--accent-magenta) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .mode-pill {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  padding: 3px 8px;
+  padding: 3px 7px;
   background: rgba(0, 242, 254, 0.15);
   color: var(--accent-cyan);
   border: 1px solid rgba(0, 242, 254, 0.35);
   border-radius: 10px;
+  white-space: nowrap;
+}
+
+/* 2. Center Zone: Smooth Touch Scrollable Fidgets */
+.top-bar-center-scroll {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1 1 auto;
+  max-width: 520px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  pointer-events: auto;
+  scrollbar-width: none;
+  padding: 2px 4px;
+}
+
+.top-bar-center-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* 3. Right Zone: Fixed Priority Controls */
+.top-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  pointer-events: auto;
 }
 
 /* Button Base */
@@ -295,8 +337,8 @@ button {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  height: 38px;
-  min-width: 38px;
+  height: 42px;
+  min-width: 42px;
   padding: 0 12px;
   background: var(--bg-panel);
   color: var(--text-main);
@@ -309,6 +351,7 @@ button {
   box-shadow: var(--shadow-glass);
   transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
   white-space: nowrap;
+  touch-action: manipulation;
 }
 
 .icon-btn:hover, .hamburger-btn:hover {
@@ -324,18 +367,19 @@ button {
 
 .hamburger-btn {
   padding: 0 14px;
-  background: rgba(0, 242, 254, 0.15);
-  border-color: rgba(0, 242, 254, 0.4);
+  background: rgba(0, 242, 254, 0.18);
+  border-color: rgba(0, 242, 254, 0.5);
   color: #ffffff;
+  font-weight: 700;
 }
 
 .hamburger-btn:hover {
-  background: rgba(0, 242, 254, 0.3);
-  box-shadow: 0 0 20px rgba(0, 242, 254, 0.5);
+  background: rgba(0, 242, 254, 0.32);
+  box-shadow: 0 0 20px rgba(0, 242, 254, 0.6);
 }
 
 .hamburger-icon {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
 }
 
 /* Fidget Glows */
@@ -690,14 +734,16 @@ button {
   border-color: var(--accent-cyan);
 }
 
-/* Sliders */
+/* Sliders & Interactive Tooltips */
 .slider-control {
-  margin-bottom: 14px;
+  position: relative;
+  margin-bottom: 16px;
 }
 
 .slider-control label {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   font-size: 0.76rem;
   color: var(--text-muted);
   margin-bottom: 6px;
@@ -707,6 +753,15 @@ button {
   color: var(--text-main);
   font-family: var(--font-mono);
   font-weight: 700;
+}
+
+.slider-tooltip {
+  display: block;
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  margin-top: 3px;
+  font-style: italic;
+  line-height: 1.3;
 }
 
 .slider-control input[type="range"] {
@@ -720,8 +775,8 @@ button {
 
 .slider-control input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: var(--accent-cyan);
   box-shadow: 0 0 10px var(--accent-cyan);
@@ -863,20 +918,71 @@ button {
   }
 }
 
-/* Mobile responsive */
-@media (max-width: 600px) {
+/* Mobile & Tablet Responsive Queries */
+@media (max-width: 768px) {
   .btn-text-desktop {
     display: none;
   }
-  .icon-btn {
+  
+  #top-bar {
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    gap: 6px;
+  }
+
+  #top-bar.pos-bottom {
+    bottom: 8px !important;
+  }
+
+  .icon-btn, .hamburger-btn {
+    height: 42px;
+    min-width: 42px;
     padding: 0 10px;
-    height: 40px;
-    min-width: 40px;
   }
-  .brand-title {
-    font-size: 0.8rem;
+
+  .top-bar-center-scroll {
+    gap: 4px;
+    padding: 0 2px;
   }
+}
+
+@media (max-width: 480px) {
+  .brand-title, .mode-pill {
+    display: none;
+  }
+
+  .brand-capsule {
+    padding: 6px 8px;
+    border-radius: 14px;
+  }
+
+  .brand-icon {
+    font-size: 1.1rem;
+  }
+
+  .hamburger-text {
+    display: none;
+  }
+
+  .hamburger-btn {
+    padding: 0 12px;
+    min-width: 42px;
+  }
+
   #settings-drawer {
-    width: 320px;
+    width: 88vw;
+    max-width: 340px;
+  }
+
+  .avatar-grid, .bg-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+  }
+
+  .avatar-btn, .bg-btn {
+    padding: 6px 2px;
+    min-height: 46px;
+    font-size: 0.68rem;
   }
 }

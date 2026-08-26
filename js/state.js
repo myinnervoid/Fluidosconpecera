@@ -5,6 +5,7 @@
  * - Radial & Bilateral Symmetry Modes
  * - User Avatar & Autonomous Swarm Avatar
  * - Active Backgrounds (Adaptive 16:9 / 9:16)
+ * - UI States (Fullscreen, Bar Position, Drawer Open, Dev Mode)
  * - Physical States (Gravity, Pause)
  * License: MIT
  */
@@ -14,6 +15,7 @@
 
   class StateController {
     constructor() {
+      // Estado de Elemento y Color
       this.palette = { key: 'aurora', name: '🌌 Aurora Boreal' };
       this.activeElement = 'fluid'; // 'fluid', 'sand', 'gas', 'lava'
       this.symmetry = 4; // 1, 2, 4, 6, 8
@@ -21,14 +23,18 @@
       this.isGravityOn = false;
       this.gravityMagnitude = -1.85;
       
+      // Avatares
       this.userAvatar = 'none'; // 'none', 'nyan', 'rocket', 'comet', 'clownfish', 'miku', 'custom'
-      this.swarmAvatar = 'nyan'; // Avatar activo para la bandada
+      this.swarmAvatar = 'nyan';
       this.swarmCount = 3;
       this.isSwarmActive = false;
-      this.devMode = false;
 
-      // Fondos Inmersivos Adaptativos
-      this.activeBackground = 'universe';
+      // Preferencias de UI Persistentes
+      this.devMode = localStorage.getItem('aetheria_dev_mode') === 'true';
+      this.barPosition = localStorage.getItem('aetheria_bar_position') || 'top'; // 'top' | 'bottom'
+      this.activeBackground = localStorage.getItem('aetheria_background') || 'universe';
+      this.isFullscreen = false;
+      this.isDrawerOpen = false;
     }
 
     getPaletteColors() {
@@ -84,6 +90,16 @@
     setUserAvatar(type) {
       this.userAvatar = type;
       this.swarmAvatar = type;
+    }
+
+    setBarPosition(pos) {
+      this.barPosition = pos === 'bottom' ? 'bottom' : 'top';
+      localStorage.setItem('aetheria_bar_position', this.barPosition);
+    }
+
+    setDevMode(enabled) {
+      this.devMode = !!enabled;
+      localStorage.setItem('aetheria_dev_mode', this.devMode.toString());
     }
   }
 

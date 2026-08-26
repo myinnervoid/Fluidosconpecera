@@ -88,7 +88,9 @@
     }
 
     onPointerDown(e) {
-      if (e.target.closest('#top-bar') || e.target.closest('#settings-drawer')) return;
+      // Bloquear si el cajón de ajustes está abierto o si el toque fue sobre elementos UI
+      if (typeof AetheriaState !== 'undefined' && AetheriaState.isDrawerOpen) return;
+      if (e.target.closest('#top-bar, #settings-drawer, #drawer-overlay, .ui-interactive')) return;
 
       const normX = e.clientX / window.innerWidth;
       const normY = 1.0 - e.clientY / window.innerHeight;
@@ -119,6 +121,17 @@
     }
 
     onPointerMove(e) {
+      // Bloquear si el cajón de ajustes está abierto o si el puntero entró en la UI
+      if (typeof AetheriaState !== 'undefined' && AetheriaState.isDrawerOpen) return;
+      if (e.target.closest('#top-bar, #settings-drawer, #drawer-overlay, .ui-interactive')) {
+        const p = this.pointers.get(e.pointerId);
+        if (p) {
+          this.pointers.delete(e.pointerId);
+          AetheriaSymmetry.releasePointer(e.pointerId);
+        }
+        return;
+      }
+
       const normX = e.clientX / window.innerWidth;
       const normY = 1.0 - e.clientY / window.innerHeight;
 

@@ -1,14 +1,22 @@
 # RELEASE.md — Estrategia de Release, Despliegue y Changelog
 
 **Proyecto:** Aetheria Fluid & Sand Studio  
-**Versión Actual:** `v1.6.0` — *"Immersive Backgrounds, 6-Avatar Swarm & Multi-Touch Studio"*  
+**Versión Actual:** `v1.6.0` — *"Immersive Backgrounds, 6-Avatar Swarm & Mobile-First 3-Zone Touch Studio"*  
 **Demo en Vivo:** [https://myinnervoid.github.io/Memexicanisimos-Aetheria-Fluid---Sand-Studio/](https://myinnervoid.github.io/Memexicanisimos-Aetheria-Fluid---Sand-Studio/)
 
 ---
 
 ## 📋 Changelog Acumulado (v1.0.0 $\to$ v1.6.0)
 
-### `v1.6.0` (2026-08-25) — *Immersive Backgrounds, 6-Avatar Swarm & Multi-Touch Studio*
+### `v1.6.0` (2026-08-25) — *Immersive Backgrounds, 6-Avatar Swarm & Mobile-First Touch Studio*
+* **📱 Interfaz Táctil Responsive en 3 Zonas:**
+  - **Bloque Derecho Fijo:** Botón `☰ Ajustes`, `⛶ Pantalla Completa` y `👁️ Modo Zen` fijados en la esquina superior derecha, garantizando acceso con un solo toque en cualquier smartphone ($320\text{px}-414\text{px}$) sin requerir activar "modo escritorio".
+  - **Área Central con Desplazamiento Táctil:** Contenedor de fidgets con scroll horizontal suave (`touch-action: pan-x; -webkit-overflow-scrolling: touch;`).
+  - **Barra Anclable (Arriba / Abajo):** Botón `↕️` para alternar la posición de la barra entre el borde superior e inferior para uso ergonómico a una mano.
+  - **Modo Pantalla Completa (`[F]` o `⛶`):** Integración con Fullscreen API cross-browser para eliminar las barras de navegación en Android e iOS.
+  - **Filtro Anti-Manchas UI:** `e.target.closest('#top-bar, #settings-drawer, #drawer-overlay, .ui-interactive')` y bloqueo total de trazos cuando el cajón de ajustes está abierto (`isDrawerOpen`).
+  - **Tooltips Interactivos:** Tooltips en sliders que explican los parámetros físicos tanto en hover como en toque táctil.
+  - **Persistencia Centralizada:** Almacenamiento en LocalStorage de `aetheria_bar_position`, `aetheria_dev_mode` y `aetheria_background`.
 * **🖼️ 8 Fondos Inmersivos Adaptativos (16:9 Desktop / 9:16 Móvil):**
   - Módulo `AetheriaBackground` (`js/extensions/backgrounds.js`) con detección automática de orientación y cambio en caliente sin recargar la página.
   - Precarga de imágenes con `new Image()` y transición suave de opacidad (fade de 0.3s) para evitar parpadeos blancos.
@@ -43,7 +51,7 @@
 * **⏳ Shader de Arena Granular & Fidgets:**
   - Modo Arena Granular (*Reloj de arena*) con bisel y relieve celular.
   - Fidgets de 1 clic: Supernova, Vórtice y Gravedad continua.
-  - Modo Zen (`[H]`) y panel Drawer superior.
+  - Modo Zen (`[H]`) y panel Drawer superior con backdrop de cierre táctil.
 
 ---
 

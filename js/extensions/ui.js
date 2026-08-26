@@ -1,7 +1,7 @@
 /**
  * AETHERIA | User Interface & Interaction Controller
- * Manages Drawer Navigation, Physical Sliders, Thematic Avatars,
- * Adaptive Backgrounds Selector, Radial Symmetry, and Action Fidgets.
+ * Manages Responsive 3-Zone Top Bar, Fullscreen API, Docking Position,
+ * Drawer Navigation, Thematic Avatars, Adaptive Backgrounds, and Fidgets.
  * License: MIT
  */
 
@@ -20,6 +20,7 @@
     init(app) {
       this.app = app;
       this.initDOM();
+      this.restorePreferences();
       this.bindEvents();
       this.renderPaletteGrid();
       this.syncBackgroundButtons();
@@ -30,7 +31,13 @@
       this.topBar = document.getElementById('top-bar');
       this.btnHamburger = document.getElementById('btn-hamburger');
       this.btnZenToggle = document.getElementById('btn-zen-toggle');
+      this.btnFullscreenToggle = document.getElementById('btn-fullscreen-toggle');
+      this.fullscreenIcon = document.getElementById('fullscreen-icon');
+      this.btnBarPositionToggle = document.getElementById('btn-bar-position-toggle');
       this.currentModeBadge = document.getElementById('current-mode-badge');
+      this.brandCapsuleBtn = document.getElementById('brand-capsule-btn');
+
+      // Fidget Quick Buttons
       this.btnQuickSupernova = document.getElementById('btn-quick-supernova');
       this.btnQuickVortex = document.getElementById('btn-quick-vortex');
       this.btnQuickGravity = document.getElementById('btn-quick-gravity');
@@ -88,25 +95,83 @@
       this.valBoidsCount = document.getElementById('val-boids-count');
       this.boidslimitBadge = document.getElementById('boids-limit-badge');
       this.toggleDevMode = document.getElementById('toggle-dev-mode');
+      this.devWarningText = document.getElementById('dev-warning-text');
 
       this.paletteSelectorGrid = document.getElementById('palette-selector-grid');
       this.toastContainer = document.getElementById('toast-container');
     }
 
+    restorePreferences() {
+      // 1. Restaurar posición de la barra
+      if (typeof AetheriaState !== 'undefined') {
+        const isBottom = AetheriaState.barPosition === 'bottom';
+        if (this.topBar) {
+          this.topBar.classList.toggle('pos-bottom', isBottom);
+        }
+
+        // 2. Restaurar modo Desarrollador
+        if (this.toggleDevMode) {
+          this.toggleDevMode.checked = AetheriaState.devMode;
+          this.applyDevModeUI(AetheriaState.devMode, false);
+        }
+      }
+    }
+
     bindEvents() {
       const app = this.app;
 
-      // 1. Hamburger Menu Toggle
+      // 1. Hamburger Menu Toggle & Backdrop
       this.btnHamburger.addEventListener('click', () => this.toggleDrawer(true));
       this.btnCloseDrawer.addEventListener('click', () => this.toggleDrawer(false));
       this.drawerOverlay.addEventListener('click', () => this.toggleDrawer(false));
 
-      // 2. Zen Mode Toggle
+      // 2. Fullscreen API Toggle
+      if (this.btnFullscreenToggle) {
+        this.btnFullscreenToggle.addEventListener('click', () => this.toggleFullscreen());
+      }
+
+      const onFsChange = () => {
+        const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+        if (typeof AetheriaState !== 'undefined') {
+          AetheriaState.isFullscreen = isFs;
+        }
+        if (this.btnFullscreenToggle) {
+          this.btnFullscreenToggle.classList.toggle('active', isFs);
+          this.btnFullscreenToggle.setAttribute('aria-pressed', isFs ? 'true' : 'false');
+        }
+        if (this.fullscreenIcon) {
+          this.fullscreenIcon.textContent = isFs ? '✖' : '⛶';
+        }
+      };
+
+      document.addEventListener('fullscreenchange', onFsChange);
+      document.addEventListener('webkitfullscreenchange', onFsChange);
+      document.addEventListener('mozfullscreenchange', onFsChange);
+      document.addEventListener('MSFullscreenChange', onFsChange);
+
+      // 3. Bar Position Toggle (Top / Bottom)
+      if (this.btnBarPositionToggle) {
+        this.btnBarPositionToggle.addEventListener('click', () => {
+          if (typeof AetheriaState !== 'undefined') {
+            const newPos = AetheriaState.barPosition === 'top' ? 'bottom' : 'top';
+            AetheriaState.setBarPosition(newPos);
+            this.topBar.classList.toggle('pos-bottom', newPos === 'bottom');
+            this.showToast(newPos === 'bottom' ? '⬇️ Barra anclada abajo' : '⬆️ Barra anclada arriba');
+          }
+        });
+      }
+
+      // 4. Zen Mode Toggle
       if (this.btnZenToggle) {
         this.btnZenToggle.addEventListener('click', () => this.toggleZenMode());
       }
 
-      // 3. Element Selectors
+      // 5. Brand Capsule Click (Abre el Drawer de Ajustes)
+      if (this.brandCapsuleBtn) {
+        this.brandCapsuleBtn.addEventListener('click', () => this.toggleDrawer(true));
+      }
+
+      // 6. Element Selectors
       this.elementBtns.forEach((btn) => {
         btn.addEventListener('click', () => {
           const elem = btn.dataset.element;
@@ -114,7 +179,7 @@
         });
       });
 
-      // 4. Avatar Cursor Selectors (None, Nyan, Rocket, Comet, Clownfish, Miku)
+      // 7. Avatar Cursor Selectors
       this.avatarBtns.forEach((btn) => {
         btn.addEventListener('click', () => {
           const type = btn.dataset.avatar;
@@ -143,7 +208,7 @@
         });
       }
 
-      // 5. Background Selectors
+      // 8. Background Selectors
       this.bgBtns.forEach((btn) => {
         btn.addEventListener('click', () => {
           const bg = btn.dataset.bg;
@@ -151,7 +216,7 @@
         });
       });
 
-      // 6. Swarm Auto-Pilot Bindings
+      // 9. Swarm Auto-Pilot Bindings
       const toggleSwarmAction = () => {
         const isSwarmOn = AetheriaSwarm.toggle();
         if (this.btnQuickSwarm) {
@@ -171,7 +236,7 @@
       if (this.btnQuickSwarm) this.btnQuickSwarm.addEventListener('click', toggleSwarmAction);
       if (this.btnDrawerSwarm) this.btnDrawerSwarm.addEventListener('click', toggleSwarmAction);
 
-      // 7. Symmetry Selectors
+      // 10. Symmetry Selectors
       this.symmetryBtns.forEach((btn) => {
         btn.addEventListener('click', () => {
           const sym = parseInt(btn.dataset.symmetry, 10);
@@ -179,7 +244,7 @@
         });
       });
 
-      // 8. Supernova Action
+      // 11. Supernova Action
       const triggerSupernovaAction = () => {
         const col = this.getNextColor();
         AetheriaFidgets.triggerSupernova(FluidCore, col);
@@ -188,7 +253,7 @@
       if (this.btnQuickSupernova) this.btnQuickSupernova.addEventListener('click', triggerSupernovaAction);
       if (this.btnDrawerSupernova) this.btnDrawerSupernova.addEventListener('click', triggerSupernovaAction);
 
-      // 9. Vortex Action
+      // 12. Vortex Action
       const triggerVortexAction = () => {
         const col = this.getNextColor();
         AetheriaFidgets.triggerVortex(FluidCore, col);
@@ -197,7 +262,7 @@
       if (this.btnQuickVortex) this.btnQuickVortex.addEventListener('click', triggerVortexAction);
       if (this.btnDrawerVortex) this.btnDrawerVortex.addEventListener('click', triggerVortexAction);
 
-      // 10. Gravity Toggle Action
+      // 13. Gravity Toggle Action
       const toggleGravityAction = () => {
         const isGravityOn = AetheriaFidgets.toggleGravity(FluidCore);
         this.updateGravityUI(isGravityOn);
@@ -205,7 +270,7 @@
       if (this.btnQuickGravity) this.btnQuickGravity.addEventListener('click', toggleGravityAction);
       if (this.btnDrawerGravity) this.btnDrawerGravity.addEventListener('click', toggleGravityAction);
 
-      // 11. Cycle Palette Action
+      // 14. Cycle Palette Action
       if (this.btnDrawerPalette) {
         this.btnDrawerPalette.addEventListener('click', () => {
           const nextPal = this.cycleNextPalette();
@@ -217,7 +282,7 @@
         });
       }
 
-      // 12. Pause / Resume Simulation
+      // 15. Pause / Resume Simulation
       if (this.btnDrawerPause) {
         this.btnDrawerPause.addEventListener('click', () => {
           const isPaused = AetheriaFidgets.togglePause(FluidCore);
@@ -230,7 +295,7 @@
         });
       }
 
-      // 13. Clear Canvas Action
+      // 16. Clear Canvas Action
       const clearAction = () => {
         AetheriaFidgets.clearCanvas(FluidCore, AetheriaParticles);
         this.showToast('🧹 Lienzo limpio');
@@ -238,7 +303,7 @@
       if (this.btnQuickClear) this.btnQuickClear.addEventListener('click', clearAction);
       if (this.btnDrawerClear) this.btnDrawerClear.addEventListener('click', clearAction);
 
-      // 14. Export High-Res PNG
+      // 17. Export High-Res PNG
       if (this.btnDrawerExport) {
         this.btnDrawerExport.addEventListener('click', () => {
           this.app.exportPNG();
@@ -246,7 +311,7 @@
         });
       }
 
-      // 15. Physical Parameters Sliders
+      // 18. Physical Parameters Sliders
       if (this.sliderVorticity) {
         this.sliderVorticity.addEventListener('input', (e) => {
           const val = parseFloat(e.target.value);
@@ -291,7 +356,7 @@
         });
       }
 
-      // 16. Boids Count Slider & Dev Mode
+      // 19. Boids Count Slider & Dev Mode
       if (this.sliderBoidsCount) {
         this.sliderBoidsCount.addEventListener('input', (e) => {
           const val = parseInt(e.target.value, 10);
@@ -309,32 +374,13 @@
         this.toggleDevMode.addEventListener('change', (e) => {
           const isDev = e.target.checked;
           if (typeof AetheriaState !== 'undefined') {
-            AetheriaState.devMode = isDev;
+            AetheriaState.setDevMode(isDev);
           }
-          if (isDev) {
-            this.sliderBoidsCount.max = 50;
-            if (this.boidslimitBadge) {
-              this.boidslimitBadge.textContent = 'dev: máx. 50';
-              this.boidslimitBadge.style.color = 'var(--accent-magenta)';
-            }
-            this.showToast('🛠️ Modo Dev: Boids desbloqueados hasta 50');
-          } else {
-            this.sliderBoidsCount.max = 10;
-            if (parseInt(this.sliderBoidsCount.value, 10) > 10) {
-              this.sliderBoidsCount.value = 10;
-              this.valBoidsCount.textContent = 10;
-              if (typeof AetheriaSwarm !== 'undefined') AetheriaSwarm.setBoidsCount(10);
-            }
-            if (this.boidslimitBadge) {
-              this.boidslimitBadge.textContent = 'máx. 10';
-              this.boidslimitBadge.style.color = 'var(--accent-cyan)';
-            }
-            this.showToast('🔒 Modo Normal: Límite 10 boids');
-          }
+          this.applyDevModeUI(isDev, true);
         });
       }
 
-      // 17. Keyboard Shortcuts Map
+      // 20. Keyboard Shortcuts Map
       window.addEventListener('keydown', (e) => {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
@@ -343,6 +389,7 @@
           case '2': this.setElement('lava'); break;
           case '3': this.setElement('sand'); break;
           case '4': this.setElement('gas'); break;
+          case 'f': this.toggleFullscreen(); break;
           case 'h': this.toggleZenMode(); break;
           case 'm': this.toggleDrawer(); break;
           case 'a': toggleSwarmAction(); break;
@@ -356,6 +403,11 @@
               this.paletteStatusText.textContent = pal.name.split(' ')[1] || pal.name;
             }
             this.showToast(`🎨 Paleta: ${pal.name}`);
+            break;
+          case 'escape':
+            if (this.settingsDrawer && this.settingsDrawer.classList.contains('open')) {
+              this.toggleDrawer(false);
+            }
             break;
           case ' ':
             e.preventDefault();
@@ -377,12 +429,61 @@
       });
     }
 
+    toggleFullscreen() {
+      const doc = document;
+      const docEl = document.documentElement;
+      const isFs = doc.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement || doc.msFullscreenElement;
+
+      if (!isFs) {
+        if (docEl.requestFullscreen) docEl.requestFullscreen().catch(() => {});
+        else if (docEl.webkitRequestFullscreen) docEl.webkitRequestFullscreen();
+        else if (docEl.mozRequestFullScreen) docEl.mozRequestFullScreen();
+        else if (docEl.msRequestFullscreen) docEl.msRequestFullscreen();
+        this.showToast('⛶ Pantalla Completa Activada');
+      } else {
+        if (doc.exitFullscreen) doc.exitFullscreen().catch(() => {});
+        else if (doc.webkitExitFullscreen) doc.webkitExitFullscreen();
+        else if (doc.mozCancelFullScreen) doc.mozCancelFullScreen();
+        else if (doc.msExitFullscreen) doc.msExitFullscreen();
+        this.showToast('⛶ Pantalla Completa Desactivada');
+      }
+    }
+
+    applyDevModeUI(isDev, showToastMsg = true) {
+      if (!this.sliderBoidsCount) return;
+      if (isDev) {
+        this.sliderBoidsCount.max = 50;
+        if (this.boidslimitBadge) {
+          this.boidslimitBadge.textContent = 'dev: máx. 50';
+          this.boidslimitBadge.style.color = 'var(--accent-magenta)';
+        }
+        if (this.devWarningText) this.devWarningText.style.display = 'block';
+        if (showToastMsg) this.showToast('🛠️ Modo Dev: Boids desbloqueados hasta 50');
+      } else {
+        this.sliderBoidsCount.max = 10;
+        if (parseInt(this.sliderBoidsCount.value, 10) > 10) {
+          this.sliderBoidsCount.value = 10;
+          this.valBoidsCount.textContent = 10;
+          if (typeof AetheriaSwarm !== 'undefined') AetheriaSwarm.setBoidsCount(10);
+        }
+        if (this.boidslimitBadge) {
+          this.boidslimitBadge.textContent = 'máx. 10';
+          this.boidslimitBadge.style.color = 'var(--accent-cyan)';
+        }
+        if (this.devWarningText) this.devWarningText.style.display = 'none';
+        if (showToastMsg) this.showToast('🔒 Modo Normal: Límite 10 boids');
+      }
+    }
+
     toggleDrawer(forceState = null) {
       const isOpen = forceState !== null ? forceState : !this.settingsDrawer.classList.contains('open');
       this.settingsDrawer.classList.toggle('open', isOpen);
       this.drawerOverlay.classList.toggle('open', isOpen);
       this.settingsDrawer.setAttribute('aria-hidden', (!isOpen).toString());
       this.btnHamburger.setAttribute('aria-expanded', isOpen.toString());
+      if (typeof AetheriaState !== 'undefined') {
+        AetheriaState.isDrawerOpen = isOpen;
+      }
     }
 
     toggleZenMode() {

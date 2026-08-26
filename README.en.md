@@ -11,13 +11,19 @@
 > 🌐 **Experience the live interactive studio directly in your browser:**  
 > 👉 **[https://myinnervoid.github.io/Memexicanisimos-Aetheria-Fluid---Sand-Studio/](https://myinnervoid.github.io/Memexicanisimos-Aetheria-Fluid---Sand-Studio/)**
 
-**Aetheria** is an interactive generative art and real-time fluid dynamics studio powered by GPU WebGL Navier-Stokes numerical solvers. It unifies incompressible liquid flow, granular sand particle shaders (*hourglass mode*), high-vorticity cosmic gas, unified multicursor radial symmetries (1x to 8x), an autonomous 6-avatar aquarium swarm, and an adaptive gallery of **8 immersive backgrounds** in dual aspect ratios (16:9 for desktop and 9:16 for portrait mobile).
+**Aetheria** is an interactive generative art and real-time fluid dynamics studio powered by GPU WebGL Navier-Stokes numerical solvers. It unifies incompressible liquid flow, granular sand particle shaders (*hourglass mode*), high-vorticity cosmic gas, unified multicursor radial symmetries (1x to 8x), an autonomous 6-avatar aquarium swarm, an adaptive gallery of **8 immersive backgrounds** in dual aspect ratios (16:9 for desktop and 9:16 for portrait mobile), and a **mobile-responsive 3-zone touch interface with Fullscreen and dockable top/bottom positioning**.
 
 ---
 
 ## 🌟 Highlights and Evolution (Version 1.6.0)
 
 Since version 1.0.0, Aetheria has expanded into a full generative environment:
+
+* 📱 **3-Zone Touch Interface & Native Fullscreen:**
+  - **Always-Accessible Settings Button:** The settings menu (`☰ Settings`), **Fullscreen toggle (`⛶`)**, and **Zen Mode (`👁️`)** are permanently anchored in the top-right corner, ensuring 1-tap access on any mobile phone without needing "Desktop Mode".
+  - **Center Touch Scroll Area:** Secondary fidgets (*Supernova, Vortex, Gravity, Auto-Pilot, Clear*) glide horizontally with fluid touch momentum (`touch-action: pan-x`).
+  - **Dockable Bar (Top / Bottom):** The `↕️` button toggles the toolbar between the top and bottom edge for comfortable single-handed mobile reach.
+  - **Fullscreen API (`[F]` or `⛶`):** Cross-browser Fullscreen API hides browser address bars on Android/iOS for an unobstructed canvas.
 
 * 🖼️ **8 Adaptive Immersive Backgrounds (16:9 Desktop / 9:16 Mobile):**
   - Real-time orientation detector automatically loads the optimized resolution:
@@ -44,7 +50,7 @@ Since version 1.0.0, Aetheria has expanded into a full generative environment:
 * 🐟 **Autonomous "Aquarium" Mode (Swarm Boids):** Flocking agents with **quadratic soft boundary repulsion** (8% margin) ensuring agents swim fluidly without ever leaving the viewport, with organic harmonic oscillations.
 * 🎨 **Real-Time Visual Boid Renderer (`SwarmRenderer`):** Dedicated overlay 2D canvas painting avatars with dynamic angle rotation, glowing shadows, and custom image support.
 * 🪞 **Unified Radial Symmetry (1x to 8x):** Boids and user strokes pass through the master `SymmetryEngine.injectSplat`, producing synchronized moving mandalas while auto-throttling boids to preserve 60 FPS.
-* 🏛️ **Centralized State Bus (`AetheriaState`):** Decoupled architecture preventing state collisions between user interaction and background automation.
+* 🏛️ **Centralized State Bus (`AetheriaState`):** Decoupled architecture with LocalStorage persistence (`aetheria_bar_position`, `aetheria_dev_mode`, etc.).
 
 ---
 
@@ -61,23 +67,6 @@ Since version 1.0.0, Aetheria has expanded into a full generative environment:
 
 ---
 
-## 📐 Mathematical & Physical Foundations (GPU Gems 38)
-
-The core numerically solves the **Navier-Stokes equations for incompressible fluid flow**:
-
-$$\frac{\partial \mathbf{u}}{\partial t} = -(\mathbf{u} \cdot \nabla)\mathbf{u} - \frac{1}{\rho}\nabla p + \nu \nabla^2 \mathbf{u} + \mathbf{F}$$
-
-$$\nabla \cdot \mathbf{u} = 0$$
-
-### GPU Pipeline:
-1. **Vorticity Confinement (Fedkiw et al.):** Restores rotational energy lost to numerical dissipation: $\mathbf{F}_{vort} = \varepsilon (\mathbf{N} \times \mathbf{\omega})$.
-2. **Divergence Computation:** Measures velocity field compression via central finite differences.
-3. **Jacobi Pressure Solver:** 20 GPU iterations solving Poisson's pressure equation.
-4. **Helmholtz-Hodge Projection:** Subtracts pressure gradient ($\mathbf{u} = \mathbf{w} - \nabla p$) ensuring a divergence-free solenoidal velocity field.
-5. **Semi-Lagrangian Advection with Gravity:** Bilinear transport of velocity and density with continuous pre-Poisson vertical acceleration.
-
----
-
 ## ⌨️ Keyboard Shortcuts
 
 | Key | Action |
@@ -86,9 +75,11 @@ $$\nabla \cdot \mathbf{u} = 0$$
 | **`[2]`** | Lava Lamp Mode (Viscous thermal convection) |
 | **`[3]`** | Granular Sand Mode (Hourglass) |
 | **`[4]`** | Gas / Cosmic Smoke Mode |
+| **`[F]`** | **Fullscreen** (Toggle Fullscreen Mode) |
 | **`[H]`** | **Zen Mode** (Toggle entire UI visibility) |
 | **`[A]`** | Toggle Swarm Auto-Pilot (Aquarium) |
 | **`[M]`** | Open / Close Settings Drawer |
+| **`[Escape]`** | Close Settings Drawer |
 | **`[S]`** | Trigger Supernova Shockwave |
 | **`[V]`** | Inject Rotational Vortex |
 | **`[G]`** | Toggle Cascade Gravity (ON / OFF) |
@@ -122,4 +113,4 @@ npx serve .
 Released under the **MIT License**. See [LICENSE](LICENSE) for details.
 
 Copyright (c) 2017 Pavel Dobryakov  
-Modular architecture, extended physics, adaptive backgrounds, avatars & swarm by Estudio Memexicanisimos.
+Modular architecture, extended physics, adaptive backgrounds, avatars, swarm & responsive touch UI by Estudio Memexicanisimos.

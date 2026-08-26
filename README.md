@@ -11,13 +11,19 @@
 > 🌐 **Prueba la experiencia interactiva en vivo aquí:**  
 > 👉 **[https://myinnervoid.github.io/Memexicanisimos-Aetheria-Fluid---Sand-Studio/](https://myinnervoid.github.io/Memexicanisimos-Aetheria-Fluid---Sand-Studio/)**
 
-**Aetheria** es un estudio interactivo de arte generativo y física de fluidos incompresibles en tiempo real ejecutado en WebGL sobre la GPU (Navier-Stokes). Combina simulación física líquida con sombreado 3D difuso/especular, modos de partículas de arena granular (*reloj de arena*), humo espacial de alta vorticidad, simetrías radiales unificadas (1x a 8x), un enjambre de 6 avatares autónomos ("pecera") y una galería de **8 fondos inmersivos adaptativos** en resoluciones horizontal (16:9) y vertical móvil (9:16).
+**Aetheria** es un estudio interactivo de arte generativo y física de fluidos incompresibles en tiempo real ejecutado en WebGL sobre la GPU (Navier-Stokes). Combina simulación física líquida con sombreado 3D difuso/especular, modos de partículas de arena granular (*reloj de arena*), humo espacial de alta vorticidad, simetrías radiales unificadas (1x a 8x), un enjambre de 6 avatares autónomos ("pecera"), una galería de **8 fondos inmersivos adaptativos** en resoluciones horizontal (16:9) y vertical móvil (9:16), y una **interfaz táctil responsive en 3 zonas con Pantalla Completa y barra anclable (arriba/abajo)**.
 
 ---
 
 ## 🌟 Novedades y Evolución (Versión 1.6.0)
 
 Desde la versión inicial 1.0.0, Aetheria ha evolucionado con las siguientes arquitecturas:
+
+* 📱 **Interfaz Móvil Optimizada en 3 Zonas & Pantalla Completa:**
+  - **Botón de Ajustes Inamovible:** El acceso al menú de configuración (`☰ Ajustes`), el botón de **Pantalla Completa (`⛶`)** y el **Modo Zen (`👁️`)** se encuentran anclados de forma permanente y visible en la esquina superior derecha, garantizando acceso con un toque en cualquier celular sin necesidad de activar modo escritorio.
+  - **Área Central con Desplazamiento Táctil:** Los botones de acción rápida (*Supernova, Vórtice, Gravedad, Auto-Piloto, Limpiar*) cuentan con desplazamiento horizontal táctil suave (`touch-action: pan-x`).
+  - **Barra Anclable (Arriba / Abajo):** Botón `↕️` que permite alternar la posición de la barra entre la parte superior e inferior de la pantalla para máxima comodidad con una sola mano.
+  - **Modo Pantalla Completa (`[F]` o `⛶`):** Integración con la Fullscreen API cross-browser para ocultar las barras del navegador en Android e iOS y sumergirse en el arte a pantalla completa.
 
 * 🖼️ **8 Fondos Inmersivos Adaptativos (16:9 PC / 9:16 Móvil):**
   - El motor detecta en tiempo real la orientación de tu dispositivo y carga la versión optimizada:
@@ -44,7 +50,7 @@ Desde la versión inicial 1.0.0, Aetheria ha evolucionado con las siguientes arq
 * 🐟 **Modo Automático "Pecera" (Swarm Boids):** Agentes autónomos con física de bandada (separación, alineación, cohesión), **evasión suave de bordes** (*soft boundary repulsion* al 8% de margen) para mantenerlos dentro de la pantalla indefinidamente y oscilación armónica suave.
 * 🎨 **Renderizador Visual de Boids en Tiempo Real (`SwarmRenderer`):** Lienzo 2D superpuesto que dibuja a los avatares volando y nadando con sombras luminosas y rotación angular precisa.
 * 🪞 **Simetría Radial Unificada (1x a 8x):** Los Boids y el usuario inyectan a través del mismo pipeline (`SymmetryEngine.injectSplat`), creando mandalas en movimiento. Auto-regula los boids a 3 en simetrías altas para garantizar 60 FPS estables.
-* 🏛️ **Bus de Estado Centralizado (`AetheriaState`):** Gestión desacoplada y robusta que previene colisiones entre el usuario y la automatización.
+* 🏛️ **Bus de Estado Centralizado (`AetheriaState`):** Gestión desacoplada y persistencia en LocalStorage (`aetheria_bar_position`, `aetheria_dev_mode`, etc.).
 
 ---
 
@@ -61,23 +67,6 @@ Desde la versión inicial 1.0.0, Aetheria ha evolucionado con las siguientes arq
 
 ---
 
-## 📐 Fundamentos Matemáticos y Físicos (GPU Gems 38)
-
-El motor resuelve numéricamente las ecuaciones de **Navier-Stokes para fluidos incompresibles**:
-
-$$\frac{\partial \mathbf{u}}{\partial t} = -(\mathbf{u} \cdot \nabla)\mathbf{u} - \frac{1}{\rho}\nabla p + \nu \nabla^2 \mathbf{u} + \mathbf{F}$$
-
-$$\nabla \cdot \mathbf{u} = 0$$
-
-### Pipeline en GPU:
-1. **Confinamiento de Vorticidad (Fedkiw et al.):** Restaura la energía rotacional perdida por viscosidad numérica: $\mathbf{F}_{vort} = \varepsilon (\mathbf{N} \times \mathbf{\omega})$.
-2. **Cálculo de Divergencia:** Medición de compresión del campo de velocidad mediante diferencias finitas centrales.
-3. **Solver de Jacobi para la Presión:** 20 iteraciones continuas en GPU resolviendo la ecuación de Poisson.
-4. **Proyección de Helmholtz-Hodge:** Sustracción del gradiente de presión ($\mathbf{u} = \mathbf{w} - \nabla p$) para garantizar velocidad solenoidal libre de divergencia.
-5. **Advección Semi-Lagrangiana con Gravedad:** Transporte bilineal de velocidad y color con aceleración gravitatoria continua pre-Poisson.
-
----
-
 ## ⌨️ Atajos de Teclado
 
 | Tecla | Acción |
@@ -86,9 +75,11 @@ $$\nabla \cdot \mathbf{u} = 0$$
 | **`[2]`** | Modo Lava Lamp (Convección térmica viscosa) |
 | **`[3]`** | Modo Arena Granular (Reloj de Arena) |
 | **`[4]`** | Modo Gas / Humo Espacial |
+| **`[F]`** | **Pantalla Completa** (Alternar Fullscreen) |
 | **`[H]`** | **Modo Zen** (Ocultar / Mostrar interfaz) |
 | **`[A]`** | Alternar Auto-Piloto Swarm (Pecera) |
 | **`[M]`** | Abrir / Cerrar Cajón de Ajustes |
+| **`[Escape]`** | Cerrar Cajón de Ajustes |
 | **`[S]`** | Detonar Supernova |
 | **`[V]`** | Inyectar Vórtice |
 | **`[G]`** | Alternar Gravedad (ON / OFF) |
@@ -122,4 +113,4 @@ npx serve .
 Distribuido bajo la licencia **MIT**. Consulta el archivo [LICENSE](LICENSE) para más información.
 
 Copyright (c) 2017 Pavel Dobryakov  
-Arquitectura modular, física extendida, fondos adaptativos, avatares y enjambre por Estudio Memexicanisimos.
+Arquitectura modular, física extendida, fondos adaptativos, avatares, enjambre e interfaz responsive por Estudio Memexicanisimos.
