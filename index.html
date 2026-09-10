@@ -5,9 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Aetheria | Generative Fluid & Sand Studio</title>
   <meta name="description" content="Simulación de fluidos en GPU con Navier-Stokes, Arena Granular, Humo Espacial, Fondos Inmersivos, Swarm Boids y Punteros Temáticos.">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'self';">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="css/style.css?v=1.6.1">
+  <link rel="stylesheet" href="css/style.css?v=1.8.6">
 </head>
 <body>
 
@@ -89,259 +91,447 @@
         <span aria-hidden="true">⚙️</span>
         <h3>Configuración de Estudio</h3>
       </div>
-      <button class="close-drawer-btn ui-interactive" id="btn-close-drawer" aria-label="Cerrar panel de ajustes (Atajo: Esc)">✕</button>
+      <div class="drawer-header-actions">
+        <button class="drawer-action-mini ui-interactive" id="btn-collapse-all" title="Colapsar todos los menús" aria-label="Colapsar todos los menús">⊟ Colapsar</button>
+        <button class="drawer-action-mini ui-interactive" id="btn-expand-all" title="Expandir todos los menús" aria-label="Expandir todos los menús">⊞ Expandir</button>
+        <button class="close-drawer-btn ui-interactive" id="btn-close-drawer" aria-label="Cerrar panel de ajustes (Atajo: Esc)">✕</button>
+      </div>
     </div>
 
     <div class="drawer-body ui-interactive">
       <!-- 1. Selector de Modos de Elemento -->
-      <section class="drawer-section">
-        <h4>✨ Elemento de Física</h4>
-        <div class="mode-grid">
-          <button class="mode-btn active ui-interactive" data-element="fluid" aria-pressed="true">
-            <span class="mode-icon" aria-hidden="true">💧</span>
-            <span>Fluido 3D</span>
-          </button>
-          <button class="mode-btn ui-interactive" data-element="lava" aria-pressed="false">
-            <span class="mode-icon" aria-hidden="true">🔴</span>
-            <span>Lava Lamp</span>
-          </button>
-          <button class="mode-btn ui-interactive" data-element="sand" aria-pressed="false">
-            <span class="mode-icon" aria-hidden="true">⏳</span>
-            <span>Arena</span>
-          </button>
-          <button class="mode-btn ui-interactive" data-element="gas" aria-pressed="false">
-            <span class="mode-icon" aria-hidden="true">💨</span>
-            <span>Gas / Humo</span>
-          </button>
+      <details class="drawer-accordion" open>
+        <summary class="accordion-header ui-interactive">
+          <div class="accordion-title">
+            <span class="acc-icon" aria-hidden="true">✨</span>
+            <h4>Elemento de Física</h4>
+          </div>
+          <span class="acc-chevron" aria-hidden="true">▾</span>
+        </summary>
+        <div class="accordion-content">
+          <div class="mode-grid">
+            <button class="mode-btn active ui-interactive" data-element="fluid" aria-pressed="true">
+              <span class="mode-icon" aria-hidden="true">💧</span>
+              <span>Fluido 3D</span>
+            </button>
+            <button class="mode-btn ui-interactive" data-element="lava" aria-pressed="false">
+              <span class="mode-icon" aria-hidden="true">🔴</span>
+              <span>Lava Lamp</span>
+            </button>
+            <button class="mode-btn ui-interactive" data-element="sand" aria-pressed="false">
+              <span class="mode-icon" aria-hidden="true">⏳</span>
+              <span>Arena</span>
+            </button>
+            <button class="mode-btn ui-interactive" data-element="gas" aria-pressed="false">
+              <span class="mode-icon" aria-hidden="true">💨</span>
+              <span>Gas / Humo</span>
+            </button>
+          </div>
         </div>
-      </section>
+      </details>
 
       <!-- 2. Punteros Temáticos y Avatares de Simulación -->
-      <section class="drawer-section">
-        <h4>🐱 Puntero Temático (Usuario & Pecera)</h4>
-        <div class="avatar-grid">
-          <button class="avatar-btn active ui-interactive" data-avatar="none" title="Puntero estándar de sistema (Solo fluido)" aria-pressed="true">
-            <span class="avatar-icon" aria-hidden="true">🚫</span>
-            <span>Ninguno</span>
-          </button>
-          <button class="avatar-btn ui-interactive" data-avatar="nyan" title="Nyan Cat (Color sólido en clic / Arcoíris en automático)" aria-pressed="false">
-            <span class="avatar-icon" aria-hidden="true">🐱</span>
-            <span>Nyan</span>
-          </button>
-          <button class="avatar-btn ui-interactive" data-avatar="rocket" title="Cohete Espacial (Orientación dinámica 360° con tobera de fuego)" aria-pressed="false">
-            <span class="avatar-icon" aria-hidden="true">🚀</span>
-            <span>Cohete</span>
-          </button>
-          <button class="avatar-btn ui-interactive" data-avatar="comet" title="Cometa Cósmico (Haz de plasma plateado y polvo estelar)" aria-pressed="false">
-            <span class="avatar-icon" aria-hidden="true">☄️</span>
-            <span>Cometa</span>
-          </button>
-          <button class="avatar-btn ui-interactive" data-avatar="clownfish" title="Pez Payaso Nemo (Nado suave con estela de burbujas)" aria-pressed="false">
-            <span class="avatar-icon" aria-hidden="true">🐠</span>
-            <span>Pez</span>
-          </button>
-          <button class="avatar-btn ui-interactive" data-avatar="miku" title="Hatsune Miku (Estela Techno Pop cian y magenta)" aria-pressed="false">
-            <span class="avatar-icon" aria-hidden="true">🩵</span>
-            <span>Miku</span>
+      <details class="drawer-accordion" open>
+        <summary class="accordion-header ui-interactive">
+          <div class="accordion-title">
+            <span class="acc-icon" aria-hidden="true">🐱</span>
+            <h4>Puntero Temático (Usuario & Pecera)</h4>
+          </div>
+          <span class="acc-chevron" aria-hidden="true">▾</span>
+        </summary>
+        <div class="accordion-content">
+          <div class="avatar-grid">
+            <button class="avatar-btn active ui-interactive" data-avatar="none" title="Puntero estándar de sistema (Solo fluido)" aria-pressed="true">
+              <div class="avatar-icon-wrap">
+                <svg viewBox="0 0 24 24" style="width:20px;height:20px;" aria-hidden="true">
+                  <path d="M4 2 L4 20 L9 15 L14 22 L17 20 L12 13 L19 13 Z" fill="#00f2fe"/>
+                </svg>
+              </div>
+              <div class="avatar-meta">
+                <span class="avatar-name">Original</span>
+                <span class="avatar-tag">Sistema / Solo Fluido</span>
+              </div>
+            </button>
+            <button class="avatar-btn ui-interactive" data-avatar="nyan" title="Nyan Cat (Arcoíris y chispas de píxeles)" aria-pressed="false">
+              <div class="avatar-icon-wrap">
+                <svg viewBox="0 0 48 32" style="width:30px;height:20px;" aria-hidden="true">
+                  <path d="M0 8h8v16H0z" fill="#ff0000" opacity="0.85"/>
+                  <path d="M0 11h8v10H0z" fill="#ff9900" opacity="0.85"/>
+                  <path d="M0 14h8v4H0z" fill="#ffff00" opacity="0.85"/>
+                  <path d="M0 16h8v4H0z" fill="#33ff00" opacity="0.85"/>
+                  <path d="M0 18h8v4H0z" fill="#0099ff" opacity="0.85"/>
+                  <path d="M0 20h8v4H0z" fill="#6633ff" opacity="0.85"/>
+                  <rect x="10" y="6" width="24" height="20" rx="3" fill="#ffd199" stroke="#111" stroke-width="1.2"/>
+                  <rect x="13" y="9" width="18" height="14" rx="2" fill="#ff99bb"/>
+                  <circle cx="16" cy="12" r="1" fill="#ff0055"/>
+                  <circle cx="22" cy="11" r="1" fill="#9900cc"/>
+                  <circle cx="27" cy="14" r="1" fill="#ff0055"/>
+                  <rect x="26" y="10" width="16" height="14" rx="3" fill="#999999" stroke="#111" stroke-width="1.2"/>
+                  <polygon points="27,10 31,4 33,10" fill="#999999" stroke="#111" stroke-width="1"/>
+                  <polygon points="37,10 39,4 41,10" fill="#999999" stroke="#111" stroke-width="1"/>
+                  <circle cx="31" cy="15" r="1.5" fill="#000"/>
+                  <circle cx="37" cy="15" r="1.5" fill="#000"/>
+                  <circle cx="34" cy="17" r="1" fill="#ff6699"/>
+                </svg>
+              </div>
+              <div class="avatar-meta">
+                <span class="avatar-name">Nyan Cat</span>
+                <span class="avatar-tag">Arcoíris Pixel</span>
+              </div>
+            </button>
+            <button class="avatar-btn ui-interactive" data-avatar="rocket" title="Cohete Espacial (Tobera de fuego y brasas)" aria-pressed="false">
+              <div class="avatar-icon-wrap">
+                <svg viewBox="0 0 36 36" style="width:24px;height:24px;" aria-hidden="true">
+                  <polygon points="18,34 13,24 23,24" fill="#ffbe0b"/>
+                  <polygon points="18,30 15,24 21,24" fill="#ff007f"/>
+                  <path d="M18 2 Q27 12 24 25 L12 25 Q9 12 18 2 Z" fill="#f8fafc" stroke="#0f172a" stroke-width="1.5"/>
+                  <circle cx="18" cy="14" r="3.5" fill="#00f2fe" stroke="#0f172a" stroke-width="1"/>
+                  <circle cx="17" cy="13" r="1" fill="#ffffff"/>
+                  <path d="M12 20 L5 26 L12 25 Z" fill="#ff007f" stroke="#0f172a" stroke-width="1"/>
+                  <path d="M24 20 L31 26 L24 25 Z" fill="#ff007f" stroke="#0f172a" stroke-width="1"/>
+                </svg>
+              </div>
+              <div class="avatar-meta">
+                <span class="avatar-name">Cohete</span>
+                <span class="avatar-tag">Tobera de Fuego</span>
+              </div>
+            </button>
+            <button class="avatar-btn ui-interactive" data-avatar="comet" title="Cometa Cósmico (Plasma y polvo estelar)" aria-pressed="false">
+              <div class="avatar-icon-wrap">
+                <svg viewBox="0 0 36 36" style="width:24px;height:24px;" aria-hidden="true">
+                  <polygon points="4,32 18,18 32,4 18,14 8,24" fill="#38bdf8"/>
+                  <circle cx="28" cy="8" r="5" fill="#ffffff"/>
+                  <circle cx="28" cy="8" r="2.5" fill="#7dd3fc"/>
+                </svg>
+              </div>
+              <div class="avatar-meta">
+                <span class="avatar-name">Cometa</span>
+                <span class="avatar-tag">Plasma Cósmico</span>
+              </div>
+            </button>
+            <button class="avatar-btn ui-interactive" data-avatar="clownfish" title="Pez Payaso Nemo (Burbujas acuáticas)" aria-pressed="false">
+              <div class="avatar-icon-wrap">
+                <svg viewBox="0 0 38 28" style="width:26px;height:20px;" aria-hidden="true">
+                  <ellipse cx="18" cy="14" rx="14" ry="10" fill="#ff7a00"/>
+                  <path d="M4 14 L0 6 L0 22 Z" fill="#ff5500"/>
+                  <path d="M14 4 Q17 14 14 24" stroke="#ffffff" stroke-width="3" fill="none"/>
+                  <circle cx="26" cy="11" r="2" fill="#000000"/>
+                  <circle cx="27" cy="10" r="0.8" fill="#ffffff"/>
+                </svg>
+              </div>
+              <div class="avatar-meta">
+                <span class="avatar-name">Pez Nemo</span>
+                <span class="avatar-tag">Burbujas Acuáticas</span>
+              </div>
+            </button>
+            <button class="avatar-btn ui-interactive" data-avatar="miku" title="Hatsune Miku (Techno Pop Neón)" aria-pressed="false">
+              <div class="avatar-icon-wrap">
+                <svg viewBox="0 0 36 36" style="width:24px;height:24px;" aria-hidden="true">
+                  <path d="M12 12 C6 18 4 30 2 34 C6 30 10 24 12 18 Z" fill="#39C5BB"/>
+                  <path d="M24 12 C30 18 32 30 34 34 C30 30 26 24 24 18 Z" fill="#39C5BB"/>
+                  <circle cx="18" cy="18" r="7" fill="#ffe0bd"/>
+                  <rect x="11" y="11" width="14" height="6" rx="3" fill="#39C5BB"/>
+                  <circle cx="15.5" cy="18" r="1.5" fill="#39C5BB"/>
+                  <circle cx="20.5" cy="18" r="1.5" fill="#39C5BB"/>
+                </svg>
+              </div>
+              <div class="avatar-meta">
+                <span class="avatar-name">Hatsune Miku</span>
+                <span class="avatar-tag">Techno Pop Neón</span>
+              </div>
+            </button>
+          </div>
+          <input type="file" id="custom-avatar-input" accept="image/*" style="display: none;">
+          <button class="upload-avatar-btn ui-interactive" id="btn-upload-avatar" title="Subir imagen propia (PNG/GIF) para guardar como cursor local">
+            <span aria-hidden="true">📁</span>
+            <span>Subir Puntero Propio (PNG / Logo)</span>
           </button>
         </div>
-        <input type="file" id="custom-avatar-input" accept="image/*" style="display: none;">
-        <button class="upload-avatar-btn ui-interactive" id="btn-upload-avatar" title="Subir imagen propia (PNG/GIF) para guardar como cursor local">
-          <span aria-hidden="true">📁</span>
-          <span>Subir Puntero Propio (PNG / Logo)</span>
-        </button>
-      </section>
+      </details>
 
       <!-- 3. Fondos de Pantalla Inmersivos (Ambiente Adaptativo 16:9 / 9:16) -->
-      <section class="drawer-section">
-        <h4>🖼️ Fondos de Pantalla (Ambiente)</h4>
-        <div class="bg-grid" id="bg-selector-grid">
-          <!-- 1. Vacío / Negro -->
-          <button class="bg-btn ui-interactive" data-bg="none" title="Fondo negro puro para máxima concentración y contraste" aria-pressed="false">
-            <span class="bg-icon" aria-hidden="true">🌑</span>
-            <span>Vacío</span>
-          </button>
-          <!-- 2. Universo -->
-          <button class="bg-btn active ui-interactive" data-bg="universe" title="Universo profundo con nebulosas violetas y cian" aria-pressed="true">
-            <span class="bg-icon" aria-hidden="true">🌌</span>
-            <span>Universo</span>
-          </button>
-          <!-- 3. Galaxia -->
-          <button class="bg-btn ui-interactive" data-bg="galaxy" title="Espiral de galaxia cósmica luminosa" aria-pressed="false">
-            <span class="bg-icon" aria-hidden="true">🌀</span>
-            <span>Galaxia</span>
-          </button>
-          <!-- 4. Alberca -->
-          <button class="bg-btn ui-interactive" data-bg="pool" title="Piscina cristalina con cáusticas solares bajo el agua" aria-pressed="false">
-            <span class="bg-icon" aria-hidden="true">🏊</span>
-            <span>Alberca</span>
-          </button>
-          <!-- 5. Cubeta -->
-          <button class="bg-btn ui-interactive" data-bg="bucket" title="Interior de cubeta con agua pura y reflejos metálicos" aria-pressed="false">
-            <span class="bg-icon" aria-hidden="true">🪣</span>
-            <span>Cubeta</span>
-          </button>
-          <!-- 6. Mar Caribe -->
-          <button class="bg-btn ui-interactive" data-bg="caribbean" title="Aguas turquesas del Mar Caribe con arena blanca" aria-pressed="false">
-            <span class="bg-icon" aria-hidden="true">🏝️</span>
-            <span>Caribe</span>
-          </button>
-          <!-- 7. Río -->
-          <button class="bg-btn ui-interactive" data-bg="river" title="Río de montaña cristalino corriendo entre piedras lisas" aria-pressed="false">
-            <span class="bg-icon" aria-hidden="true">🏞️</span>
-            <span>Río</span>
-          </button>
-          <!-- 8. Laguna -->
-          <button class="bg-btn ui-interactive" data-bg="lagoon" title="Laguna mística bioluminiscente con vegetación tropical" aria-pressed="false">
-            <span class="bg-icon" aria-hidden="true">🌿</span>
-            <span>Laguna</span>
-          </button>
-          <!-- 9. Cenote -->
-          <button class="bg-btn ui-interactive" data-bg="cenote" title="Cenote sagrado maya con rayo de sol penetrando el agua" aria-pressed="false">
-            <span class="bg-icon" aria-hidden="true">🕳️</span>
-            <span>Cenote</span>
-          </button>
+      <details class="drawer-accordion">
+        <summary class="accordion-header ui-interactive">
+          <div class="accordion-title">
+            <span class="acc-icon" aria-hidden="true">🖼️</span>
+            <h4>Fondos de Pantalla (Ambiente)</h4>
+          </div>
+          <span class="acc-chevron" aria-hidden="true">▾</span>
+        </summary>
+        <div class="accordion-content">
+          <div class="bg-grid" id="bg-selector-grid">
+            <button class="bg-btn ui-interactive" data-bg="none" title="Fondo negro puro para máxima concentración y contraste" aria-pressed="false">
+              <span class="bg-icon" aria-hidden="true">🌑</span>
+              <span>Vacío</span>
+            </button>
+            <button class="bg-btn active ui-interactive" data-bg="universe" title="Universo profundo con nebulosas violetas y cian" aria-pressed="true">
+              <span class="bg-icon" aria-hidden="true">🌌</span>
+              <span>Universo</span>
+            </button>
+            <button class="bg-btn ui-interactive" data-bg="galaxy" title="Espiral de galaxia cósmica luminosa" aria-pressed="false">
+              <span class="bg-icon" aria-hidden="true">🌀</span>
+              <span>Galaxia</span>
+            </button>
+            <button class="bg-btn ui-interactive" data-bg="pool" title="Piscina cristalina con cáusticas solares bajo el agua" aria-pressed="false">
+              <span class="bg-icon" aria-hidden="true">🏊</span>
+              <span>Alberca</span>
+            </button>
+            <button class="bg-btn ui-interactive" data-bg="bucket" title="Interior de cubeta con agua pura y reflejos metálicos" aria-pressed="false">
+              <span class="bg-icon" aria-hidden="true">🪣</span>
+              <span>Cubeta</span>
+            </button>
+            <button class="bg-btn ui-interactive" data-bg="caribbean" title="Aguas turquesas del Mar Caribe con arena blanca" aria-pressed="false">
+              <span class="bg-icon" aria-hidden="true">🏝️</span>
+              <span>Caribe</span>
+            </button>
+            <button class="bg-btn ui-interactive" data-bg="river" title="Río de montaña cristalino corriendo entre piedras lisas" aria-pressed="false">
+              <span class="bg-icon" aria-hidden="true">🏞️</span>
+              <span>Río</span>
+            </button>
+            <button class="bg-btn ui-interactive" data-bg="lagoon" title="Laguna mística bioluminiscente con vegetación tropical" aria-pressed="false">
+              <span class="bg-icon" aria-hidden="true">🌿</span>
+              <span>Laguna</span>
+            </button>
+            <button class="bg-btn ui-interactive" data-bg="cenote" title="Cenote sagrado maya con rayo de sol penetrando el agua" aria-pressed="false">
+              <span class="bg-icon" aria-hidden="true">🕳️</span>
+              <span>Cenote</span>
+            </button>
+          </div>
         </div>
-      </section>
+      </details>
 
       <!-- 4. Selector de Simetría Angular -->
-      <section class="drawer-section">
-        <h4>🪞 Simetría Radial</h4>
-        <div class="sym-row">
-          <button class="sym-btn ui-interactive" data-symmetry="1" title="Trazo libre sin simetría" aria-pressed="false">1x</button>
-          <button class="sym-btn ui-interactive" data-symmetry="2" title="Espejo horizontal" aria-pressed="false">2x</button>
-          <button class="sym-btn active ui-interactive" data-symmetry="4" title="Cuadrantes radiales 4x" aria-pressed="true">4x</button>
-          <button class="sym-btn ui-interactive" data-symmetry="6" title="Hexágono radial 6x" aria-pressed="false">6x</button>
-          <button class="sym-btn ui-interactive" data-symmetry="8" title="Mandala cósmico 8x" aria-pressed="false">8x</button>
+      <details class="drawer-accordion">
+        <summary class="accordion-header ui-interactive">
+          <div class="accordion-title">
+            <span class="acc-icon" aria-hidden="true">🪞</span>
+            <h4>Simetría Radial (Puntero)</h4>
+          </div>
+          <span class="acc-chevron" aria-hidden="true">▾</span>
+        </summary>
+        <div class="accordion-content">
+          <div class="sym-grid">
+            <button class="sym-card sym-btn ui-interactive" data-symmetry="1" title="Trazo libre sin simetría" aria-pressed="false">
+              <span class="sym-multiplier">1x</span>
+              <span class="sym-label">Libre</span>
+            </button>
+            <button class="sym-card sym-btn ui-interactive" data-symmetry="2" title="Espejo horizontal bilateral" aria-pressed="false">
+              <span class="sym-multiplier">2x</span>
+              <span class="sym-label">Espejo</span>
+            </button>
+            <button class="sym-card sym-btn ui-interactive" data-symmetry="3" title="Tríada radial de 3 ejes" aria-pressed="false">
+              <span class="sym-multiplier">3x</span>
+              <span class="sym-label">Tríada</span>
+            </button>
+            <button class="sym-card sym-btn active ui-interactive" data-symmetry="4" title="Cuadrantes radiales 4x" aria-pressed="true">
+              <span class="sym-multiplier">4x</span>
+              <span class="sym-label">Cuadrantes</span>
+            </button>
+            <button class="sym-card sym-btn ui-interactive" data-symmetry="5" title="Pentagrama radial de 5 ejes" aria-pressed="false">
+              <span class="sym-multiplier">5x</span>
+              <span class="sym-label">Pentagrama</span>
+            </button>
+            <button class="sym-card sym-btn ui-interactive" data-symmetry="6" title="Hexágono radial cósmico 6x" aria-pressed="false">
+              <span class="sym-multiplier">6x</span>
+              <span class="sym-label">Hexágono</span>
+            </button>
+            <button class="sym-card sym-btn ui-interactive" data-symmetry="7" title="Heptágono místico de 7 ejes" aria-pressed="false">
+              <span class="sym-multiplier">7x</span>
+              <span class="sym-label">Heptágono</span>
+            </button>
+            <button class="sym-card sym-btn ui-interactive" data-symmetry="8" title="Mandala cósmico 8x" aria-pressed="false">
+              <span class="sym-multiplier">8x</span>
+              <span class="sym-label">Mandala</span>
+            </button>
+          </div>
         </div>
-      </section>
+      </details>
 
       <!-- 5. Acciones y Fidgets -->
-      <section class="drawer-section">
-        <h4>🎮 Fidgets & Controles</h4>
-        <div class="action-grid">
-          <button class="action-btn ui-interactive" id="drawer-btn-swarm" aria-label="Alternar Auto-Piloto Swarm">
-            <span aria-hidden="true">🐟</span>
-            <span>Auto-Piloto: <b id="swarm-status-text">OFF</b></span>
-          </button>
-          <button class="action-btn ui-interactive" id="drawer-btn-gravity" aria-label="Alternar Gravedad" aria-pressed="false">
-            <span aria-hidden="true">🪐</span>
-            <span>Gravedad: <b id="gravity-status-text">OFF</b></span>
-          </button>
-          <button class="action-btn ui-interactive" id="drawer-btn-supernova" aria-label="Detonar Supernova">
-            <span aria-hidden="true">💥</span>
-            <span>Supernova (S)</span>
-          </button>
-          <button class="action-btn ui-interactive" id="drawer-btn-vortex" aria-label="Inyectar Vórtice">
-            <span aria-hidden="true">🌪️</span>
-            <span>Vórtice (V)</span>
-          </button>
-          <button class="action-btn ui-interactive" id="drawer-btn-palette" aria-label="Cambiar paleta de color">
-            <span aria-hidden="true">🎨</span>
-            <span>Paleta: <b id="palette-status-text">Aurora</b></span>
-          </button>
-          <button class="action-btn ui-interactive" id="drawer-btn-pause" aria-label="Pausar simulación" aria-pressed="false">
-            <span aria-hidden="true">⏸️</span>
-            <span id="pause-status-text">Pausar</span>
-          </button>
-          <button class="action-btn ui-interactive" id="drawer-btn-clear" aria-label="Limpiar lienzo">
-            <span aria-hidden="true">🧹</span>
-            <span>Limpiar</span>
-          </button>
-          <button class="action-btn ui-interactive" id="drawer-btn-export" aria-label="Guardar imagen PNG">
-            <span aria-hidden="true">📸</span>
-            <span>Guardar PNG</span>
-          </button>
-        </div>
-      </section>
+      <details class="drawer-accordion" open>
+        <summary class="accordion-header ui-interactive">
+          <div class="accordion-title">
+            <span class="acc-icon" aria-hidden="true">🎮</span>
+            <h4>Fidgets & Controles Rápidos</h4>
+          </div>
+          <span class="acc-chevron" aria-hidden="true">▾</span>
+        </summary>
+        <div class="accordion-content">
+          <div id="action-grid-container">
+            <!-- Subgrupo 1: 💥 Fidgets Físicos & Dinámicas -->
+            <div class="action-subgroup" id="fidgets-sensory">
+              <span class="subgroup-label">💥 Fidgets Sensoriales</span>
+              <div class="action-grid">
+                <button class="action-btn ui-interactive" data-action="supernova" title="Supernova radial (Atajo: S)" aria-label="Supernova (S)">
+                  <span class="icon" aria-hidden="true">💥</span>
+                  <span>Supernova</span>
+                </button>
+                <button class="action-btn ui-interactive" data-action="vortex" title="Vórtice ciclónico (Atajo: V)" aria-label="Vórtice (V)">
+                  <span class="icon" aria-hidden="true">🌪️</span>
+                  <span>Vórtice</span>
+                </button>
+                <button class="action-btn ui-interactive" data-action="gravity" title="Alternar gravedad (Atajo: G)" aria-label="Gravedad (G)">
+                  <span class="icon" aria-hidden="true">🪐</span>
+                  <span>Gravedad</span>
+                </button>
+                <button class="action-btn ui-interactive" data-action="tsunami" title="Tsunami transversal (Atajo: T)" aria-label="Tsunami (T)">
+                  <span class="icon" aria-hidden="true">🌊</span>
+                  <span>Tsunami</span>
+                </button>
+                <button class="action-btn ui-interactive" data-action="meteor" title="Lluvia cósmica de gotas (Atajo: L)" aria-label="Lluvia Cósmica (L)">
+                  <span class="icon" aria-hidden="true">🌧️</span>
+                  <span>Lluvia</span>
+                </button>
+              </div>
+            </div>
 
-      <!-- 6. Sliders de Parámetros Físicos con Tooltips Interactivos -->
-      <section class="drawer-section">
-        <h4>🌊 Parámetros de Física</h4>
-        
-        <div class="slider-control" data-tooltip="Controla la intensidad de los torbellinos y remolinos caóticos.">
-          <label for="slider-vorticity">Vorticidad / Remolinos <span id="val-vorticity">30</span></label>
-          <input type="range" id="slider-vorticity" class="ui-interactive" min="0" max="60" step="1" value="30">
-          <span class="slider-tooltip">Intensidad de rizos y torbellinos</span>
+            <!-- Subgrupo 2: 🎬 Utilidades de Captura & Estudio -->
+            <div class="action-subgroup" id="fidgets-studio">
+              <span class="subgroup-label">🎬 Captura & Estudio</span>
+              <div class="action-grid">
+                <button class="action-btn ui-interactive" data-action="screenshot" title="Captura de pantalla (Atajo: E)" aria-label="Captura PNG">
+                  <span class="icon" aria-hidden="true">📸</span>
+                  <span>PNG 4K</span>
+                </button>
+                <button class="action-btn ui-interactive" data-action="record" title="Grabar video canvas (Atajo: R)" aria-label="Grabar Video">
+                  <span class="icon" aria-hidden="true">⏺️</span>
+                  <span id="record-label">Grabar</span>
+                  <span id="record-timer" class="record-timer" style="display:none;">00:00</span>
+                </button>
+                <button class="action-btn ui-interactive" data-action="pause" title="Pausar simulación (Atajo: Espacio)" aria-label="Pausa (Espacio)">
+                  <span class="icon" aria-hidden="true">⏸️</span>
+                  <span id="pause-label">Pausar</span>
+                </button>
+                <button class="action-btn ui-interactive" data-action="clear" title="Limpiar lienzo (Atajo: Del / Backspace)" aria-label="Limpiar (Del)">
+                  <span class="icon" aria-hidden="true">🧹</span>
+                  <span>Purga</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
+      </details>
 
-        <div class="slider-control" data-tooltip="Velocidad de desvanecimiento del tinte. Menor = dura más; Mayor = humo rápido.">
-          <label for="slider-dissipation">Disipación de Densidad <span id="val-dissipation">0.98</span></label>
-          <input type="range" id="slider-dissipation" class="ui-interactive" min="0.1" max="2.0" step="0.05" value="0.98">
-          <span class="slider-tooltip">Velocidad de desvanecimiento del color</span>
-        </div>
+      <!-- 6. Parámetros Físicos & Auto-Piloto (Tarjetas Numéricas) -->
+      <details class="drawer-accordion" open>
+        <summary class="accordion-header ui-interactive">
+          <div class="accordion-title">
+            <span class="acc-icon" aria-hidden="true">🌊</span>
+            <h4>Parámetros de Física & Auto-Piloto</h4>
+          </div>
+          <span class="acc-chevron" aria-hidden="true">▾</span>
+        </summary>
+        <div class="accordion-content">
+          <!-- Grupo Física -->
+          <div class="params-group">
+            <h5 class="params-group-title">🌊 Dinámica de Fluidos</h5>
+            <div class="param-card-grid">
+              <div class="param-card ui-interactive">
+                <label for="slider-vorticity">Vorticidad</label>
+                <input type="number" id="slider-vorticity" value="30" min="0" max="60" step="1" class="ui-interactive" aria-describedby="help-vorticity">
+                <span class="param-help" id="help-vorticity" title="Intensidad de los remolinos. Valores altos generan más turbulencia y estelas vivas.">ⓘ</span>
+              </div>
+              <div class="param-card ui-interactive">
+                <label for="slider-dissipation">Disipación</label>
+                <input type="number" id="slider-dissipation" value="0.98" min="0.1" max="2.0" step="0.05" class="ui-interactive" aria-describedby="help-dissipation">
+                <span class="param-help" id="help-dissipation" title="Velocidad de desvanecimiento del color. Bajo = persiste largo tiempo, alto = humo rápido.">ⓘ</span>
+              </div>
+              <div class="param-card ui-interactive">
+                <label for="slider-splat-radius">Radio Splat</label>
+                <input type="number" id="slider-splat-radius" value="0.25" min="0.05" max="1.0" step="0.05" class="ui-interactive" aria-describedby="help-splat">
+                <span class="param-help" id="help-splat" title="Grosor y amplitud del chorro de inyección al mover el puntero o agentes.">ⓘ</span>
+              </div>
+              <div class="param-card ui-interactive">
+                <label for="slider-gravity-force">Gravedad</label>
+                <input type="number" id="slider-gravity-force" value="1.8" min="0.5" max="5.0" step="0.2" class="ui-interactive" aria-describedby="help-gravity">
+                <span class="param-help" id="help-gravity" title="Aceleración y fuerza de caída vertical continua en cascada.">ⓘ</span>
+              </div>
+              <div class="param-card ui-interactive">
+                <label for="slider-grain-size">Grano Arena</label>
+                <input type="number" id="slider-grain-size" value="10" min="4" max="32" step="2" class="ui-interactive" aria-describedby="help-grain">
+                <span class="param-help" id="help-grain" title="Tamaño visual y granulometría de las partículas en Modo Arena.">ⓘ</span>
+              </div>
+            </div>
+          </div>
 
-        <div class="slider-control" data-tooltip="Grosor y amplitud del chorro inyectado por el cursor y los boids.">
-          <label for="slider-splat-radius">Radio de Splat <span id="val-splat-radius">0.25</span></label>
-          <input type="range" id="slider-splat-radius" class="ui-interactive" min="0.05" max="1.0" step="0.05" value="0.25">
-          <span class="slider-tooltip">Grosor del chorro de inyección</span>
+          <!-- Grupo Auto-Piloto -->
+          <div class="params-group">
+            <h5 class="params-group-title">🐟 Auto-Piloto (Swarm Boids)</h5>
+            <div class="param-card-grid">
+              <!-- [MEJORA] Botón toggle de Auto-Piloto dentro del drawer -->
+              <div class="param-card" style="grid-column: span 2; justify-content: space-between;">
+                <label for="drawer-swarm-toggle" style="flex:1;">🐟 Auto-Piloto</label>
+                <button id="drawer-swarm-toggle" class="submenu-btn ui-interactive" style="background:rgba(255,255,255,0.08);border-radius:8px;padding:4px 16px;font-weight:700;border:1px solid transparent;transition:all 0.2s;">Activar</button>
+              </div>
+              <div class="param-card ui-interactive">
+                <label for="slider-boids-count">Cantidad Boids</label>
+                <input type="number" id="slider-boids-count" value="3" min="1" max="10" step="1" class="ui-interactive" aria-describedby="help-boids">
+                <span class="param-help" id="help-boids" title="Número de avatares autónomos nadando en la pecera.">ⓘ</span>
+              </div>
+              <div class="param-card ui-interactive">
+                <label for="toggle-dev-mode" style="cursor:pointer;">Modo Dev (50 Boids)</label>
+                <input type="checkbox" id="toggle-dev-mode" class="ui-interactive">
+              </div>
+            </div>
+            <span class="dev-warning-text" id="dev-warning-text" style="display:none;font-size:0.7rem;color:var(--accent-magenta);margin-top:6px;padding-left:4px;">⚠️ Más de 15 boids puede reducir FPS en dispositivos móviles</span>
+          </div>
         </div>
-
-        <div class="slider-control" data-tooltip="Escala de textura granular de partículas en Modo Arena.">
-          <label for="slider-grain-size">Tamaño Grano de Arena <span id="val-grain-size">10px</span></label>
-          <input type="range" id="slider-grain-size" class="ui-interactive" min="4" max="32" step="2" value="10">
-          <span class="slider-tooltip">Tamaño visual de granos de arena</span>
-        </div>
-
-        <div class="slider-control" data-tooltip="Aceleración vertical continua hacia abajo en cascada.">
-          <label for="slider-gravity-force">Fuerza de Gravedad <span id="val-gravity-force">1.8</span></label>
-          <input type="range" id="slider-gravity-force" class="ui-interactive" min="0.5" max="5.0" step="0.2" value="1.8">
-          <span class="slider-tooltip">Fuerza de caída vertical continua</span>
-        </div>
-
-        <div class="slider-control" data-tooltip="Cantidad de avatares autónomos de la pecera activa.">
-          <label for="slider-boids-count">
-            Auto-Piloto: Cantidad de Boids <span id="val-boids-count">3</span>
-            <span class="boids-limit-badge" id="boids-limit-badge">máx. 10</span>
-          </label>
-          <input type="range" id="slider-boids-count" class="ui-interactive" min="1" max="10" step="1" value="3">
-          <span class="slider-tooltip">Número de agentes en la pecera</span>
-        </div>
-
-        <div class="slider-control" style="margin-top:8px;">
-          <label for="toggle-dev-mode" style="cursor:pointer;gap:8px;">
-            <span>🛠️ Modo Desarrollador (Boids hasta 50)</span>
-            <input type="checkbox" id="toggle-dev-mode" class="ui-interactive" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent-magenta);">
-          </label>
-          <span class="dev-warning-text" id="dev-warning-text" style="display:none;font-size:0.68rem;color:var(--accent-magenta);margin-top:2px;">⚠️ En móviles con más de 15 boids puede reducir FPS</span>
-        </div>
-      </section>
+      </details>
 
       <!-- 7. Selector de Paletas de Color -->
-      <section class="drawer-section">
-        <h4>🎨 Paletas de Color & Ambiente</h4>
-        <div class="palette-grid" id="palette-selector-grid"></div>
-      </section>
+      <details class="drawer-accordion" open>
+        <summary class="accordion-header ui-interactive">
+          <div class="accordion-title">
+            <span class="acc-icon" aria-hidden="true">🎨</span>
+            <h4>Paletas de Color & Cromática</h4>
+          </div>
+          <span class="acc-chevron" aria-hidden="true">▾</span>
+        </summary>
+        <div class="accordion-content">
+          <div class="palette-grid" id="palette-selector-grid"></div>
+        </div>
+      </details>
 
       <!-- 8. Guía y Explicación Detallada de Parámetros Físicos y Fondos -->
-      <section class="drawer-section guide-section">
-        <h4>📖 Guía de Parámetros Físicos & Fondos</h4>
-        
-        <div class="guide-item">
-          <p><strong>🖼️ Fondos de Pantalla:</strong> Fondos inmersivos que se adaptan automáticamente a PC (16:9) y Móvil (9:16). El fluido se superpone con transparencia creando una experiencia ambiental completa.</p>
+      <details class="drawer-accordion">
+        <summary class="accordion-header ui-interactive">
+          <div class="accordion-title">
+            <span class="acc-icon" aria-hidden="true">📖</span>
+            <h4>Guía de Parámetros, Física & Atajos</h4>
+          </div>
+          <span class="acc-chevron" aria-hidden="true">▾</span>
+        </summary>
+        <div class="accordion-content guide-section">
+          <div class="guide-item">
+            <strong>🌊 Vorticidad (Remolinos & Turbulencia)</strong>
+            <p>Controla la intensidad del cálculo rotacional de Navier-Stokes en el fluido. Un valor bajo (0–10) produce un flujo laminar suave y relajante; un valor alto (40–60) desata torbellinos caóticos y ondulaciones orgánicas de alta energía.</p>
+          </div>
+          <div class="guide-item">
+            <strong>💨 Disipación de Densidad</strong>
+            <p>Define la persistencia temporal de la tinta inyectada. Valores bajos (0.1–0.5) retienen los trazos durante minutos creando lienzos acumulativos; valores altos (1.5–2.0) evaporan el fluido rápidamente dando la sensación de vapor efímero.</p>
+          </div>
+          <div class="guide-item">
+            <strong>🎯 Radio de Splat & Grosor</strong>
+            <p>Ajusta el radio volumétrico del chorro impulsado por el cursor del usuario o los peces autónomos. Valores amplios generan nebulosas suaves; valores finos producen líneas de caligrafía luminosa nítida.</p>
+          </div>
+          <div class="guide-item">
+            <strong>🪐 Cascada Gravitatoria Tangible</strong>
+            <p>Aplica un vector constante de aceleración hacia el fondo del lienzo. Al activarse con [G], el fluido se precipita en cascadas verticales continuas simulando cataratas cuánticas.</p>
+          </div>
+          <div class="guide-item">
+            <strong>⏳ Tamaño de Grano (Modo Arena)</strong>
+            <p>Ajusta la textura estocástica del sombreador granular en el Modo Arena Zen. Un valor alto (20–32) produce granos gruesos estilo mármol triturado; un valor fino (4–8) simula polvo de dunas doradas.</p>
+          </div>
+          <div class="guide-item">
+            <strong>🐟 Auto-Piloto (Swarm Boids)</strong>
+            <p>Algoritmo de comportamiento colectivo (Alineación, Cohesión, Separación) que navega la pantalla de manera orgánica sin depender del puntero del usuario. El modo desarrollador permite liberar hasta 50 boids simultáneos.</p>
+          </div>
+          <div class="guide-item">
+            <strong>⌨️ Mapa Maestro de Atajos de Teclado</strong>
+            <p>[1-4] Elementos Físicos | [S] Supernova | [V] Vórtice | [T] Tsunami | [L] Lluvia Cósmica | [G] Gravedad | [A] Auto-Piloto | [Espacio] Pausar | [C] Ciclar Paleta | [P] Grabar Video | [R]/[E] Foto PNG | [Del] Purga | [F] Pantalla Completa | [H] Modo Zen | [M] Panel de Ajustes | [Doble Clic] Supernova instantánea.</p>
+          </div>
         </div>
-        <div class="guide-item">
-          <p><strong>🌪️ Vorticidad (Remolinos):</strong> Controla la intensidad de los torbellinos. A mayor valor, el fluido se retuerce más y las estelas se vuelven más caóticas y vivas.</p>
-        </div>
-        <div class="guide-item">
-          <p><strong>💨 Disipación de Densidad:</strong> Es la velocidad de desvanecimiento del color. Un valor bajo (0.1) hace que el color permanezca mucho tiempo; un valor alto (2.0) lo desvanece casi al instante, dando sensación de humo ligero.</p>
-        </div>
-        <div class="guide-item">
-          <p><strong>🎯 Radio de Splat:</strong> Tamaño del chorro que sale del cursor o de los Boids. A mayor radio, el impacto es más amplio y difuso.</p>
-        </div>
-        <div class="guide-item">
-          <p><strong>⏳ Tamaño de Grano (Modo Arena):</strong> Ajusta el tamaño aparente de las partículas de arena. Más grande = granos más gruesos; más pequeño = textura fina y definida.</p>
-        </div>
-        <div class="guide-item">
-          <p><strong>🪐 Fuerza de Gravedad:</strong> Aceleración vertical hacia abajo. A mayor valor, el fluido cae más rápido creando cascadas continuas.</p>
-        </div>
-        <div class="guide-item">
-          <p><strong>🐟 Cantidad de Boids (Auto-Piloto):</strong> Número de avatares autónomos de la pecera. Más boids = más actividad visual.</p>
-        </div>
-        <div class="guide-item">
-          <p><strong>⌨️ Atajos de Teclado:</strong> [1-4] Modos | [F] Pantalla Completa | [H] Zen | [M] Ajustes | [A] Auto-Piloto | [Espacio] Pausa | [C] Color | [S] Supernova | [V] Vórtice | [G] Gravedad | [Del] Limpiar.</p>
-        </div>
-      </section>
+      </details>
     </div>
   </aside>
 
@@ -349,23 +539,25 @@
   <div id="toast-container" class="ui-interactive" aria-live="polite" aria-atomic="true"></div>
 
   <!-- Scripts con Cache Busting -->
-  <script src="assets/palettes.js?v=1.6.1"></script>
-  <script src="js/state.js?v=1.6.1"></script>
-  <script src="js/extensions/backgrounds.js?v=1.6.1"></script>
-  <script src="js/original/fluidCore.js?v=1.6.1"></script>
-  <script src="js/extensions/particleFx.js?v=1.6.1"></script>
-  <script src="js/extensions/customCursor.js?v=1.6.1"></script>
-  <script src="js/extensions/swarmEngine.js?v=1.6.1"></script>
-  <script src="js/extensions/swarmRenderer.js?v=1.6.1"></script>
-  <script src="js/extensions/symmetry.js?v=1.6.1"></script>
-  <script src="js/extensions/fidgets.js?v=1.6.1"></script>
-  <script src="js/extensions/sandMode.js?v=1.6.1"></script>
-  <script src="js/extensions/ui.js?v=1.6.1"></script>
-  <script src="js/main.js?v=1.6.1"></script>
+  <script src="js/contracts.js?v=1.8.6"></script>
+  <script src="assets/palettes.js?v=1.8.6"></script>
+  <script src="js/state.js?v=1.8.6"></script>
+  <script src="js/extensions/backgrounds.js?v=1.8.6"></script>
+  <script src="js/original/fluidCore.js?v=1.8.6"></script>
+  <script src="js/extensions/particleFx.js?v=1.8.6"></script>
+  <script src="js/extensions/customCursor.js?v=1.8.6"></script>
+  <script src="js/extensions/swarmEngine.js?v=1.8.6"></script>
+  <script src="js/extensions/swarmRenderer.js?v=1.8.6"></script>
+  <script src="js/extensions/symmetry.js?v=1.8.6"></script>
+  <script src="js/extensions/fidgets.js?v=1.8.6"></script>
+  <script src="js/extensions/sandMode.js?v=1.8.6"></script>
+  <script src="js/extensions/recorder.js?v=1.8.6"></script>
+  <script src="js/extensions/ui.js?v=1.8.6"></script>
+  <script src="js/main.js?v=1.8.6"></script>
   <script>
     if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=1.6.1').catch(() => {});
+        navigator.serviceWorker.register('./sw.js?v=1.8.6').catch(() => {});
       });
     }
   </script>

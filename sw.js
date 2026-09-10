@@ -2,7 +2,7 @@
  * AETHERIA | Offline Service Worker (Network-First with Offline Cache Fallback)
  */
 
-const CACHE_NAME = 'aetheria-v3.0.0';
+const CACHE_NAME = 'aetheria-v1.8.6';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

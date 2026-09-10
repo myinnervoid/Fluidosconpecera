@@ -138,7 +138,11 @@
       }
 
       this.activeBackground = name;
-      localStorage.setItem('aetheria_background', name);
+      try {
+        localStorage.setItem('aetheria_background', name);
+      } catch (e) {
+        console.warn('LocalStorage no disponible para fondo:', e);
+      }
 
       if (typeof AetheriaState !== 'undefined') {
         AetheriaState.activeBackground = name;
@@ -149,52 +153,79 @@
         FluidCore.config.TRANSPARENT = (name !== 'none');
       }
 
-      this.applyBackground(name, smooth);
+      return this.applyBackground(name, smooth);
     }
 
     applyBackground(name, smooth = true) {
-      if (!this.container) return;
+      return new Promise((resolve) => {
+        if (!this.container) {
+          const res = (typeof createApiResponse === 'function')
+            ? createApiResponse(false, null, 'ERR_IMAGE_LOAD_FAILED', 'Contenedor de fondo no encontrado')
+            : { success: false, data: null, error_code: 'ERR_IMAGE_LOAD_FAILED', message: 'Contenedor no encontrado' };
+          return resolve(res);
+        }
 
-      const bg = this.backgrounds[name];
-      if (!bg || name === 'none' || !bg.files) {
-        if (smooth) {
-          this.container.style.opacity = '0';
-          setTimeout(() => {
+        const bg = this.backgrounds[name];
+        if (!bg || name === 'none' || !bg.files) {
+          if (smooth) {
+            this.container.style.opacity = '0';
+            setTimeout(() => {
+              this.container.style.backgroundImage = 'none';
+              this.container.style.backgroundColor = '#07090e';
+              this.container.style.opacity = '1';
+              const res = (typeof createApiResponse === 'function')
+                ? createApiResponse(true, { background: 'none' }, null, 'Fondo vacío aplicado')
+                : { success: true, data: { background: 'none' }, error_code: null, message: 'Fondo vacío aplicado' };
+              resolve(res);
+            }, 300);
+          } else {
             this.container.style.backgroundImage = 'none';
             this.container.style.backgroundColor = '#07090e';
             this.container.style.opacity = '1';
-          }, 300);
-        } else {
-          this.container.style.backgroundImage = 'none';
-          this.container.style.backgroundColor = '#07090e';
-          this.container.style.opacity = '1';
+            const res = (typeof createApiResponse === 'function')
+              ? createApiResponse(true, { background: 'none' }, null, 'Fondo vacío aplicado')
+              : { success: true, data: { background: 'none' }, error_code: null, message: 'Fondo vacío aplicado' };
+            resolve(res);
+          }
+          return;
         }
-        return;
-      }
 
-      const orientation = this.getOrientation();
-      const imageUrl = bg.files[orientation] || bg.files['16_9'];
+        const orientation = this.getOrientation();
+        const imageUrl = bg.files[orientation] || bg.files['16_9'];
 
-      // Preload image before applying to avoid white flashes
-      const img = new Image();
-      img.onload = () => {
-        if (smooth) {
-          this.container.style.opacity = '0';
-          setTimeout(() => {
+        // Preload image before applying to avoid white flashes
+        const img = new Image();
+        img.onload = () => {
+          if (smooth) {
+            this.container.style.opacity = '0';
+            setTimeout(() => {
+              this.container.style.backgroundImage = `url("${imageUrl}")`;
+              this.container.style.backgroundColor = 'transparent';
+              this.container.style.opacity = '1';
+              const res = (typeof createApiResponse === 'function')
+                ? createApiResponse(true, { background: name, orientation, imageUrl }, null, `Fondo ${bg.name} aplicado`)
+                : { success: true, data: { background: name, orientation, imageUrl }, error_code: null, message: `Fondo ${bg.name} aplicado` };
+              resolve(res);
+            }, 250);
+          } else {
             this.container.style.backgroundImage = `url("${imageUrl}")`;
             this.container.style.backgroundColor = 'transparent';
             this.container.style.opacity = '1';
-          }, 250);
-        } else {
-          this.container.style.backgroundImage = `url("${imageUrl}")`;
-          this.container.style.backgroundColor = 'transparent';
-          this.container.style.opacity = '1';
-        }
-      };
-      img.onerror = () => {
-        console.warn(`AetheriaBackground: No se pudo cargar ${imageUrl}`);
-      };
-      img.src = imageUrl;
+            const res = (typeof createApiResponse === 'function')
+              ? createApiResponse(true, { background: name, orientation, imageUrl }, null, `Fondo ${bg.name} aplicado`)
+              : { success: true, data: { background: name, orientation, imageUrl }, error_code: null, message: `Fondo ${bg.name} aplicado` };
+            resolve(res);
+          }
+        };
+        img.onerror = () => {
+          console.warn(`AetheriaBackground: No se pudo cargar ${imageUrl}`);
+          const res = (typeof createApiResponse === 'function')
+            ? createApiResponse(false, null, 'ERR_IMAGE_LOAD_FAILED', `No se pudo cargar la imagen: ${imageUrl}`)
+            : { success: false, data: null, error_code: 'ERR_IMAGE_LOAD_FAILED', message: `Fallo carga de imagen ${imageUrl}` };
+          resolve(res);
+        };
+        img.src = imageUrl;
+      });
     }
 
     getCurrentBackground() {

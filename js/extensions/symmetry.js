@@ -17,7 +17,7 @@
       this.maxSplatsPerFrame = 16;
       this.cursorOverlay = null;
       this.mirrorCursorPool = []; // Static DOM Pool to prevent GC thrashing
-      this.maxPoolSize = 8;
+      this.maxPoolSize = 12;
     }
 
     init(overlayElement) {
@@ -184,12 +184,12 @@
         if (points[i] && i < mode) {
           el.style.left = `${points[i].x * width}px`;
           el.style.top = `${(1.0 - points[i].y) * height}px`;
-          el.style.opacity = isPointerDown ? '1' : '0.45';
+          el.style.opacity = '1.0';
 
           // Directional avatar rotation
           if (typeof AetheriaCursor !== 'undefined') {
             const rot = AetheriaCursor.calculateRotation(points[i].dx, points[i].dy);
-            const scale = isPointerDown ? 1.25 : 0.95;
+            const scale = isPointerDown ? 1.25 : 1.0;
             el.style.transform = `translate(-50%, -50%) rotate(${rot}deg) scale(${scale})`;
           }
         } else {

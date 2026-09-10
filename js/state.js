@@ -78,13 +78,6 @@
 
     setSymmetry(mode) {
       this.symmetry = parseInt(mode, 10) || 1;
-      // Auto-regular cantidad de boids si la simetría es alta para garantizar 60 FPS
-      if (this.symmetry >= 6 && this.swarmCount > 4 && !this.devMode) {
-        this.swarmCount = 3;
-        if (typeof AetheriaSwarm !== 'undefined') {
-          AetheriaSwarm.setBoidsCount(3);
-        }
-      }
     }
 
     setUserAvatar(type) {

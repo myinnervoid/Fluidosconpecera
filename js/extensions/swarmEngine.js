@@ -149,7 +149,7 @@
       if (typeof FluidCore !== 'undefined') {
         if (this.isEnabled) {
           this.prevDissipation = FluidCore.config.DENSITY_DISSIPATION;
-          FluidCore.config.DENSITY_DISSIPATION = 1.35;
+          FluidCore.config.DENSITY_DISSIPATION = 1.1; // Reducido para que el color persista más
         } else {
           FluidCore.config.DENSITY_DISSIPATION = this.prevDissipation || 0.98;
         }
@@ -274,15 +274,7 @@
         const b = this.boids[i];
         b.update(this.boids, aspect, dt);
 
-        // Posición de la Tobera Trasera / Cola
-        const speed = Math.hypot(b.vx, b.vy);
-        const normVx = speed > 0.0001 ? b.vx / speed : 1.0;
-        const normVy = speed > 0.0001 ? b.vy / speed : 0.0;
-        const tailOffset = (trailCfg.offset ? Math.abs(trailCfg.offset) : 0.024);
-        const tailX = b.x - normVx * tailOffset;
-        const tailY = b.y - normVy * tailOffset;
-
-        // Inyección de Color Autónomo
+        // Inyección de Color Autónomo directamente en la posición del Boid (sin puntos traseros)
         const color = this.getAutoSwarmColor(avatarType, b, this.time);
 
         // Oscilación armónica orgánica
@@ -291,18 +283,8 @@
         const splatForce = (FluidCore.config.SPLAT_FORCE || 6000) * 0.42 * impulseMultiplier;
         const splatRadius = trailCfg.radiusScale * (0.9 + 0.2 * Math.sin(nowSec * 0.8 + b.phase));
 
-        // Inyección unificada a través de SymmetryEngine (Bug #2)
-        if (typeof AetheriaSymmetry !== 'undefined') {
-          AetheriaSymmetry.injectSplat(tailX, tailY, b.vx * splatForce, b.vy * splatForce, color, splatRadius, aspect);
-        } else {
-          fluidCore.splat(tailX, tailY, b.vx * splatForce, b.vy * splatForce, color, splatRadius);
-        }
-
-        // Partículas temáticas desde la tobera
-        if (particlesEngine) {
-          const hexCol = `rgb(${Math.round(color[0] * 255)}, ${Math.round(color[1] * 255)}, ${Math.round(color[2] * 255)})`;
-          particlesEngine.emit(tailX * w, (1.0 - tailY) * h, b.vx * 150, b.vy * 150, hexCol, trailCfg.sparkType, trailCfg.sparkCount || 2);
-        }
+        // Inyección autónoma e independiente (cada boid es 1 entidad individual, aislada de la simetría del puntero)
+        fluidCore.splat(b.x, b.y, b.vx * splatForce, b.vy * splatForce, color, splatRadius);
       }
     }
 

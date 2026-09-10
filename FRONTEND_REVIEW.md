@@ -14,33 +14,16 @@
 
 ---
 
-## 2. Hallazgos y Áreas de Mejora
+## 2. Estado de Hallazgos de Frontend y Componentes GUI
 
-### Hallazgo FE-01: Registro de Eventos Pointer en `window` en lugar de `#gl-canvas`
-* **Impacto:** Medio
-* **Ubicación:** `js/main.js` (Línea 47):
-  ```javascript
-  const target = window;
-  target.addEventListener('pointerdown', (e) => this.onPointerDown(e));
-  ```
-* **Análisis:** Al escuchar en `window`, el código debe comprobar manualmente `if (e.target.closest('#main-toolbar') || e.target.closest('#settings-panel')) return;`. Si se añaden modales futuros o enlaces en la página, podrían capturar clicks accidentales como splats de fluido.
-* **Propuesta de Mejora:** Escuchar `pointerdown` directamente en `#canvas-container` o `#gl-canvas`, y delegar `pointermove` y `pointerup` a `window` únicamente mientras el puntero esté presionado (*pointer capture*).
+### Hallazgo FE-01: Enrutamiento y Aislamiento de Eventos Pointer
+* **Estado en v1.7.0:** ✅ **RESUELTO E IMPLEMENTADO**
+* **Descripción:** `main.js` implementa filtrado activo con `e.target.closest('#top-bar, #settings-drawer, #drawer-overlay, .ui-interactive')` y bloqueo total de trazos cuando el panel de ajustes está abierto (`isDrawerOpen`).
 
-### Hallazgo FE-02: Generación Dinámica de Nodos DOM en Simetría
-* **Impacto:** Bajo
-* **Ubicación:** `js/extensions/symmetry.js` (`updateCursorDOM`):
-  ```javascript
-  this.cursorOverlay.innerHTML = '';
-  // Crea nuevos <div> por cada cambio de simetría
-  ```
-* **Análisis:** Aunque el impacto es mínimo debido al bajo número de elementos (máximo 8), la manipulación con `innerHTML = ''` causa recolección de basura (*GC thrashing*).
-* **Propuesta:** Reutilizar un pool fijo de 8 elementos `div` creados al inicio, alternando su visibilidad (`display: none` o `opacity: 0`) según el modo activo.
+### Hallazgo FE-02: Pool Estático de Nodos DOM en Simetría (`symmetry.js`)
+* **Estado en v1.7.0:** ✅ **RESUELTO E IMPLEMENTADO**
+* **Descripción:** `AetheriaSymmetry` utiliza un pool estático fijo de 8 elementos `div` pre-creados (`initCursorPool()`), alternando visibilidad y rotación sin llamar a `innerHTML = ''` en caliente, eliminando el *GC thrashing*.
 
-### Hallazgo FE-03: Falta de `aria-pressed` y Roles en Botones de Toggle
-* **Impacto:** Medio (Accesibilidad y Semántica)
-* **Ubicación:** `index.html` y `js/extensions/ui.js`
-* **Análisis:** Botones como *Gravedad* y *Pausa* alternan su estado visual mediante clases CSS, pero no comunican su estado a tecnologías de asistencia.
-* **Propuesta:** Añadir `aria-pressed="false"` dinámico en `ui.js`:
-  ```javascript
-  this.btnGravity.setAttribute('aria-pressed', isGravityOn ? 'true' : 'false');
-  ```
+### Hallazgo FE-03: Semántica ARIA y Autómata de Estados (`ui.js` e `index.html`)
+* **Estado en v1.7.0:** ✅ **RESUELTO E IMPLEMENTADO**
+* **Descripción:** Todos los botones de toggle cuentan con `aria-pressed`, `aria-expanded` y `aria-controls`. Los sliders están vinculados a sus tooltips mediante `aria-describedby` y las operaciones asíncronas se gestionan deterministamente con `UIStateMachine` (5 estados canónicos).

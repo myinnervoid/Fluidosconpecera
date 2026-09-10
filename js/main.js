@@ -50,6 +50,11 @@
       // 8. Initialize UI Controller
       AetheriaUI.init(this);
 
+      // 8.1 Initialize Canvas Recorder
+      if (typeof AetheriaRecorder !== 'undefined') {
+        AetheriaRecorder.init();
+      }
+
       // 9. Bind Resizing & Interactions
       window.addEventListener('resize', () => this.onResize());
       this.bindInteractions();
@@ -85,9 +90,27 @@
       target.addEventListener('pointermove', (e) => this.onPointerMove(e));
       target.addEventListener('pointerup', (e) => this.onPointerUp(e));
       target.addEventListener('pointercancel', (e) => this.onPointerUp(e));
+
+      // Doble clic para detonar Supernova directamente en las coordenadas del cursor
+      if (this.glCanvas) {
+        this.glCanvas.addEventListener('dblclick', (e) => {
+          if (typeof AetheriaState !== 'undefined' && AetheriaState.isDrawerOpen) return;
+          if (e.target.closest('#top-bar, #settings-drawer, #drawer-overlay, .ui-interactive')) return;
+
+          const normX = Math.max(0, Math.min(1, e.clientX / window.innerWidth));
+          const normY = Math.max(0, Math.min(1, 1.0 - (e.clientY / window.innerHeight)));
+          if (typeof AetheriaFidgets !== 'undefined' && typeof AetheriaFidgets.supernova === 'function') {
+            AetheriaFidgets.supernova(normX, normY);
+          }
+        });
+      }
     }
 
     onPointerDown(e) {
+      this.lastPointerX = e.clientX;
+      this.lastPointerY = e.clientY;
+      window._lastPointerEvent = e;
+
       // Bloquear si el cajón de ajustes está abierto o si el toque fue sobre elementos UI
       if (typeof AetheriaState !== 'undefined' && AetheriaState.isDrawerOpen) return;
       if (e.target.closest('#top-bar, #settings-drawer, #drawer-overlay, .ui-interactive')) return;
@@ -117,10 +140,22 @@
         FluidCore.splat(normX, normY, 0, 0, col, trailCfg.radiusScale);
       }
 
+      // Emisión de partículas temáticas en clic
+      if (typeof AetheriaParticles !== 'undefined' && typeof AetheriaCursor !== 'undefined') {
+        if (AetheriaCursor.currentType !== 'none') {
+          const spark = AetheriaCursor.getSparkEmission();
+          AetheriaParticles.emit(e.clientX, e.clientY, 0, 0, spark.colorHex, spark.sparkType, spark.count + 2);
+        }
+      }
+
       AetheriaSymmetry.renderVisualPoints(normX, normY, window.innerWidth, window.innerHeight, true, 0, 0);
     }
 
     onPointerMove(e) {
+      this.lastPointerX = e.clientX;
+      this.lastPointerY = e.clientY;
+      window._lastPointerEvent = e;
+
       // Bloquear si el cajón de ajustes está abierto o si el puntero entró en la UI
       if (typeof AetheriaState !== 'undefined' && AetheriaState.isDrawerOpen) return;
       if (e.target.closest('#top-bar, #settings-drawer, #drawer-overlay, .ui-interactive')) {
@@ -140,7 +175,14 @@
 
       if (!pointer) {
         // Movimiento flotante previo a clic: orientar avatar en pantalla
-        AetheriaSymmetry.renderVisualPoints(normX, normY, window.innerWidth, window.innerHeight, false, 0, 0);
+        const prevHoverX = this._lastHoverX || normX;
+        const prevHoverY = this._lastHoverY || normY;
+        const hdx = (normX - prevHoverX) * FluidCore.config.SPLAT_FORCE;
+        const hdy = (normY - prevHoverY) * FluidCore.config.SPLAT_FORCE;
+        this._lastHoverX = normX;
+        this._lastHoverY = normY;
+
+        AetheriaSymmetry.renderVisualPoints(normX, normY, window.innerWidth, window.innerHeight, false, hdx, hdy);
         return;
       }
 
@@ -160,24 +202,29 @@
       const trailCfg = (typeof AetheriaCursor !== 'undefined') ? AetheriaCursor.getTrailConfig() : { radiusScale: 1.0, sparkType: 'star', sparkCount: 2, impulse: 1.0 };
       const col = (typeof AetheriaCursor !== 'undefined') ? AetheriaCursor.getUserSplatColor(0) : [0.0, 0.95, 1.0];
 
-      // Posición de emisión trasera (Tobera/Cola)
-      let emitterPt = { x: normX, y: normY };
-      if (typeof AetheriaCursor !== 'undefined') {
-        emitterPt = AetheriaCursor.getEmitterOffsetPoint(normX, normY, dx, dy);
-      }
-
-      // Inyección de fluido con simetría unificada
+      // Inyección de fluido con simetría unificada directamente en la posición del puntero
       const impulse = trailCfg.impulse || 1.0;
       if (typeof AetheriaSymmetry !== 'undefined') {
-        AetheriaSymmetry.injectSplat(emitterPt.x, emitterPt.y, dx * impulse, dy * impulse, col, trailCfg.radiusScale, aspect);
+        AetheriaSymmetry.injectSplat(normX, normY, dx * impulse, dy * impulse, col, trailCfg.radiusScale, aspect);
       } else {
-        FluidCore.splat(emitterPt.x, emitterPt.y, dx * impulse, dy * impulse, col, trailCfg.radiusScale);
+        FluidCore.splat(normX, normY, dx * impulse, dy * impulse, col, trailCfg.radiusScale);
       }
 
-      // Emisión de partículas desde la tobera
-      if (AetheriaParticles) {
-        const hexCol = `rgb(${Math.round(col[0] * 255)}, ${Math.round(col[1] * 255)}, ${Math.round(col[2] * 255)})`;
-        AetheriaParticles.emit(emitterPt.x * window.innerWidth, (1.0 - emitterPt.y) * window.innerHeight, dx * 0.05, dy * 0.05, hexCol, trailCfg.sparkType, trailCfg.sparkCount);
+      // Emisión de partículas temáticas del puntero
+      if (typeof AetheriaParticles !== 'undefined' && typeof AetheriaCursor !== 'undefined') {
+        if (AetheriaCursor.currentType !== 'none') {
+          const spark = AetheriaCursor.getSparkEmission();
+          const points = (typeof AetheriaSymmetry !== 'undefined')
+            ? AetheriaSymmetry.getPoints(normX, normY, rawDx, rawDy, aspect)
+            : [{ x: normX, y: normY, dx: rawDx, dy: rawDy }];
+
+          for (let pIdx = 0; pIdx < points.length; pIdx++) {
+            const pt = points[pIdx];
+            const px = pt.x * window.innerWidth;
+            const py = (1.0 - pt.y) * window.innerHeight;
+            AetheriaParticles.emit(px, py, pt.dx * 18, pt.dy * 18, spark.colorHex, spark.sparkType, spark.count);
+          }
+        }
       }
 
       AetheriaSymmetry.renderVisualPoints(normX, normY, window.innerWidth, window.innerHeight, true, dx, dy);
@@ -187,54 +234,79 @@
       this.pointers.delete(e.pointerId);
       AetheriaSymmetry.releasePointer(e.pointerId);
 
-      if (this.pointers.size === 0) {
-        AetheriaSymmetry.hideVisualPoints();
-      }
+      const normX = e.clientX / window.innerWidth;
+      const normY = 1.0 - e.clientY / window.innerHeight;
+      AetheriaSymmetry.renderVisualPoints(normX, normY, window.innerWidth, window.innerHeight, false, 0, 0);
     }
 
     exportPNG() {
-      const w = this.glCanvas.width;
-      const h = this.glCanvas.height;
+      return new Promise((resolve) => {
+        if (!this.glCanvas) {
+          const res = (typeof createApiResponse === 'function')
+            ? createApiResponse(false, null, 'ERR_CANVAS_CAPTURE_FAILED', 'Lienzo WebGL no disponible para exportación.')
+            : { success: false, data: null, error_code: 'ERR_CANVAS_CAPTURE_FAILED', message: 'Lienzo no disponible' };
+          return resolve(res);
+        }
 
-      const exportCanvas = document.createElement('canvas');
-      exportCanvas.width = w;
-      exportCanvas.height = h;
-      const ctx = exportCanvas.getContext('2d');
+        const w = this.glCanvas.width;
+        const h = this.glCanvas.height;
 
-      // Draw Background Color
-      ctx.fillStyle = '#07090e';
-      ctx.fillRect(0, 0, w, h);
+        const exportCanvas = document.createElement('canvas');
+        exportCanvas.width = w;
+        exportCanvas.height = h;
+        const ctx = exportCanvas.getContext('2d');
 
-      // Draw WebGL layer
-      ctx.drawImage(this.glCanvas, 0, 0, w, h);
+        // Draw Background Color
+        ctx.fillStyle = '#07090e';
+        ctx.fillRect(0, 0, w, h);
 
-      // Draw Swarm visual layer
-      if (AetheriaSwarmRenderer && AetheriaSwarmRenderer.canvas) {
-        ctx.drawImage(AetheriaSwarmRenderer.canvas, 0, 0, w, h);
-      }
+        // Draw WebGL layer
+        ctx.drawImage(this.glCanvas, 0, 0, w, h);
 
-      // Draw Particle layer
-      if (AetheriaParticles && AetheriaParticles.canvas) {
-        ctx.drawImage(AetheriaParticles.canvas, 0, 0, w, h);
-      }
+        // Draw Swarm visual layer
+        if (typeof AetheriaSwarmRenderer !== 'undefined' && AetheriaSwarmRenderer.canvas) {
+          ctx.drawImage(AetheriaSwarmRenderer.canvas, 0, 0, w, h);
+        }
 
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-      const filename = `Aetheria-Art-${timestamp}.png`;
+        // Draw Particle layer
+        if (typeof AetheriaParticles !== 'undefined' && AetheriaParticles.canvas) {
+          ctx.drawImage(AetheriaParticles.canvas, 0, 0, w, h);
+        }
 
-      exportCanvas.toBlob((blob) => {
-        if (!blob) return;
-        const link = document.createElement('a');
-        link.download = filename;
-        link.href = URL.createObjectURL(blob);
-        link.click();
-        setTimeout(() => URL.revokeObjectURL(link.href), 3000);
-      }, 'image/png');
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+        const filename = `Aetheria-Art-${timestamp}.png`;
+
+        exportCanvas.toBlob((blob) => {
+          if (!blob) {
+            const res = (typeof createApiResponse === 'function')
+              ? createApiResponse(false, null, 'ERR_CANVAS_CAPTURE_FAILED', 'Fallo al generar archivo Blob de imagen.')
+              : { success: false, data: null, error_code: 'ERR_CANVAS_CAPTURE_FAILED', message: 'Error en toBlob' };
+            return resolve(res);
+          }
+          const link = document.createElement('a');
+          link.download = filename;
+          link.href = URL.createObjectURL(blob);
+          link.click();
+          setTimeout(() => URL.revokeObjectURL(link.href), 3000);
+
+          const res = (typeof createApiResponse === 'function')
+            ? createApiResponse(true, { filename, width: w, height: h, sizeBytes: blob.size }, null, `Imagen ${filename} guardada con éxito.`)
+            : { success: true, data: { filename }, error_code: null, message: 'Imagen guardada' };
+          resolve(res);
+        }, 'image/png');
+      });
     }
 
     loop() {
       const now = performance.now();
       const dt = Math.min((now - this.lastTime) / 1000.0, 0.033);
       this.lastTime = now;
+
+      // WebGL Context Lost Guard
+      if (typeof FluidCore !== 'undefined' && FluidCore.isContextLost && FluidCore.isContextLost()) {
+        this._rafId = requestAnimationFrame(() => this.loop());
+        return;
+      }
 
       // 1. Autonomous Swarm Boids (Auto-Pilot "Pecera" con oscilación armónica suave)
       if (typeof AetheriaSwarm !== 'undefined' && AetheriaSwarm.isEnabled) {

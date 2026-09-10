@@ -416,8 +416,8 @@
           c = max(c, vec3(0.0));
 
           // When transparent mode is active, early-return transparent pixel if no fluid is present
-          float lum = dot(c, vec3(0.299, 0.587, 0.114));
-          if (lum < 0.002) {
+          float densityMag = max(c.r, max(c.g, c.b));
+          if (densityMag < 0.002) {
             gl_FragColor = (uTransparent == 1) ? vec4(0.0, 0.0, 0.0, 0.0) : vec4(0.0, 0.0, 0.0, 1.0);
             return;
           }
@@ -446,7 +446,13 @@
           float noise = texture2D(uDithering, ditherUv).r * 2.0 - 1.0;
           c += noise / 255.0;
 
-          float a = (uTransparent == 1) ? clamp(lum * 3.5, 0.0, 1.0) : 1.0;
+          // Perceptual alpha based on dominant density channel - Mejorado para preservar opacidad
+          float a = 1.0;
+          if (uTransparent == 1) {
+            // Umbral para comenzar a ser opaco y escala para rápida saturación
+            float alphaThreshold = 0.06;
+            a = clamp((densityMag - alphaThreshold) * 12.0, 0.0, 1.0);
+          }
           gl_FragColor = vec4(linearToGamma(max(c, vec3(0.0))), a);
         }
       `;
@@ -667,16 +673,22 @@
       this.blit(this.velocity.write);
       this.velocity.swap();
 
-      // Splat Dye Color with area-compensated intensity (Prevents white-hot dense blobs)
-      const intensity = 0.28 * Math.sqrt(Math.max(0.1, radiusScale));
+      // Splat Dye Color with area-compensated intensity & chromatic energy normalization
+      const maxComponent = Math.max(color[0], color[1], color[2], 0.001);
+      const normalizedColor = [
+        color[0] / maxComponent,
+        color[1] / maxComponent,
+        color[2] / maxComponent
+      ];
+      const intensity = 0.32 * Math.sqrt(Math.max(0.1, radiusScale));
       gl.uniform1i(p.uniforms.uTarget, this.density.read.attach(0));
-      gl.uniform3f(p.uniforms.color, color[0] * intensity, color[1] * intensity, color[2] * intensity);
+      gl.uniform3f(p.uniforms.color, normalizedColor[0] * intensity, normalizedColor[1] * intensity, normalizedColor[2] * intensity);
       this.blit(this.density.write);
       this.density.swap();
     }
 
     step(dt) {
-      if (this.config.PAUSED || !this.isInitialized) return;
+      if (this.config.PAUSED || !this.isInitialized || this.isContextLost()) return;
 
       const gl = this.gl;
 
@@ -761,7 +773,7 @@
     }
 
     render(targetFBO = null) {
-      if (!this.isInitialized) return;
+      if (!this.isInitialized || this.isContextLost()) return;
 
       const gl = this.gl;
       const p = this.programs.display;
@@ -781,6 +793,10 @@
       gl.uniform1i(p.uniforms.uTransparent, this.config.TRANSPARENT ? 1 : 0);
 
       this.blit(targetFBO);
+    }
+
+    isContextLost() {
+      return !this.gl || this.gl.isContextLost();
     }
 
     setGravity(x, y) {

@@ -14,13 +14,94 @@
   'use strict';
 
   const AVATAR_CONFIGS = {
-    none:      { radiusScale: 1.00, sparkType: 'star',    impulse: 1.00, offset: 0.000, angleCorrection: 0 },
-    nyan:      { radiusScale: 0.38, sparkType: 'pixel',   impulse: 0.85, offset: -0.024, angleCorrection: 0 },
-    rocket:    { radiusScale: 0.32, sparkType: 'fire',    impulse: 1.25, offset: -0.028, angleCorrection: 90 },
-    comet:     { radiusScale: 0.28, sparkType: 'dust',    impulse: 1.10, offset: -0.025, angleCorrection: 45 },
-    clownfish: { radiusScale: 0.34, sparkType: 'bubbles', impulse: 0.75, offset: -0.022, angleCorrection: 0 },
-    miku:      { radiusScale: 0.36, sparkType: 'neon',    impulse: 0.90, offset: -0.020, angleCorrection: 0 },
-    custom:    { radiusScale: 0.40, sparkType: 'star',    impulse: 1.00, offset: 0.000, angleCorrection: 0 }
+    none: {
+      name: 'Sin Puntero',
+      tag: 'Predeterminado',
+      radiusScale: 1.00,
+      sparkType: 'star',
+      sparkColors: null,
+      sparkCount: 2,
+      impulse: 1.00,
+      offset: 0.000,
+      angleCorrection: 0
+    },
+    nyan: {
+      name: 'Nyan Cat',
+      tag: 'Arcoíris Pixel',
+      radiusScale: 0.38,
+      sparkType: 'pixel',
+      sparkColors: ['#ff0055', '#ff9900', '#ffff00', '#33ff00', '#0099ff', '#9900cc'],
+      sparkCount: 3,
+      impulse: 0.85,
+      offset: 0.000,
+      angleCorrection: 0
+    },
+    rocket: {
+      name: 'Cohete',
+      tag: 'Tobera de Fuego',
+      radiusScale: 0.32,
+      sparkType: 'fire',
+      sparkColors: ['#ffbe0b', '#ff4500', '#ff007f', '#ff9e1b', '#ffffff'],
+      sparkCount: 3,
+      impulse: 1.25,
+      offset: 0.000,
+      angleCorrection: 90
+    },
+    comet: {
+      name: 'Cometa',
+      tag: 'Plasma Cósmico',
+      radiusScale: 0.28,
+      sparkType: 'dust',
+      sparkColors: ['#38bdf8', '#00f2fe', '#e0f2fe', '#ffffff', '#a78bfa'],
+      sparkCount: 3,
+      impulse: 1.10,
+      offset: 0.000,
+      angleCorrection: 45
+    },
+    clownfish: {
+      name: 'Pez Payaso',
+      tag: 'Burbujas Marinas',
+      radiusScale: 0.34,
+      sparkType: 'bubbles',
+      sparkColors: ['#38bdf8', '#a5f3fc', '#ffffff', '#fed7aa', '#ff7a00'],
+      sparkCount: 2,
+      impulse: 0.75,
+      offset: 0.000,
+      angleCorrection: 0
+    },
+    fish: {
+      name: 'Pez Nemo',
+      tag: 'Burbujas Marinas',
+      radiusScale: 0.34,
+      sparkType: 'bubbles',
+      sparkColors: ['#38bdf8', '#a5f3fc', '#ffffff', '#fed7aa', '#ff7a00'],
+      sparkCount: 2,
+      impulse: 0.75,
+      offset: 0.000,
+      angleCorrection: 0
+    },
+    miku: {
+      name: 'Hatsune Miku',
+      tag: 'Techno Pop Neón',
+      radiusScale: 0.36,
+      sparkType: 'neon',
+      sparkColors: ['#39C5BB', '#ff007f', '#00f2fe', '#ff80ab', '#ffffff'],
+      sparkCount: 3,
+      impulse: 0.90,
+      offset: 0.000,
+      angleCorrection: 0
+    },
+    custom: {
+      name: 'Personalizado',
+      tag: 'Estrellas Oro',
+      radiusScale: 0.40,
+      sparkType: 'star',
+      sparkColors: ['#fbbf24', '#f59e0b', '#fef08a', '#ffffff'],
+      sparkCount: 3,
+      impulse: 1.00,
+      offset: 0.000,
+      angleCorrection: 0
+    }
   };
 
   const AVATAR_SVGS = {
@@ -175,14 +256,22 @@
       this.customDataUrl = dataUrl;
       try {
         localStorage.setItem('aetheria_custom_avatar', dataUrl);
+        localStorage.setItem('aetheria-custom-avatar', dataUrl);
       } catch (e) {
         console.warn('No se pudo persistir el avatar en LocalStorage:', e);
       }
       this.setCursorType('custom');
     }
 
+    setCustomImage(dataUrl) {
+      this.saveCustomAvatar(dataUrl);
+    }
+
     setCursorType(type) {
-      this.currentType = AVATAR_CONFIGS[type] ? type : 'none';
+      const resolvedType = (type === 'fish') ? 'clownfish' : type;
+      this.currentType = AVATAR_CONFIGS[resolvedType] ? resolvedType : 'none';
+      this.currentAvatar = this.currentType;
+
       if (typeof AetheriaState !== 'undefined') {
         AetheriaState.setUserAvatar(this.currentType);
       }
@@ -192,6 +281,21 @@
       if (typeof AetheriaSymmetry !== 'undefined') {
         AetheriaSymmetry.updateCursorDOM();
       }
+      if (typeof AetheriaParticles !== 'undefined' && typeof AetheriaParticles.setEffect === 'function') {
+        const cfg = this.getTrailConfig();
+        AetheriaParticles.setEffect(cfg.sparkType, (cfg.sparkColors && cfg.sparkColors[0]) || '#00f2fe');
+      }
+      try {
+        localStorage.setItem('aetheria-avatar', this.currentType);
+      } catch (e) {}
+    }
+
+    setAvatar(type) {
+      this.setCursorType(type);
+    }
+
+    getCurrentAvatarConfig() {
+      return this.getTrailConfig();
     }
 
     getAvatarHTML() {
@@ -206,6 +310,32 @@
 
     getTrailConfig() {
       return AVATAR_CONFIGS[this.currentType] || AVATAR_CONFIGS.none;
+    }
+
+    /**
+     * Retorna la configuración de emisión de chispas y partículas para el puntero activo.
+     */
+    getSparkEmission() {
+      const cfg = this.getTrailConfig();
+      let colorHex = '#00f2fe';
+
+      if (cfg.sparkColors && cfg.sparkColors.length > 0) {
+        const randIdx = Math.floor(Math.random() * cfg.sparkColors.length);
+        colorHex = cfg.sparkColors[randIdx];
+      } else if (typeof AetheriaState !== 'undefined') {
+        const rgb = AetheriaState.getUserColor(0);
+        const r = Math.round(Math.min(1, Math.max(0, rgb[0])) * 255);
+        const g = Math.round(Math.min(1, Math.max(0, rgb[1])) * 255);
+        const b = Math.round(Math.min(1, Math.max(0, rgb[2])) * 255);
+        colorHex = `rgb(${r},${g},${b})`;
+      }
+
+      return {
+        sparkType: cfg.sparkType || 'star',
+        colorHex,
+        count: cfg.sparkCount || 2,
+        radiusScale: cfg.radiusScale || 1.0
+      };
     }
 
     /**
