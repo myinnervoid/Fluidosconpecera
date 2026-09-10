@@ -1,6 +1,6 @@
 # AETHERIA | Generative Fluid & Sand Studio
 
-[![Live Demo](https://img.shields.io/badge/Demo%20Online-GitHub%20Pages-00f2fe.svg?style=for-the-badge&logo=github)](https://myinnervoid.github.io/Memexicanisimos-Aetheria-Fluid---Sand-Studio/)
+[![Live Demo](https://img.shields.io/badge/Demo%20Online-GitHub%20Pages-00f2fe.svg?style=for-the-badge&logo=github)](https://myinnervoid.github.io/Fluidosconpecera/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 [![WebGL](https://img.shields.io/badge/WebGL-1.0%20%2F%202.0-00f5d4.svg?style=for-the-badge&logo=webgl)](https://www.khronos.org/webgl/)
 [![PWA Ready](https://img.shields.io/badge/PWA-100%25%20Offline-ff007f.svg?style=for-the-badge)](manifest.json)
@@ -8,8 +8,7 @@
 
 ![Aetheria Fluid Studio Screenshot](assets/screenshot1.png)
 
-> 🌐 **Prueba la experiencia interactiva en vivo aquí:**  
-> 👉 **[https://myinnervoid.github.io/Memexicanisimos-Aetheria-Fluid---Sand-Studio/](https://myinnervoid.github.io/Memexicanisimos-Aetheria-Fluid---Sand-Studio/)**
+> 🌐 **Prueba la experiencia interactiva en vivo aquí:** > 👉 **[https://myinnervoid.github.io/Fluidosconpecera/](https://myinnervoid.github.io/Fluidosconpecera/)**
 
 **Aetheria** es un estudio interactivo de arte generativo y física de fluidos incompresibles en tiempo real ejecutado en WebGL sobre la GPU (Navier-Stokes). Combina simulación física líquida con sombreado 3D difuso/especular, modos de partículas de arena granular (*reloj de arena*), humo espacial de alta vorticidad, simetrías radiales unificadas (1x a 8x), un enjambre de 6 avatares autónomos ("pecera"), una galería de **8 fondos inmersivos adaptativos** en resoluciones horizontal (16:9) y vertical móvil (9:16), y una **interfaz táctil responsive en 3 zonas con Pantalla Completa y barra anclable (arriba/abajo)**.
 
@@ -92,7 +91,7 @@ Desde la versión inicial 1.0.0, Aetheria ha evolucionado con las siguientes arq
 ## 🚀 Cómo Ejecutar
 
 ### Opción 1: Probar en Línea (Demo GitHub Pages)
-Visita directamente [https://myinnervoid.github.io/Memexicanisimos-Aetheria-Fluid---Sand-Studio/](https://myinnervoid.github.io/Memexicanisimos-Aetheria-Fluid---Sand-Studio/).
+Visita directamente [https://myinnervoid.github.io/Fluidosconpecera/](https://myinnervoid.github.io/Fluidosconpecera/).
 
 ### Opción 2: 100% Offline (Doble Clic)
 Haz doble clic en `index.html` en tu explorador de archivos. Funciona de inmediato sin internet, terminal ni Node.js.
@@ -103,7 +102,7 @@ Haz doble clic en `index.html` en tu explorador de archivos. Funciona de inmedia
 python3 -m http.server 8080
 
 # Con npx
-npx serve .
+npx serve
 ```
 
 ---
