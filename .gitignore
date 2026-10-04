@@ -7,3 +7,4 @@ Thumbs.db
 *.zip
 .tempmediaStorage/
 .descriptions.xml
+node_modules
