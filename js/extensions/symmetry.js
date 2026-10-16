@@ -121,7 +121,7 @@
       // Radial N-Fold Rotational Symmetry (6x, 8x)
       const count = mode;
       const baseAngle = Math.atan2(ry, rx * aspectRatio);
-      const radius = Math.hypot(rx * aspectRatio, ry);
+      const radius = MathUtils.magnitude(rx * aspectRatio, ry);
 
       for (let i = 0; i < count; i++) {
         const stepAngle = (i / count) * Math.PI * 2;

@@ -1,9 +1,13 @@
 {
+<<<<<<< ours
   "scripts": {
     "test": "node tests/run_tests.js",
     "build": "echo \"Clean build: no steps needed\""
   },
   "devDependencies": {
+=======
+  "dependencies": {
+>>>>>>> theirs
     "puppeteer": "^25.14.0"
   }
 }

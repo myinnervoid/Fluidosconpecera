@@ -108,8 +108,8 @@
 
       for (let i = 0; i < count; i++) {
         const angle = (i / count) * Math.PI * 2;
-        const ox = Math.max(0, Math.min(1, center.x + Math.cos(angle) * radius));
-        const oy = Math.max(0, Math.min(1, center.y + Math.sin(angle) * radius));
+        const ox = MathUtils.clamp(center.x + Math.cos(angle) * radius, 0, 1);
+        const oy = MathUtils.clamp(center.y + Math.sin(angle) * radius, 0, 1);
         const dx = -Math.sin(angle) * force;
         const dy = Math.cos(angle) * force;
         activeCore.splat(ox, oy, dx, dy, col, 0.6);
