@@ -510,7 +510,7 @@
      * Compiles and links a vertex and fragment shader into a WebGL program.
      * @param {string} vertexSource - The GLSL source for the vertex shader.
      * @param {string} fragmentSource - The GLSL source for the fragment shader.
-     * @returns {{program: WebGLProgram, uniforms: object, bind: Function} | null} The compiled program and its uniforms, or null on error.
+     * @returns {{program: WebGLProgram, uniforms: Object<string, WebGLUniformLocation>, bind: Function} | null} The compiled program and its uniforms, or null on error.
      */
     createProgram(vertexSource, fragmentSource) {
       const gl = this.gl;
@@ -589,7 +589,7 @@
      * Creates a WebGL texture with the specified parameters.
      * @param {number} width - The width of the texture.
      * @param {number} height - The height of the texture.
-     * @param {object} formatObj - Object containing `internalFormat` and `format`.
+     * @param {{internalFormat: number, format: number}} formatObj - Object containing `internalFormat` and `format`.
      * @param {number} minFilter - The minification filter.
      * @param {number} magFilter - The magnification filter.
      * @returns {WebGLTexture} The created texture.
@@ -610,10 +610,10 @@
      * Creates a Framebuffer Object (FBO) with an attached texture.
      * @param {number} width - The width of the FBO.
      * @param {number} height - The height of the FBO.
-     * @param {object} formatObj - Object containing `internalFormat` and `format`.
+     * @param {{internalFormat: number, format: number}} formatObj - Object containing `internalFormat` and `format`.
      * @param {number} minFilter - The minification filter.
      * @param {number} magFilter - The magnification filter.
-     * @returns {object} An object containing the texture, fbo, dimensions, and utility functions.
+     * @returns {{texture: WebGLTexture, fbo: WebGLFramebuffer, width: number, height: number, texelSizeX: number, texelSizeY: number, attach: function(number): number}} An object containing the texture, fbo, dimensions, and utility functions.
      */
     createFBO(width, height, formatObj, minFilter, magFilter) {
       const gl = this.gl;
@@ -643,10 +643,10 @@
      * Creates a double Framebuffer Object (ping-pong FBO) for read/write operations.
      * @param {number} width - The width of the FBO.
      * @param {number} height - The height of the FBO.
-     * @param {object} formatObj - Object containing `internalFormat` and `format`.
+     * @param {{internalFormat: number, format: number}} formatObj - Object containing `internalFormat` and `format`.
      * @param {number} minFilter - The minification filter.
      * @param {number} magFilter - The magnification filter.
-     * @returns {object} An object managing two FBOs with a swap function.
+     * @returns {{width: number, height: number, texelSizeX: number, texelSizeY: number, read: {texture: WebGLTexture, fbo: WebGLFramebuffer, width: number, height: number, texelSizeX: number, texelSizeY: number, attach: function(number): number}, write: {texture: WebGLTexture, fbo: WebGLFramebuffer, width: number, height: number, texelSizeX: number, texelSizeY: number, attach: function(number): number}, swap: function()}} An object managing two FBOs with a swap function.
      */
     createDoubleFBO(width, height, formatObj, minFilter, magFilter) {
       let fbo1 = this.createFBO(width, height, formatObj, minFilter, magFilter);
