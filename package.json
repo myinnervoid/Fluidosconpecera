@@ -1,13 +1,11 @@
 {
-<<<<<<< ours
+  "name": "fluidosconpecera",
+  "version": "1.0.0",
   "scripts": {
     "test": "node tests/run_tests.js",
     "build": "echo \"Clean build: no steps needed\""
   },
   "devDependencies": {
-=======
-  "dependencies": {
->>>>>>> theirs
     "puppeteer": "^25.14.0"
   }
 }
