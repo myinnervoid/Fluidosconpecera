@@ -9,6 +9,9 @@
   'use strict';
 
   class FluidSimulationEngine {
+    /**
+     * Initializes the FluidSimulationEngine properties.
+     */
     constructor() {
       this.canvas = null;
       this.gl = null;
@@ -46,6 +49,11 @@
       this.ditheringTexture = null;
     }
 
+    /**
+     * Initializes the fluid simulation engine with a given canvas.
+     * @param {HTMLCanvasElement} canvas - The canvas element to render the simulation on.
+     * @returns {boolean} True if initialization was successful, false otherwise.
+     */
     init(canvas) {
       this.canvas = canvas;
       const { gl, ext } = this.getWebGLContext(canvas);
@@ -65,6 +73,11 @@
       return true;
     }
 
+    /**
+     * Retrieves the WebGL context and relevant extensions.
+     * @param {HTMLCanvasElement} canvas - The canvas element.
+     * @returns {{gl: WebGLRenderingContext | WebGL2RenderingContext | null, ext: object | null}} The WebGL context and extensions.
+     */
     getWebGLContext(canvas) {
       const params = {
         alpha: true,
@@ -121,6 +134,14 @@
       };
     }
 
+    /**
+     * Finds a supported render texture format by falling back to simpler formats if necessary.
+     * @param {WebGLRenderingContext | WebGL2RenderingContext} gl - The WebGL context.
+     * @param {number} internalFormat - The requested internal format.
+     * @param {number} format - The requested format.
+     * @param {number} type - The data type of the texture.
+     * @returns {{internalFormat: number, format: number} | null} The supported format, or null if unsupported.
+     */
     getSupportedFormat(gl, internalFormat, format, type) {
       if (!this.supportRenderTextureFormat(gl, internalFormat, format, type)) {
         switch (internalFormat) {
@@ -135,6 +156,14 @@
       return { internalFormat, format };
     }
 
+    /**
+     * Tests if a specific texture format can be used as a render target.
+     * @param {WebGLRenderingContext | WebGL2RenderingContext} gl - The WebGL context.
+     * @param {number} internalFormat - The internal texture format.
+     * @param {number} format - The texture format.
+     * @param {number} type - The texture data type.
+     * @returns {boolean} True if the format is supported for rendering.
+     */
     supportRenderTextureFormat(gl, internalFormat, format, type) {
       const texture = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -154,6 +183,9 @@
       return status === gl.FRAMEBUFFER_COMPLETE;
     }
 
+    /**
+     * Initializes all WebGL shader programs used by the simulation.
+     */
     initShaders() {
       const gl = this.gl;
 
@@ -474,6 +506,12 @@
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, -1, 1, 1, 1, 1, -1]), gl.STATIC_DRAW);
     }
 
+    /**
+     * Compiles and links a vertex and fragment shader into a WebGL program.
+     * @param {string} vertexSource - The GLSL source for the vertex shader.
+     * @param {string} fragmentSource - The GLSL source for the fragment shader.
+     * @returns {{program: WebGLProgram, uniforms: object, bind: Function} | null} The compiled program and its uniforms, or null on error.
+     */
     createProgram(vertexSource, fragmentSource) {
       const gl = this.gl;
       const program = gl.createProgram();
@@ -504,6 +542,12 @@
       };
     }
 
+    /**
+     * Compiles a single WebGL shader.
+     * @param {number} type - The type of shader (gl.VERTEX_SHADER or gl.FRAGMENT_SHADER).
+     * @param {string} source - The GLSL source code.
+     * @returns {WebGLShader | null} The compiled shader, or null on error.
+     */
     compileShader(type, source) {
       const gl = this.gl;
       const shader = gl.createShader(type);
@@ -517,6 +561,9 @@
       return shader;
     }
 
+    /**
+     * Initializes a noise texture used for dithering to prevent color banding.
+     */
     initDitheringTexture() {
       const gl = this.gl;
       const size = 128;
@@ -538,6 +585,15 @@
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.UNSIGNED_BYTE, buffer);
     }
 
+    /**
+     * Creates a WebGL texture with the specified parameters.
+     * @param {number} width - The width of the texture.
+     * @param {number} height - The height of the texture.
+     * @param {object} formatObj - Object containing `internalFormat` and `format`.
+     * @param {number} minFilter - The minification filter.
+     * @param {number} magFilter - The magnification filter.
+     * @returns {WebGLTexture} The created texture.
+     */
     createTexture(width, height, formatObj, minFilter, magFilter) {
       const gl = this.gl;
       const texture = gl.createTexture();
@@ -550,6 +606,15 @@
       return texture;
     }
 
+    /**
+     * Creates a Framebuffer Object (FBO) with an attached texture.
+     * @param {number} width - The width of the FBO.
+     * @param {number} height - The height of the FBO.
+     * @param {object} formatObj - Object containing `internalFormat` and `format`.
+     * @param {number} minFilter - The minification filter.
+     * @param {number} magFilter - The magnification filter.
+     * @returns {object} An object containing the texture, fbo, dimensions, and utility functions.
+     */
     createFBO(width, height, formatObj, minFilter, magFilter) {
       const gl = this.gl;
       const texture = this.createTexture(width, height, formatObj, minFilter, magFilter);
@@ -574,6 +639,15 @@
       };
     }
 
+    /**
+     * Creates a double Framebuffer Object (ping-pong FBO) for read/write operations.
+     * @param {number} width - The width of the FBO.
+     * @param {number} height - The height of the FBO.
+     * @param {object} formatObj - Object containing `internalFormat` and `format`.
+     * @param {number} minFilter - The minification filter.
+     * @param {number} magFilter - The magnification filter.
+     * @returns {object} An object managing two FBOs with a swap function.
+     */
     createDoubleFBO(width, height, formatObj, minFilter, magFilter) {
       let fbo1 = this.createFBO(width, height, formatObj, minFilter, magFilter);
       let fbo2 = this.createFBO(width, height, formatObj, minFilter, magFilter);
@@ -595,6 +669,9 @@
       };
     }
 
+    /**
+     * Initializes all primary framebuffers (density, velocity, divergence, curl, pressure).
+     */
     initFramebuffers() {
       const gl = this.gl;
       const ext = this.ext;
@@ -611,6 +688,11 @@
       this.pressure = this.createDoubleFBO(simRes.width, simRes.height, ext.formatR, gl.NEAREST, gl.NEAREST);
     }
 
+    /**
+     * Calculates the correct resolution for an FBO based on the canvas aspect ratio and a target resolution, clamping to power-of-two.
+     * @param {number} resolution - The target resolution.
+     * @returns {{width: number, height: number}} The calculated width and height.
+     */
     getResolution(resolution) {
       const gl = this.gl;
       let aspectRatio = gl.drawingBufferWidth / gl.drawingBufferHeight;
@@ -630,6 +712,9 @@
       }
     }
 
+    /**
+     * Handles canvas resizing and reinitializes framebuffers if dimensions change.
+     */
     resize() {
       if (!this.canvas) return;
       const width = window.innerWidth;
@@ -642,6 +727,10 @@
       }
     }
 
+    /**
+     * Draws a full-screen quad to a target FBO or the default framebuffer.
+     * @param {object | null} [targetFBO=null] - The target FBO to render to, or null for the default canvas.
+     */
     blit(targetFBO = null) {
       const gl = this.gl;
       gl.bindBuffer(gl.ARRAY_BUFFER, this.quadBuffer);
@@ -659,6 +748,15 @@
       gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
     }
 
+    /**
+     * Adds forces and colors (dye) to the fluid simulation at a specific point.
+     * @param {number} x - The x-coordinate in normalized device coordinates (0 to 1).
+     * @param {number} y - The y-coordinate in normalized device coordinates (0 to 1).
+     * @param {number} dx - The force vector x-component.
+     * @param {number} dy - The force vector y-component.
+     * @param {number[]} color - The RGB color array of the dye.
+     * @param {number} [radiusScale=1.0] - Scale multiplier for the splat radius.
+     */
     splat(x, y, dx, dy, color, radiusScale = 1.0) {
       if (!this.isInitialized) return;
       const gl = this.gl;
@@ -691,6 +789,10 @@
       this.density.swap();
     }
 
+    /**
+     * Steps the fluid simulation forward by dt.
+     * @param {number} dt - The time step delta.
+     */
     step(dt) {
       if (this.config.PAUSED || !this.isInitialized || this.isContextLost()) return;
 
@@ -776,6 +878,10 @@
       this.density.swap();
     }
 
+    /**
+     * Renders the fluid density field to the screen or a target FBO, applying shading, tonemapping and dithering.
+     * @param {object | null} [targetFBO=null] - The target FBO, or null for the default canvas.
+     */
     render(targetFBO = null) {
       if (!this.isInitialized || this.isContextLost()) return;
 
@@ -799,15 +905,29 @@
       this.blit(targetFBO);
     }
 
+    /**
+     * Checks if the WebGL context is lost.
+     * @returns {boolean} True if the context is lost.
+     */
     isContextLost() {
       return !this.gl || this.gl.isContextLost();
     }
 
+    /**
+     * Sets the global gravity vector for the simulation.
+     * @param {number} x - The x-component of gravity.
+     * @param {number} y - The y-component of gravity.
+     */
     setGravity(x, y) {
       this.config.GRAVITY.x = x;
       this.config.GRAVITY.y = y;
     }
 
+    /**
+     * Updates configuration parameters for the simulation.
+     * @param {string | object} key - The configuration key, or an object of key-value pairs.
+     * @param {*} [value] - The value if key is a string.
+     */
     setConfig(key, value) {
       if (typeof key === 'object') {
         Object.assign(this.config, key);
@@ -816,11 +936,17 @@
       }
     }
 
+    /**
+     * Resets the simulation state by clearing and re-initializing the framebuffers.
+     */
     reset() {
       if (!this.isInitialized) return;
       this.initFramebuffers();
     }
 
+    /**
+     * Disposes of all WebGL resources and stops the simulation.
+     */
     dispose() {
       if (!this.gl) return;
       const gl = this.gl;
@@ -857,14 +983,26 @@
       console.info('FluidCore: Recursos de VRAM liberados exitosamente.');
     }
 
+    /**
+     * Retrieves the canvas element used by the simulation.
+     * @returns {HTMLCanvasElement | null} The canvas element.
+     */
     getCanvas() {
       return this.canvas;
     }
 
+    /**
+     * Retrieves the WebGL context used by the simulation.
+     * @returns {WebGLRenderingContext | WebGL2RenderingContext | null} The WebGL context.
+     */
     getGL() {
       return this.gl;
     }
 
+    /**
+     * Retrieves the underlying density texture.
+     * @returns {WebGLTexture | null} The WebGL texture for the density field.
+     */
     getDensityTexture() {
       return this.density ? this.density.read.texture : null;
     }
