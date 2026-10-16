@@ -80,7 +80,7 @@
           const vx = Math.cos(angle) * speed;
           const vy = Math.sin(angle) * speed - 1;
           if (typeof ps.emit === 'function') {
-            ps.emit(cx, cy, vx, vy, '#ff007f', 'fire', 2);
+            ps.emit(cx, cy, vx, vy, '#dd4027', 'fire', 2);
           }
         }
       }

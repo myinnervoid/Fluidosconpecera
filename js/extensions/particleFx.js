@@ -16,14 +16,14 @@
       this.poolIndex = 0;
       this.isEnabled = true;
       this.effectType = 'star';
-      this.baseColor = '#00f2fe';
+      this.baseColor = '#dd4027';
 
       this.initPool();
     }
 
     setEffect(type, color) {
       this.effectType = type || 'star';
-      this.baseColor = color || '#00f2fe';
+      this.baseColor = color || '#dd4027';
     }
 
     randomRainbow() {
@@ -86,7 +86,7 @@
         resolvedColor = this.baseColor;
         resolvedType = this.effectType || 'star';
       } else if (!resolvedColor) {
-        resolvedColor = this.baseColor || '#00f2fe';
+        resolvedColor = this.baseColor || '#dd4027';
       }
 
       if (!resolvedType || resolvedType === 'star') {
@@ -123,7 +123,7 @@
         } else if (resolvedType === 'neon') {
           p.size = 2.5 + Math.random() * 3.5;
           p.maxLife = 0.45 + Math.random() * 0.40;
-          p.color = (Math.random() > 0.5) ? '#39C5BB' : '#ff007f';
+          p.color = (Math.random() > 0.5) ? '#39C5BB' : '#dd4027';
         } else if (resolvedType === 'dust') {
           p.size = 2.0 + Math.random() * 3.0;
           p.maxLife = 0.40 + Math.random() * 0.45;
@@ -131,7 +131,7 @@
         } else {
           p.size = 2.2 + Math.random() * 3.2;
           p.maxLife = 0.40 + Math.random() * 0.45;
-          p.color = resolvedColor || '#00f2fe';
+          p.color = resolvedColor || '#dd4027';
         }
 
         p.life = 1.0;

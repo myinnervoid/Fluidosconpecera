@@ -865,7 +865,7 @@
         this.sliderBoidsCount.max = 50;
         if (this.boidslimitBadge) {
           this.boidslimitBadge.textContent = 'dev: máx. 50';
-          this.boidslimitBadge.style.color = 'var(--accent-magenta)';
+          this.boidslimitBadge.style.color = 'var(--accent-primary)';
         }
         if (this.devWarningText) this.devWarningText.style.display = 'block';
         if (showToastMsg) this.showToast('🛠️ Modo Dev: Boids desbloqueados hasta 50');
@@ -878,7 +878,7 @@
         }
         if (this.boidslimitBadge) {
           this.boidslimitBadge.textContent = 'máx. 10';
-          this.boidslimitBadge.style.color = 'var(--accent-cyan)';
+          this.boidslimitBadge.style.color = 'var(--accent-primary)';
         }
         if (this.devWarningText) this.devWarningText.style.display = 'none';
         if (showToastMsg) this.showToast('🔒 Modo Normal: Límite 10 boids');
@@ -895,8 +895,8 @@
       // Botón del drawer (si existe)
       if (this.drawerSwarmToggle) {
         this.drawerSwarmToggle.textContent = isOn ? 'Desactivar' : 'Activar';
-        this.drawerSwarmToggle.style.borderColor = isOn ? 'var(--accent-cyan)' : 'transparent';
-        this.drawerSwarmToggle.style.backgroundColor = isOn ? 'rgba(0,242,254,0.15)' : 'rgba(255,255,255,0.08)';
+        this.drawerSwarmToggle.style.borderColor = isOn ? 'var(--accent-primary)' : 'transparent';
+        this.drawerSwarmToggle.style.backgroundColor = isOn ? 'rgba(221,64,39,0.15)' : 'rgba(255,255,255,0.08)';
       }
       // Texto de estado (si existe)
       if (this.swarmStatusText) {

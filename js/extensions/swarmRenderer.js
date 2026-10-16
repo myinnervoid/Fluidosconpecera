@@ -89,13 +89,13 @@
           // Sombra luminosa
           ctx.shadowBlur = 12;
           if (avatarType === 'nyan') {
-            ctx.shadowColor = '#ff007f';
+            ctx.shadowColor = '#dd4027';
             ctx.fillText('🐱', 0, 0);
           } else if (avatarType === 'rocket') {
             ctx.shadowColor = '#ffbe0b';
             ctx.fillText('🚀', 0, 0);
           } else if (avatarType === 'comet') {
-            ctx.shadowColor = '#00f2fe';
+            ctx.shadowColor = '#dd4027';
             ctx.fillText('☄️', 0, 0);
           } else if (avatarType === 'clownfish') {
             ctx.shadowColor = '#ff6b00';
@@ -104,7 +104,7 @@
             ctx.shadowColor = '#39C5BB';
             ctx.fillText('🩵', 0, 0);
           } else {
-            ctx.shadowColor = '#00f2fe';
+            ctx.shadowColor = '#dd4027';
             ctx.fillText('✨', 0, 0);
           }
         }
