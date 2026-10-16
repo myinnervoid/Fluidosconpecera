@@ -1,4 +1,8 @@
 {
+  "scripts": {
+    "test": "node tests/run_tests.js",
+    "build": "echo \"Clean build: no steps needed\""
+  },
   "dependencies": {
     "puppeteer": "^25.12.0"
   }

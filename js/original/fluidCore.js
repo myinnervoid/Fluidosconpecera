@@ -616,8 +616,12 @@
       let aspectRatio = gl.drawingBufferWidth / gl.drawingBufferHeight;
       if (aspectRatio < 1) aspectRatio = 1.0 / aspectRatio;
 
-      const min = Math.round(resolution);
-      const max = Math.round(resolution * aspectRatio);
+      let min = Math.round(resolution);
+      let max = Math.round(resolution * aspectRatio);
+
+      // Clamp to power-of-two boundaries
+      min = Math.pow(2, Math.floor(Math.log2(min)));
+      max = Math.pow(2, Math.floor(Math.log2(max)));
 
       if (gl.drawingBufferWidth > gl.drawingBufferHeight) {
         return { width: max, height: min };

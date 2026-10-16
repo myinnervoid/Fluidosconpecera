@@ -245,6 +245,28 @@
       expect(AetheriaParticles.particles.length).toBe(200);
       expect(AetheriaParticles.particles[0].active).toBe(false);
     });
+
+    it('FluidCore.getResolution() clamps FBO texture dimensions to power-of-two boundaries', () => {
+      // Mock the drawing buffer dimensions
+      const originalGl = FluidCore.gl;
+      FluidCore.gl = {
+        drawingBufferWidth: 1920,
+        drawingBufferHeight: 1080
+      };
+
+      const res1 = FluidCore.getResolution(200);
+      
+      // Expected power-of-two behavior
+      function isPowerOfTwo(x) {
+        return (x & (x - 1)) === 0 && x > 0;
+      }
+      
+      expect(isPowerOfTwo(res1.width)).toBe(true);
+      expect(isPowerOfTwo(res1.height)).toBe(true);
+
+      // Restore original
+      FluidCore.gl = originalGl;
+    });
   });
 
   // ==========================================
