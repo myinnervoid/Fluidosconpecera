@@ -41,7 +41,7 @@
       tag: 'Tobera de Fuego',
       radiusScale: 0.32,
       sparkType: 'fire',
-      sparkColors: ['#ffbe0b', '#ff4500', '#ff007f', '#ff9e1b', '#ffffff'],
+      sparkColors: ['#ffbe0b', '#ff4500', '#dd4027', '#ff9e1b', '#ffffff'],
       sparkCount: 3,
       impulse: 1.25,
       offset: 0.000,
@@ -52,7 +52,7 @@
       tag: 'Plasma Cósmico',
       radiusScale: 0.28,
       sparkType: 'dust',
-      sparkColors: ['#38bdf8', '#00f2fe', '#e0f2fe', '#ffffff', '#a78bfa'],
+      sparkColors: ['#38bdf8', '#dd4027', '#e0f2fe', '#ffffff', '#a78bfa'],
       sparkCount: 3,
       impulse: 1.10,
       offset: 0.000,
@@ -85,7 +85,7 @@
       tag: 'Techno Pop Neón',
       radiusScale: 0.36,
       sparkType: 'neon',
-      sparkColors: ['#39C5BB', '#ff007f', '#00f2fe', '#ff80ab', '#ffffff'],
+      sparkColors: ['#39C5BB', '#dd4027', '#dd4027', '#ff80ab', '#ffffff'],
       sparkCount: 3,
       impulse: 0.90,
       offset: 0.000,
@@ -138,14 +138,14 @@
     // 2. Cohete Espacial
     rocket: `
       <svg viewBox="0 0 36 36" class="cursor-svg rocket-svg" aria-hidden="true">
-        <polygon points="18,34 13,24 23,24" fill="#ffbe0b" filter="drop-shadow(0 0 6px #ff007f)"/>
-        <polygon points="18,30 15,24 21,24" fill="#ff007f"/>
+        <polygon points="18,34 13,24 23,24" fill="#ffbe0b" filter="drop-shadow(0 0 6px #dd4027)"/>
+        <polygon points="18,30 15,24 21,24" fill="#dd4027"/>
         <path d="M18 2 Q27 12 24 25 L12 25 Q9 12 18 2 Z" fill="#f8fafc" stroke="#0f172a" stroke-width="1.5"/>
-        <circle cx="18" cy="14" r="3.5" fill="#00f2fe" stroke="#0f172a" stroke-width="1"/>
+        <circle cx="18" cy="14" r="3.5" fill="#dd4027" stroke="#0f172a" stroke-width="1"/>
         <circle cx="17" cy="13" r="1" fill="#ffffff"/>
-        <path d="M12 20 L5 26 L12 25 Z" fill="#ff007f" stroke="#0f172a" stroke-width="1"/>
-        <path d="M24 20 L31 26 L24 25 Z" fill="#ff007f" stroke="#0f172a" stroke-width="1"/>
-        <path d="M16 2 L18 0 L20 2 Z" fill="#ff007f"/>
+        <path d="M12 20 L5 26 L12 25 Z" fill="#dd4027" stroke="#0f172a" stroke-width="1"/>
+        <path d="M24 20 L31 26 L24 25 Z" fill="#dd4027" stroke="#0f172a" stroke-width="1"/>
+        <path d="M16 2 L18 0 L20 2 Z" fill="#dd4027"/>
       </svg>
     `,
 
@@ -209,9 +209,9 @@
         <path d="M10 14 C4 18 2 28 4 34 C6 30 10 24 12 18 Z" fill="url(#mikuHairGrad)" filter="drop-shadow(0 0 4px #39C5BB)"/>
         <!-- Coleta Derecha (dinámica) -->
         <path d="M26 14 C32 18 34 28 32 34 C30 30 26 24 24 18 Z" fill="url(#mikuHairGrad)" filter="drop-shadow(0 0 4px #39C5BB)"/>
-        <!-- Lazos de Coleta Rosa/Magenta -->
-        <rect x="9" y="13" width="3.5" height="3.5" rx="1" fill="#ff007f" stroke="#111" stroke-width="0.6"/>
-        <rect x="23.5" y="13" width="3.5" height="3.5" rx="1" fill="#ff007f" stroke="#111" stroke-width="0.6"/>
+        <!-- Lazos de Coleta Red -->
+        <rect x="9" y="13" width="3.5" height="3.5" rx="1" fill="#dd4027" stroke="#111" stroke-width="0.6"/>
+        <rect x="23.5" y="13" width="3.5" height="3.5" rx="1" fill="#dd4027" stroke="#111" stroke-width="0.6"/>
         <!-- Auriculares / Headset -->
         <path d="M11 15 C11 7 25 7 25 15" fill="none" stroke="#222" stroke-width="2"/>
         <rect x="9" y="13" width="3" height="5" rx="1.5" fill="#e91e63"/>
@@ -283,7 +283,7 @@
       }
       if (typeof AetheriaParticles !== 'undefined' && typeof AetheriaParticles.setEffect === 'function') {
         const cfg = this.getTrailConfig();
-        AetheriaParticles.setEffect(cfg.sparkType, (cfg.sparkColors && cfg.sparkColors[0]) || '#00f2fe');
+        AetheriaParticles.setEffect(cfg.sparkType, (cfg.sparkColors && cfg.sparkColors[0]) || '#dd4027');
       }
       try {
         localStorage.setItem('aetheria-avatar', this.currentType);
@@ -317,7 +317,7 @@
      */
     getSparkEmission() {
       const cfg = this.getTrailConfig();
-      let colorHex = '#00f2fe';
+      let colorHex = '#dd4027';
 
       if (cfg.sparkColors && cfg.sparkColors.length > 0) {
         const randIdx = Math.floor(Math.random() * cfg.sparkColors.length);

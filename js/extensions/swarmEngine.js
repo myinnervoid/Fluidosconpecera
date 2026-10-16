@@ -203,12 +203,12 @@
         return tones[Math.abs(idx)];
       }
 
-      // 5. Hatsune Miku: Teal / Cian neón característico y magenta eléctrico
+      // 5. Hatsune Miku: Teal / Cian neón característico y primary electric
       if (avatarType === 'miku') {
         const tones = [
           [0.22, 0.77, 0.73], // #39C5BB Miku Teal
           [0.0, 0.95, 0.95],  // Cian eléctrico
-          [1.0, 0.05, 0.55],  // Magenta Pop
+          [0.86, 0.25, 0.15],  // Primary Pop
           [0.85, 0.98, 1.0]   // Blanco Neón
         ];
         const idx = Math.floor((time * 3 + boid.phase * 2)) % tones.length;
