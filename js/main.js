@@ -97,8 +97,8 @@
           if (typeof AetheriaState !== 'undefined' && AetheriaState.isDrawerOpen) return;
           if (e.target.closest('#top-bar, #settings-drawer, #drawer-overlay, .ui-interactive')) return;
 
-          const normX = Math.max(0, Math.min(1, e.clientX / window.innerWidth));
-          const normY = Math.max(0, Math.min(1, 1.0 - (e.clientY / window.innerHeight)));
+          const normX = MathUtils.clamp(e.clientX / window.innerWidth, 0, 1);
+          const normY = MathUtils.clamp(1.0 - (e.clientY / window.innerHeight), 0, 1);
           if (typeof AetheriaFidgets !== 'undefined' && typeof AetheriaFidgets.supernova === 'function') {
             AetheriaFidgets.supernova(normX, normY);
           }

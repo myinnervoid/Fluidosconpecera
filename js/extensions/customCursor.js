@@ -324,9 +324,9 @@
         colorHex = cfg.sparkColors[randIdx];
       } else if (typeof AetheriaState !== 'undefined') {
         const rgb = AetheriaState.getUserColor(0);
-        const r = Math.round(Math.min(1, Math.max(0, rgb[0])) * 255);
-        const g = Math.round(Math.min(1, Math.max(0, rgb[1])) * 255);
-        const b = Math.round(Math.min(1, Math.max(0, rgb[2])) * 255);
+        const r = Math.round(MathUtils.clamp(rgb[0], 0, 1) * 255);
+        const g = Math.round(MathUtils.clamp(rgb[1], 0, 1) * 255);
+        const b = Math.round(MathUtils.clamp(rgb[2], 0, 1) * 255);
         colorHex = `rgb(${r},${g},${b})`;
       }
 
@@ -354,7 +354,7 @@
      * Calcula la rotación angular precisa en grados según el vector de movimiento (dx, dy).
      */
     calculateRotation(dx, dy) {
-      if (Math.hypot(dx, dy) < 0.0001) return 0;
+      if (MathUtils.magnitude(dx, dy) < 0.0001) return 0;
       const angleRad = Math.atan2(-dy, dx);
       let deg = angleRad * (180 / Math.PI);
 
@@ -371,7 +371,7 @@
         return { x: normX, y: normY };
       }
 
-      const speed = Math.hypot(dx, dy);
+      const speed = MathUtils.magnitude(dx, dy);
       if (speed < 0.001) return { x: normX, y: normY };
 
       const normVx = dx / speed;

@@ -232,8 +232,8 @@
           const rect = canvas.getBoundingClientRect();
           const pe = window._lastPointerEvent;
           return {
-            x: Math.max(0, Math.min(1, (pe.clientX - rect.left) / rect.width)),
-            y: Math.max(0, Math.min(1, 1.0 - (pe.clientY - rect.top) / rect.height))
+            x: MathUtils.clamp((pe.clientX - rect.left) / rect.width, 0, 1),
+            y: MathUtils.clamp(1.0 - (pe.clientY - rect.top) / rect.height, 0, 1)
           };
         }
         return { x: 0.5, y: 0.5 };
@@ -601,8 +601,8 @@
             const rect = canvas.getBoundingClientRect();
             const pe = window._lastPointerEvent;
             return {
-              x: Math.max(0, Math.min(1, (pe.clientX - rect.left) / rect.width)),
-              y: Math.max(0, Math.min(1, 1.0 - (pe.clientY - rect.top) / rect.height))
+              x: MathUtils.clamp((pe.clientX - rect.left) / rect.width, 0, 1),
+              y: MathUtils.clamp(1.0 - (pe.clientY - rect.top) / rect.height, 0, 1)
             };
           }
           return { x: 0.5, y: 0.5 };
@@ -732,8 +732,8 @@
               const rect = canvas.getBoundingClientRect();
               const pe = window._lastPointerEvent;
               return {
-                x: Math.max(0, Math.min(1, (pe.clientX - rect.left) / rect.width)),
-                y: Math.max(0, Math.min(1, 1.0 - (pe.clientY - rect.top) / rect.height))
+                x: MathUtils.clamp((pe.clientX - rect.left) / rect.width, 0, 1),
+                y: MathUtils.clamp(1.0 - (pe.clientY - rect.top) / rect.height, 0, 1)
               };
             }
             return { x: 0.5, y: 0.5 };

@@ -37,7 +37,7 @@
         if (other === this) continue;
         const dx = (this.x - other.x) * aspect;
         const dy = this.y - other.y;
-        const dist = Math.hypot(dx, dy);
+        const dist = MathUtils.magnitude(dx, dy);
 
         if (dist < perceptionRadius && dist > 0.0001) {
           // Separación
@@ -100,7 +100,7 @@
       const timeNow = (typeof performance !== 'undefined' ? performance.now() : Date.now()) * 0.001;
       const speedOsc = 0.8 + 0.4 * Math.sin(timeNow * 0.75 + this.phase);
       const baseSpeed = 0.0035 * speedOsc;
-      const currentSpeed = Math.hypot(this.vx, this.vy);
+      const currentSpeed = MathUtils.magnitude(this.vx, this.vy);
       if (currentSpeed > 0.00001) {
         this.vx = (this.vx / currentSpeed) * baseSpeed;
         this.vy = (this.vy / currentSpeed) * baseSpeed;
@@ -111,8 +111,8 @@
       this.y += this.vy * 60 * dt;
 
       // Clamp de seguridad
-      this.x = Math.max(0.01, Math.min(0.99, this.x));
-      this.y = Math.max(0.01, Math.min(0.99, this.y));
+      this.x = MathUtils.clamp(this.x, 0.01, 0.99);
+      this.y = MathUtils.clamp(this.y, 0.01, 0.99);
     }
   }
 
@@ -221,9 +221,9 @@
         const baseColor = baseColors[boid.id % baseColors.length] || [0.0, 0.95, 1.0];
         const wave = 0.75 + 0.25 * Math.sin(time * 1.5 + boid.phase);
         return [
-          Math.min(1.0, baseColor[0] * wave + 0.1),
-          Math.min(1.0, baseColor[1] * wave + 0.1),
-          Math.min(1.0, baseColor[2] * wave + 0.1)
+          MathUtils.clamp(baseColor[0] * wave + 0.1, 0.0, 1.0),
+          MathUtils.clamp(baseColor[1] * wave + 0.1, 0.0, 1.0),
+          MathUtils.clamp(baseColor[2] * wave + 0.1, 0.0, 1.0)
         ];
       }
 
@@ -290,7 +290,7 @@
 
     setBoidsCount(n) {
       const maxAllowed = (typeof AetheriaState !== 'undefined' && AetheriaState.devMode) ? 50 : 10;
-      const count = Math.max(1, Math.min(n, maxAllowed));
+      const count = MathUtils.clamp(n, 1, maxAllowed);
       if (typeof AetheriaState !== 'undefined') {
         AetheriaState.swarmCount = count;
       }
