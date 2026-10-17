@@ -241,6 +241,11 @@
       this.loadStoredCustomAvatar();
     }
 
+    /**
+     * Loads the stored custom avatar from localStorage.
+     * @returns {void}
+     * @type {Function}
+     */
     loadStoredCustomAvatar() {
       try {
         const stored = localStorage.getItem('aetheria_custom_avatar');
@@ -252,7 +257,14 @@
       }
     }
 
+    /**
+     * Saves a custom avatar to localStorage and sets it as the active cursor.
+     * @param {string|null} dataUrl - The data URL of the image.
+     * @returns {void}
+     * @type {Function}
+     */
     saveCustomAvatar(dataUrl) {
+      if (!dataUrl) return;
       this.customDataUrl = dataUrl;
       try {
         localStorage.setItem('aetheria_custom_avatar', dataUrl);
@@ -263,11 +275,25 @@
       this.setCursorType('custom');
     }
 
+    /**
+     * Sets a custom image as the avatar.
+     * @param {string|null} dataUrl - The data URL of the image.
+     * @returns {void}
+     * @type {Function}
+     */
     setCustomImage(dataUrl) {
+      if (!dataUrl) return;
       this.saveCustomAvatar(dataUrl);
     }
 
+    /**
+     * Sets the active cursor type and applies related effects.
+     * @param {string|null} type - The type of the cursor.
+     * @returns {void}
+     * @type {Function}
+     */
     setCursorType(type) {
+      if (!type) type = 'none';
       const resolvedType = (type === 'fish') ? 'clownfish' : type;
       this.currentType = AVATAR_CONFIGS[resolvedType] ? resolvedType : 'none';
       this.currentAvatar = this.currentType;
@@ -290,14 +316,31 @@
       } catch (e) {}
     }
 
+    /**
+     * Alias for setCursorType.
+     * @param {string|null} type - The type of the avatar.
+     * @returns {void}
+     * @type {Function}
+     */
     setAvatar(type) {
+      if (!type) type = 'none';
       this.setCursorType(type);
     }
 
+    /**
+     * Gets the configuration for the current avatar.
+     * @returns {Object} The configuration object for the avatar trail.
+     * @type {Function}
+     */
     getCurrentAvatarConfig() {
       return this.getTrailConfig();
     }
 
+    /**
+     * Gets the HTML markup for the current avatar.
+     * @returns {string} The HTML string.
+     * @type {Function}
+     */
     getAvatarHTML() {
       if (this.currentType === 'none') {
         return '';
@@ -308,12 +351,19 @@
       return AVATAR_SVGS[this.currentType] || '';
     }
 
+    /**
+     * Gets the trail configuration for the current cursor type.
+     * @returns {Object} The trail configuration object.
+     * @type {Function}
+     */
     getTrailConfig() {
       return AVATAR_CONFIGS[this.currentType] || AVATAR_CONFIGS.none;
     }
 
     /**
      * Retorna la configuración de emisión de chispas y partículas para el puntero activo.
+     * @returns {{sparkType: string, colorHex: string, count: number, radiusScale: number}} The spark emission configuration.
+     * @type {Function}
      */
     getSparkEmission() {
       const cfg = this.getTrailConfig();
@@ -342,8 +392,12 @@
      * Obtiene el color para splat de usuario:
      * Al hacer click o arrastrar el usuario, respeta fielmente la paleta activa
      * consultando el estado centralizado AetheriaState.
+     * @param {number} [index=0] - The color index.
+     * @returns {number[]} The RGB color array.
+     * @type {Function}
      */
     getUserSplatColor(index = 0) {
+      if (index == null) index = 0;
       if (typeof AetheriaState !== 'undefined') {
         return AetheriaState.getUserColor(index);
       }
@@ -352,8 +406,14 @@
 
     /**
      * Calcula la rotación angular precisa en grados según el vector de movimiento (dx, dy).
+     * @param {number} dx - The change in x-coordinate.
+     * @param {number} dy - The change in y-coordinate.
+     * @returns {number} The rotation angle in degrees.
+     * @type {Function}
      */
     calculateRotation(dx, dy) {
+      if (dx == null) dx = 0;
+      if (dy == null) dy = 0;
       if (MathUtils.magnitude(dx, dy) < 0.0001) return 0;
       const angleRad = Math.atan2(-dy, dx);
       let deg = angleRad * (180 / Math.PI);
@@ -364,8 +424,18 @@
 
     /**
      * Calcula la posición de emisión trasera (tobera o cola) según el vector de avance.
+     * @param {number} normX - The normalized x-coordinate.
+     * @param {number} normY - The normalized y-coordinate.
+     * @param {number} dx - The change in x-coordinate.
+     * @param {number} dy - The change in y-coordinate.
+     * @returns {{x: number, y: number}} The offset point.
+     * @type {Function}
      */
     getEmitterOffsetPoint(normX, normY, dx, dy) {
+      if (normX == null) normX = 0;
+      if (normY == null) normY = 0;
+      if (dx == null) dx = 0;
+      if (dy == null) dy = 0;
       const cfg = AVATAR_CONFIGS[this.currentType] || AVATAR_CONFIGS.none;
       if (this.currentType === 'none' || !cfg.offset) {
         return { x: normX, y: normY };
