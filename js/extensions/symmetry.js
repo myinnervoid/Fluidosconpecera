@@ -88,7 +88,31 @@
       this.lastPointerTime.delete(pointerId);
     }
 
+    /**
+     * Generates symmetry points based on the current symmetry mode.
+     * @param {number} normX - The normalized x-coordinate of the base point.
+     * @param {number} normY - The normalized y-coordinate of the base point.
+     * @param {number} normDx - The normalized x-velocity of the base point.
+     * @param {number} normDy - The normalized y-velocity of the base point.
+     * @param {number} [aspectRatio=1.0] - The aspect ratio of the canvas.
+     * @returns {Array<{x: number, y: number, dx: number, dy: number, angleIndex: number}>} An array of symmetry points.
+     */
     getPoints(normX, normY, normDx, normDy, aspectRatio = 1.0) {
+      // Input validation / boundary checking
+      if (!Number.isFinite(normX)) normX = 0.5;
+      if (!Number.isFinite(normY)) normY = 0.5;
+      if (!Number.isFinite(normDx)) normDx = 0;
+      if (!Number.isFinite(normDy)) normDy = 0;
+
+      // Bound coordinates to standard normalized range [0.0, 1.0]
+      if (typeof MathUtils !== 'undefined' && MathUtils.clamp) {
+        normX = MathUtils.clamp(normX, 0.0, 1.0);
+        normY = MathUtils.clamp(normY, 0.0, 1.0);
+      } else {
+        normX = Math.max(0.0, Math.min(1.0, normX));
+        normY = Math.max(0.0, Math.min(1.0, normY));
+      }
+
       const points = [];
       const mode = this.getSymmetry();
 
@@ -150,6 +174,13 @@
     /**
      * Función MAESTRA de Inyección Unificada de Splats con Simetría activa.
      * Llamada tanto por UserCursorController como por AutoSwarmController.
+     * @param {number} baseX - The base x-coordinate for injection.
+     * @param {number} baseY - The base y-coordinate for injection.
+     * @param {number} dx - The x-velocity for injection.
+     * @param {number} dy - The y-velocity for injection.
+     * @param {Array<number>|string} color - The color of the splat.
+     * @param {number} radius - The radius of the splat.
+     * @param {number|null} [aspect=null] - The aspect ratio, defaults to window aspect ratio.
      */
     injectSplat(baseX, baseY, dx, dy, color, radius, aspect = null) {
       if (typeof FluidCore === 'undefined') return;
@@ -169,6 +200,16 @@
       }
     }
 
+    /**
+     * Renders visual mirrored cursor points on the DOM overlay.
+     * @param {number} normX - The normalized x-coordinate.
+     * @param {number} normY - The normalized y-coordinate.
+     * @param {number} width - The width of the overlay.
+     * @param {number} height - The height of the overlay.
+     * @param {boolean} isPointerDown - Whether the pointer is currently active.
+     * @param {number} [dx=0] - The normalized x-velocity.
+     * @param {number} [dy=0] - The normalized y-velocity.
+     */
     renderVisualPoints(normX, normY, width, height, isPointerDown, dx = 0, dy = 0) {
       if (!this.mirrorCursorPool.length) return;
       if (typeof AetheriaCursor !== 'undefined' && AetheriaCursor.currentType === 'none') {
@@ -198,6 +239,9 @@
       }
     }
 
+    /**
+     * Hides all visual points in the cursor pool.
+     */
     hideVisualPoints() {
       for (const el of this.mirrorCursorPool) {
         el.style.opacity = '0';
