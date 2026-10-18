@@ -8,30 +8,64 @@
   'use strict';
 
   class ParticleFXEngine {
+    /**
+     * Constructs the particle engine with default settings.
+     */
     constructor() {
+      /** @type {HTMLCanvasElement|null} */
       this.canvas = null;
+      /** @type {CanvasRenderingContext2D|null} */
       this.ctx = null;
+      /** @type {number} */
       this.maxParticles = 200; // Scaled for smooth 60fps performance
+      /** @type {Array<Object>} */
       this.particles = [];
+      /** @type {number} */
       this.poolIndex = 0;
+      /** @type {boolean} */
       this.isEnabled = true;
+      /** @type {string} */
       this.effectType = 'star';
+      /** @type {string} */
       this.baseColor = '#dd4027';
 
       this.initPool();
     }
 
+    /**
+     * Sets the current active effect type and base color.
+     * @param {string} type - The particle effect type.
+     * @param {string} color - The base color as a string.
+     * @returns {void}
+     */
     setEffect(type, color) {
+      if (typeof type !== 'string' && type !== undefined) return;
+      if (typeof color !== 'string' && color !== undefined) return;
+      
       this.effectType = type || 'star';
       this.baseColor = color || '#dd4027';
     }
 
+    /**
+     * Generates a random rainbow color in HSL format.
+     * @returns {string} The randomly generated HSL color string.
+     */
     randomRainbow() {
       const hue = Math.floor(Math.random() * 360);
       return `hsl(${hue}, 100%, 65%)`;
     }
 
+    /**
+     * Initializes the particle system and attaches the canvas to the container.
+     * @param {HTMLElement} container - The DOM element to append the canvas to.
+     * @returns {void}
+     */
     init(container) {
+      if (!container || !(container instanceof HTMLElement)) {
+        console.warn("ParticleFXEngine.init: Invalid container element.");
+        return;
+      }
+
       this.canvas = document.createElement('canvas');
       this.canvas.id = 'particle-canvas';
       this.canvas.style.position = 'absolute';
@@ -49,12 +83,20 @@
       window.addEventListener('resize', () => this.resize());
     }
 
+    /**
+     * Adjusts the canvas resolution to match the window dimensions.
+     * @returns {void}
+     */
     resize() {
       if (!this.canvas) return;
       this.canvas.width = window.innerWidth;
       this.canvas.height = window.innerHeight;
     }
 
+    /**
+     * Pre-allocates the particle object pool.
+     * @returns {void}
+     */
     initPool() {
       this.particles = new Array(this.maxParticles);
       for (let i = 0; i < this.maxParticles; i++) {
@@ -73,8 +115,22 @@
       }
     }
 
+    /**
+     * Emits a burst of particles at the specified location and velocity.
+     * @param {number} x - The starting X coordinate.
+     * @param {number} y - The starting Y coordinate.
+     * @param {number} vx - The initial X velocity component.
+     * @param {number} vy - The initial Y velocity component.
+     * @param {string|number} [colorHex] - The hex color string, or count if overloaded.
+     * @param {string} [type='star'] - The effect type.
+     * @param {number} [count=3] - The number of particles to emit.
+     * @returns {void}
+     */
     emit(x, y, vx, vy, colorHex, type = 'star', count = 3) {
       if (!this.isEnabled) return;
+
+      if (typeof x !== 'number' || typeof y !== 'number' || !isFinite(x) || !isFinite(y)) return;
+      if (typeof vx !== 'number' || typeof vy !== 'number' || !isFinite(vx) || !isFinite(vy)) return;
 
       // Soporte para sobrecarga flexible emit(x, y, vx, vy, count)
       let resolvedColor = colorHex;
@@ -91,6 +147,10 @@
 
       if (!resolvedType || resolvedType === 'star') {
         resolvedType = this.effectType || 'star';
+      }
+
+      if (typeof resolvedCount !== 'number' || !isFinite(resolvedCount) || resolvedCount <= 0) {
+        resolvedCount = 3;
       }
 
       for (let c = 0; c < resolvedCount; c++) {
@@ -139,8 +199,14 @@
       }
     }
 
+    /**
+     * Updates physics properties and renders all active particles.
+     * @param {number} dt - The elapsed delta time to advance the simulation.
+     * @returns {void}
+     */
     updateAndRender(dt) {
       if (!this.ctx || !this.isEnabled) return;
+      if (typeof dt !== 'number' || !isFinite(dt) || dt <= 0) return;
 
       const ctx = this.ctx;
       const w = this.canvas.width;
