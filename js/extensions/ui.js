@@ -895,8 +895,8 @@
       // Botón del drawer (si existe)
       if (this.drawerSwarmToggle) {
         this.drawerSwarmToggle.textContent = isOn ? 'Desactivar' : 'Activar';
-        this.drawerSwarmToggle.style.borderColor = isOn ? 'var(--accent-primary)' : 'transparent';
-        this.drawerSwarmToggle.style.backgroundColor = isOn ? 'rgba(221,64,39,0.15)' : 'rgba(255,255,255,0.08)';
+        this.drawerSwarmToggle.classList.toggle('active-swarm', isOn);
+        this.drawerSwarmToggle.setAttribute('aria-pressed', isOn ? 'true' : 'false');
       }
       // Texto de estado (si existe)
       if (this.swarmStatusText) {

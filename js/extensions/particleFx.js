@@ -47,12 +47,25 @@
     }
 
     /**
-     * Generates a random rainbow color in HSL format.
-     * @returns {string} The randomly generated HSL color string.
+     * Generates a canonical Sanzo Wada Polychrome (Kuikuiltik) color without synthetic neon purples.
+     * @returns {string} The canonical Wada hex color string.
      */
     randomRainbow() {
-      const hue = Math.floor(Math.random() * 360);
-      return `hsl(${hue}, 100%, 65%)`;
+      const wadaPolychrome = ['#cc1236', '#f37420', '#ffdd00', '#00b49b', '#0093a5', '#f27291'];
+      return wadaPolychrome[Math.floor(Math.random() * wadaPolychrome.length)];
+    }
+
+    /**
+     * Resets and clears all active particles from the pool and canvas.
+     * @returns {void}
+     */
+    reset() {
+      for (let i = 0; i < this.particles.length; i++) {
+        this.particles[i].active = false;
+      }
+      if (this.ctx && this.canvas) {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      }
     }
 
     /**
@@ -183,11 +196,11 @@
         } else if (resolvedType === 'neon') {
           p.size = 2.5 + Math.random() * 3.5;
           p.maxLife = 0.45 + Math.random() * 0.40;
-          p.color = (Math.random() > 0.5) ? '#39C5BB' : '#dd4027';
+          p.color = (Math.random() > 0.5) ? '#00b49b' : '#f27291';
         } else if (resolvedType === 'dust') {
           p.size = 2.0 + Math.random() * 3.0;
           p.maxLife = 0.40 + Math.random() * 0.45;
-          p.color = `hsl(200, 85%, ${70 + Math.random() * 25}%)`;
+          p.color = (Math.random() > 0.4) ? '#78cdd0' : '#f5ecc2';
         } else {
           p.size = 2.2 + Math.random() * 3.2;
           p.maxLife = 0.40 + Math.random() * 0.45;

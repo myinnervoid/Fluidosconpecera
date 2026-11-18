@@ -1,10 +1,11 @@
 /**
- * AETHERIA | Autonomous Swarm Engine (Boids / Flocking Multi-Avatar Auto-Pilot)
+ * AETHERIA | Autonomous Swarm Engine (Carangiform Fish Schooling & Multi-Avatar Boids)
  * Modo Automático "Pecera":
- * - Física de Boids con Evasión Suave de Bordes (Soft Boundary Repulsion)
- * - Reactividad al Audio (Modulación de velocidad, radio e impulso con getModulation)
- * - Inyección Unificada con Simetría (SymmetryEngine.injectSplat)
- * - Generador Autónomo de Colores: Arcoíris continuo para Nyan Cat y Modulación Temporal Temática
+ * - Locomoción Hidrodinámica Real (Burst-and-Coast + Ondulación Caudal Carangiforme)
+ * - Corrientes de Arrecife Lissajous (Exploración orgánica de todo el lienzo sin órbitas rígidas)
+ * - Evasión Cuadrática Suave de Bordes (Soft Boundary Repulsion 0.01 - 0.99)
+ * - Reacción Física a Ondas de Choque (Supernova, Vórtice, Tsunami)
+ * - Cromática 100% Canónica Sanzo Wada (MANUAL_ARMONIA_CROMATICA_WADA_MEXICO.md)
  */
 
 (function (root) {
@@ -16,19 +17,26 @@
       this.x = x;
       this.y = y;
       const angle = Math.random() * Math.PI * 2;
-      const speed = 0.0025 + Math.random() * 0.002;
+      const speed = 0.0028 + Math.random() * 0.0018;
       this.vx = Math.cos(angle) * speed;
       this.vy = Math.sin(angle) * speed;
       this.colorIndex = id * 2;
       this.phase = Math.random() * Math.PI * 2;
+      this.tailPhase = Math.random() * Math.PI * 2;
+      this.tailAngle = 0;
       this.angle = angle;
+      this.scale = 0.88 + (id % 3) * 0.10;
+      this.impulseVx = 0;
+      this.impulseVy = 0;
     }
 
     update(boids, aspect, dt, audioMod = { amplitude: 0, bass: 0 }) {
-      const bassBoost = audioMod.bass || 0;
+      const safeDt = Math.min(Math.max(dt || 0.016, 0.001), 0.05);
+      const timeNow = (typeof performance !== 'undefined' ? performance.now() : Date.now()) * 0.001;
 
-      // 1. Parámetros de Flocking (Separación, Alineación, Cohesión)
-      const perceptionRadius = 0.25;
+      // 1. Parámetros de Cardumen (Separación, Alineación, Cohesión)
+      const perceptionRadius = 0.26;
+      const personalSpace = 0.085;
       let sepX = 0, sepY = 0, totalSep = 0;
       let aliX = 0, aliY = 0, totalAli = 0;
       let cohX = 0, cohY = 0, totalCoh = 0;
@@ -40,17 +48,20 @@
         const dist = MathUtils.magnitude(dx, dy);
 
         if (dist < perceptionRadius && dist > 0.0001) {
-          // Separación
-          sepX += (dx / dist) / dist;
-          sepY += (dy / dist) / dist;
+          if (dist < personalSpace) {
+            const repulse = (personalSpace - dist) / personalSpace;
+            sepX += (dx / dist) * (1.2 + repulse * 2.5);
+            sepY += (dy / dist) * (1.2 + repulse * 2.5);
+          } else {
+            sepX += (dx / dist) / dist * 0.08;
+            sepY += (dy / dist) / dist * 0.08;
+          }
           totalSep++;
 
-          // Alineación
           aliX += other.vx;
           aliY += other.vy;
           totalAli++;
 
-          // Cohesión
           cohX += other.x;
           cohY += other.y;
           totalCoh++;
@@ -58,59 +69,88 @@
       }
 
       if (totalSep > 0) {
-        this.vx += (sepX / totalSep) * 0.00015;
-        this.vy += (sepY / totalSep) * 0.00015;
+        this.vx += (sepX / totalSep) * 0.00028;
+        this.vy += (sepY / totalSep) * 0.00028;
       }
       if (totalAli > 0) {
-        this.vx += ((aliX / totalAli) - this.vx) * 0.03;
-        this.vy += ((aliY / totalAli) - this.vy) * 0.03;
+        this.vx += ((aliX / totalAli) - this.vx) * 0.042;
+        this.vy += ((aliY / totalAli) - this.vy) * 0.042;
       }
       if (totalCoh > 0) {
         const targetX = cohX / totalCoh;
         const targetY = cohY / totalCoh;
-        this.vx += (targetX - this.x) * 0.008;
-        this.vy += (targetY - this.y) * 0.008;
+        this.vx += (targetX - this.x) * 0.0065;
+        this.vy += (targetY - this.y) * 0.0065;
       }
 
-      // 2. Regla de la Pecera: Evasión Cuadrática Suave de Bordes (Soft Boundary Repulsion)
-      const margin = 0.08;
-      const turnForce = 0.00085;
+      // 2. Corriente de Arrecife Lissajous (Nado orgánico en ocho por toda la pecera)
+      const currentTargetX = 0.5 + 0.28 * Math.sin(timeNow * 0.32 + this.id * 0.9);
+      const currentTargetY = 0.5 + 0.24 * Math.sin(timeNow * 0.48 + this.id * 0.6 + 1.1);
+      this.vx += (currentTargetX - this.x) * 0.00011;
+      this.vy += (currentTargetY - this.y) * 0.00011;
+
+      // 3. Regla de la Pecera: Evasión Cuadrática Suave de Bordes (Soft Boundary Repulsion)
+      const margin = 0.085;
+      const turnForce = 0.00095;
       if (this.x < margin) {
         const d = (margin - this.x) / margin;
-        this.vx += turnForce * (1 + d * 2.5);
+        this.vx += turnForce * (1 + d * 2.8);
       }
       if (this.x > 1.0 - margin) {
         const d = (this.x - (1.0 - margin)) / margin;
-        this.vx -= turnForce * (1 + d * 2.5);
+        this.vx -= turnForce * (1 + d * 2.8);
       }
       if (this.y < margin) {
         const d = (margin - this.y) / margin;
-        this.vy += turnForce * (1 + d * 2.5);
+        this.vy += turnForce * (1 + d * 2.8);
       }
       if (this.y > 1.0 - margin) {
         const d = (this.y - (1.0 - margin)) / margin;
-        this.vy -= turnForce * (1 + d * 2.5);
+        this.vy -= turnForce * (1 + d * 2.8);
       }
 
-      // Fuerza centrípeta suave para mantenerlos orbitando con elegancia
-      this.vx += (0.5 - this.x) * 0.00008;
-      this.vy += (0.5 - this.y) * 0.00008;
+      // 4. Cinemática Hidrodinámica de Nado (Burst & Coast + Ondulación Carangiforme)
+      // Los peces alternan un impulso caudal rítmico con deslizamiento laminar
+      const swimCycle = Math.sin(timeNow * 1.65 + this.phase);
+      const burstPulse = 0.72 + 0.48 * Math.pow(0.5 + 0.5 * swimCycle, 2.0);
+      const targetSpeed = 0.0036 * burstPulse;
 
-      // 3. Control de Velocidad con oscilación armónica suave (sin audio)
-      const timeNow = (typeof performance !== 'undefined' ? performance.now() : Date.now()) * 0.001;
-      const speedOsc = 0.8 + 0.4 * Math.sin(timeNow * 0.75 + this.phase);
-      const baseSpeed = 0.0035 * speedOsc;
-      const currentSpeed = MathUtils.magnitude(this.vx, this.vy);
-      if (currentSpeed > 0.00001) {
-        this.vx = (this.vx / currentSpeed) * baseSpeed;
-        this.vy = (this.vy / currentSpeed) * baseSpeed;
+      let speed = MathUtils.magnitude(this.vx, this.vy);
+      if (speed > 0.00001) {
+        // Suavizar hacia la velocidad objetivo preservando inercia de giro
+        const newSpeed = speed + (targetSpeed - speed) * 0.14;
+        const dirX = this.vx / speed;
+        const dirY = this.vy / speed;
+
+        // Oscilación lateral de nado (Sway perpendicular a la columna vertebral)
+        this.tailPhase += safeDt * (9.0 + newSpeed * 1600.0);
+        this.tailAngle = Math.sin(this.tailPhase) * 0.42; // Ángulo de aleta caudal en radianes
+        const lateralSway = Math.cos(this.tailPhase) * 0.00038;
+        const perpX = -dirY;
+        const perpY = dirX;
+
+        this.vx = dirX * newSpeed + perpX * lateralSway;
+        this.vy = dirY * newSpeed + perpY * lateralSway;
       }
 
-      // 4. Integración de Posición
-      this.x += this.vx * 60 * dt;
-      this.y += this.vy * 60 * dt;
+      // Incorporar impulsos externos (Supernova / Vórtice / Tsunami) con amortiguamiento viscoso
+      if (Math.abs(this.impulseVx) > 0.00001 || Math.abs(this.impulseVy) > 0.00001) {
+        this.vx += this.impulseVx;
+        this.vy += this.impulseVy;
+        const damping = Math.exp(-4.0 * safeDt);
+        this.impulseVx *= damping;
+        this.impulseVy *= damping;
+      }
 
-      // Clamp de seguridad
+      // Actualizar ángulo de orientación suavizado
+      const heading = Math.atan2(this.vy, this.vx);
+      this.angle = heading;
+
+      // 5. Integración de Posición
+      this.x += this.vx * 60 * safeDt;
+      this.y += this.vy * 60 * safeDt;
+
+      // Clamp estricto de seguridad [0.01, 0.99]
       this.x = MathUtils.clamp(this.x, 0.01, 0.99);
       this.y = MathUtils.clamp(this.y, 0.01, 0.99);
     }
@@ -133,8 +173,10 @@
       const count = (typeof AetheriaState !== 'undefined') ? AetheriaState.swarmCount : 3;
       this.boids = [];
       for (let i = 0; i < count; i++) {
-        const x = 0.2 + (i * 0.25);
-        const y = 0.3 + (i * 0.2);
+        const angle = (i / Math.max(count, 1)) * Math.PI * 2;
+        const radius = 0.18 + (i % 3) * 0.06;
+        const x = MathUtils.clamp(0.5 + Math.cos(angle) * radius, 0.12, 0.88);
+        const y = MathUtils.clamp(0.5 + Math.sin(angle) * radius, 0.12, 0.88);
         this.boids.push(new Boid(i, x, y));
       }
     }
@@ -144,12 +186,11 @@
       if (typeof AetheriaState !== 'undefined') {
         AetheriaState.isSwarmActive = this.isEnabled;
       }
-      
-      // Ajuste dinámico de disipación para evitar acumulación excesiva en auto-pilot
+
       if (typeof FluidCore !== 'undefined') {
         if (this.isEnabled) {
           this.prevDissipation = FluidCore.config.DENSITY_DISSIPATION;
-          FluidCore.config.DENSITY_DISSIPATION = 1.1; // Reducido para que el color persista más
+          FluidCore.config.DENSITY_DISSIPATION = 1.05;
         } else {
           FluidCore.config.DENSITY_DISSIPATION = this.prevDissipation || 0.98;
         }
@@ -158,94 +199,117 @@
     }
 
     /**
-     * Generador de color temático y autónomo en modo pecera.
+     * Aplica una onda expansiva o centrípeta sobre los peces activos (acoplamiento con Fidgets).
      */
-    getAutoSwarmColor(avatarType, boid, time) {
-      // 1. Nyan Cat: Arcoíris continuo (Rainbow cycle cromático)
-      if (avatarType === 'nyan') {
-        const hue = (time * 0.35 + boid.phase * 0.2) % 1.0;
-        return this.hsvToRgb(hue, 0.95, 1.0);
+    applyForceField(centerX, centerY, strength = 0.004, mode = 'radial') {
+      if (!this.boids || !this.boids.length) return;
+      for (const b of this.boids) {
+        const dx = b.x - centerX;
+        const dy = b.y - centerY;
+        const dist = Math.max(0.04, Math.hypot(dx, dy));
+        if (mode === 'radial') {
+          const factor = strength / (dist * 4.5);
+          b.impulseVx += (dx / dist) * factor;
+          b.impulseVy += (dy / dist) * factor;
+        } else if (mode === 'vortex') {
+          const factor = strength / (dist * 4.0);
+          b.impulseVx += (-dy / dist) * factor;
+          b.impulseVy += (dx / dist) * factor;
+        } else if (mode === 'tsunami') {
+          b.impulseVx += strength * 0.85;
+          b.impulseVy += (Math.random() - 0.5) * strength * 0.4;
+        }
       }
-
-      // 2. Cohete: Fuego / Plasma de Ignición
-      if (avatarType === 'rocket') {
-        const tones = [
-          [1.0, 0.15, 0.0],
-          [1.0, 0.55, 0.0],
-          [1.0, 0.90, 0.1],
-          [1.0, 0.05, 0.3]
-        ];
-        const idx = Math.floor((time * 4 + boid.phase * 3)) % tones.length;
-        return tones[Math.abs(idx)];
-      }
-
-      // 3. Cometa: Plasma de hielo y haz plateado cósmico
-      if (avatarType === 'comet') {
-        const tones = [
-          [0.92, 0.98, 1.0],
-          [0.35, 0.85, 1.0],
-          [0.15, 0.55, 0.95],
-          [0.75, 0.90, 1.0]
-        ];
-        const idx = Math.floor((time * 3 + boid.phase * 2)) % tones.length;
-        return tones[Math.abs(idx)];
-      }
-
-      // 4. Pez Payaso: Arrecife tropical y naranja bioluminiscente
-      if (avatarType === 'clownfish') {
-        const tones = [
-          [1.0, 0.42, 0.0],
-          [1.0, 0.60, 0.1],
-          [0.0, 0.90, 0.95],
-          [1.0, 0.95, 0.85]
-        ];
-        const idx = Math.floor((time * 2 + boid.phase * 2)) % tones.length;
-        return tones[Math.abs(idx)];
-      }
-
-      // 5. Hatsune Miku: Teal / Cian neón característico y primary electric
-      if (avatarType === 'miku') {
-        const tones = [
-          [0.22, 0.77, 0.73], // #39C5BB Miku Teal
-          [0.0, 0.95, 0.95],  // Cian eléctrico
-          [0.86, 0.25, 0.15],  // Primary Pop
-          [0.85, 0.98, 1.0]   // Blanco Neón
-        ];
-        const idx = Math.floor((time * 3 + boid.phase * 2)) % tones.length;
-        return tones[Math.abs(idx)];
-      }
-
-      // 6. Predeterminado / Trazo: Modulación armónica sobre la paleta del estado global
-      if (typeof AetheriaState !== 'undefined') {
-        const baseColors = AetheriaState.getPaletteColors();
-        const baseColor = baseColors[boid.id % baseColors.length] || [0.0, 0.95, 1.0];
-        const wave = 0.75 + 0.25 * Math.sin(time * 1.5 + boid.phase);
-        return [
-          MathUtils.clamp(baseColor[0] * wave + 0.1, 0.0, 1.0),
-          MathUtils.clamp(baseColor[1] * wave + 0.1, 0.0, 1.0),
-          MathUtils.clamp(baseColor[2] * wave + 0.1, 0.0, 1.0)
-        ];
-      }
-
-      return [0.0, 0.95, 1.0];
     }
 
-    hsvToRgb(h, s, v) {
-      let r, g, b;
-      const i = Math.floor(h * 6);
-      const f = h * 6 - i;
-      const p = v * (1 - s);
-      const q = v * (1 - f * s);
-      const t = v * (1 - (1 - f) * s);
-      switch (i % 6) {
-        case 0: r = v; g = t; b = p; break;
-        case 1: r = q; g = v; b = p; break;
-        case 2: r = p; g = v; b = t; break;
-        case 3: r = p; g = q; b = v; break;
-        case 4: r = t; g = p; b = v; break;
-        case 5: r = v; g = p; b = q; break;
+    /**
+     * Generador de color temático y autónomo en modo pecera bajo el Canon Sanzo Wada.
+     */
+    getAutoSwarmColor(avatarType, boid, time) {
+      // 1. Nyan Cat: Policromía Kuikuiltik Wada (Sin morados neón prohibidos)
+      if (avatarType === 'nyan') {
+        const wadaRainbow = [
+          [0.800, 0.071, 0.212], // Carmine #cc1236
+          [0.953, 0.455, 0.125], // Orange Cempasúchil #f37420
+          [1.000, 0.867, 0.000], // Apricot Yellow #ffdd00
+          [0.000, 0.706, 0.608], // Sea Green Chalchíhuitl #00b49b
+          [0.000, 0.576, 0.647], // Cerulian Blue Azul Maya #0093a5
+          [0.718, 0.122, 0.341]  // Pomegranate Purple #b71f57
+        ];
+        const pos = ((time * 1.8 + boid.phase) % wadaRainbow.length + wadaRainbow.length) % wadaRainbow.length;
+        const idx0 = Math.floor(pos);
+        const idx1 = (idx0 + 1) % wadaRainbow.length;
+        const frac = pos - idx0;
+        const c0 = wadaRainbow[idx0];
+        const c1 = wadaRainbow[idx1];
+        return [
+          c0[0] + (c1[0] - c0[0]) * frac,
+          c0[1] + (c1[1] - c0[1]) * frac,
+          c0[2] + (c1[2] - c0[2]) * frac
+        ];
       }
-      return [r, g, b];
+
+      // 2. Cohete: Fuego Solar & Rojo Enchilada Wada
+      if (avatarType === 'rocket') {
+        const tones = [
+          [0.867, 0.251, 0.153], // Red Orange #dd4027
+          [0.953, 0.455, 0.125], // Orange #f37420
+          [1.000, 0.867, 0.000], // Apricot Yellow #ffdd00
+          [0.800, 0.071, 0.212]  // Carmine #cc1236
+        ];
+        const idx = Math.floor(time * 4 + boid.phase * 3) % tones.length;
+        return tones[Math.abs(idx)];
+      }
+
+      // 3. Cometa: Azul Maya, Calamine Blue & Cal Viva Wada
+      if (avatarType === 'comet') {
+        const tones = [
+          [0.961, 0.925, 0.761], // Sulpher Yellow #f5ecc2
+          [0.471, 0.804, 0.816], // Calamine Blue #78cdd0
+          [0.000, 0.576, 0.647], // Cerulian Blue #0093a5
+          [0.737, 0.894, 0.898]  // Nile Blue #bce4e5
+        ];
+        const idx = Math.floor(time * 3 + boid.phase * 2) % tones.length;
+        return tones[Math.abs(idx)];
+      }
+
+      // 4. Pez Payaso / Cardumen de Arrecife: Bioluminiscencia Wada (Grenadine Pink, Cempasúchil, Azul Maya)
+      if (avatarType === 'clownfish' || avatarType === 'fish') {
+        const tones = [
+          [0.953, 0.455, 0.125], // Orange Cempasúchil #f37420
+          [0.957, 0.502, 0.404], // Grenadine Pink #f48067
+          [0.000, 0.706, 0.608], // Sea Green #00b49b
+          [0.961, 0.925, 0.761]  // Sulpher Yellow #f5ecc2
+        ];
+        const idx = Math.floor(time * 2.2 + boid.id + boid.phase) % tones.length;
+        return tones[Math.abs(idx)];
+      }
+
+      // 5. Hatsune Miku: Jadeíta Chalchíhuitl & Spinel Red Wada
+      if (avatarType === 'miku') {
+        const tones = [
+          [0.000, 0.706, 0.608], // Sea Green #00b49b
+          [0.000, 0.592, 0.553], // Benzol Green #00978d
+          [0.949, 0.447, 0.569], // Spinel Red #f27291
+          [0.710, 0.871, 0.800]  // Turquoise Green #b5decc
+        ];
+        const idx = Math.floor(time * 3 + boid.phase * 2) % tones.length;
+        return tones[Math.abs(idx)];
+      }
+
+      // 6. Predeterminado: Interpolación armónica suave sobre la paleta Sanzo Wada activa
+      if (typeof AetheriaState !== 'undefined') {
+        const baseColors = AetheriaState.getPaletteColors();
+        const baseColor = baseColors[boid.id % baseColors.length] || [0.957, 0.502, 0.404];
+        const wave = 0.82 + 0.18 * Math.sin(time * 1.5 + boid.phase);
+        return [
+          MathUtils.clamp(baseColor[0] * wave, 0.0, 1.0),
+          MathUtils.clamp(baseColor[1] * wave, 0.0, 1.0),
+          MathUtils.clamp(baseColor[2] * wave, 0.0, 1.0)
+        ];
+      }
+
+      return [0.957, 0.502, 0.404];
     }
 
     updateAndEmit(dt, fluidCore, particlesEngine) {
@@ -258,7 +322,6 @@
       const aspect = w / h;
       const nowSec = (typeof performance !== 'undefined' ? performance.now() : Date.now()) * 0.001;
 
-      // Sincronizar cantidad de boids con AetheriaState
       const targetCount = (typeof AetheriaState !== 'undefined') ? AetheriaState.swarmCount : 3;
       while (this.boids.length < targetCount) {
         this.boids.push(new Boid(this.boids.length, 0.5 + (Math.random() - 0.5) * 0.3, 0.5 + (Math.random() - 0.5) * 0.3));
@@ -267,24 +330,39 @@
         this.boids.pop();
       }
 
-      const avatarType = (typeof AetheriaState !== 'undefined') ? AetheriaState.swarmAvatar : 'nyan';
-      const trailCfg = (typeof AetheriaCursor !== 'undefined') ? AetheriaCursor.getTrailConfig() : { radiusScale: 0.35, sparkType: 'star', sparkCount: 2, offset: -0.024, impulse: 0.85 };
+      const avatarType = (typeof AetheriaState !== 'undefined') ? AetheriaState.swarmAvatar : 'clownfish';
+      const trailCfg = (typeof AetheriaCursor !== 'undefined') ? AetheriaCursor.getTrailConfig() : { radiusScale: 0.35, sparkType: 'bubbles', sparkCount: 2, impulse: 0.85 };
 
       for (let i = 0; i < this.boids.length; i++) {
         const b = this.boids[i];
         b.update(this.boids, aspect, dt);
 
-        // Inyección de Color Autónomo directamente en la posición del Boid (sin puntos traseros)
         const color = this.getAutoSwarmColor(avatarType, b, this.time);
 
-        // Oscilación armónica orgánica
-        const boidMod = 0.85 + 0.25 * Math.sin(nowSec * 1.2 + b.phase);
+        // Impulso hidrodinámico sincronizado con el aleteo caudal
+        const tailStroke = Math.abs(Math.cos(b.tailPhase));
+        const boidMod = 0.80 + 0.38 * tailStroke;
         const impulseMultiplier = (trailCfg.impulse || 1.0) * boidMod;
-        const splatForce = (FluidCore.config.SPLAT_FORCE || 6000) * 0.42 * impulseMultiplier;
-        const splatRadius = trailCfg.radiusScale * (0.9 + 0.2 * Math.sin(nowSec * 0.8 + b.phase));
+        const splatForce = (FluidCore.config.SPLAT_FORCE || 6000) * 0.44 * impulseMultiplier;
+        const splatRadius = trailCfg.radiusScale * (0.85 + 0.25 * Math.sin(nowSec * 1.1 + b.phase)) * b.scale;
 
-        // Inyección autónoma e independiente (cada boid es 1 entidad individual, aislada de la simetría del puntero)
-        fluidCore.splat(b.x, b.y, b.vx * splatForce, b.vy * splatForce, color, splatRadius);
+        // Punto de inyección en la estela caudal del pez para crear vórtices de Kármán realistas
+        const speed = Math.max(0.0001, MathUtils.magnitude(b.vx, b.vy));
+        const dirX = b.vx / speed;
+        const dirY = b.vy / speed;
+        const tailWakeX = MathUtils.clamp(b.x - dirX * 0.014, 0.01, 0.99);
+        const tailWakeY = MathUtils.clamp(b.y - dirY * 0.014, 0.01, 0.99);
+
+        fluidCore.splat(tailWakeX, tailWakeY, b.vx * splatForce, b.vy * splatForce, color, splatRadius);
+
+        // Emisión sutil de burbujas / chispas en los golpes de aleta caudal
+        if (particlesEngine && typeof particlesEngine.emit === 'function' && Math.random() < 0.18) {
+          const px = tailWakeX * w;
+          const py = (1.0 - tailWakeY) * h;
+          const hex = `rgb(${Math.round(color[0] * 255)}, ${Math.round(color[1] * 255)}, ${Math.round(color[2] * 255)})`;
+          const pType = (avatarType === 'clownfish' || avatarType === 'fish') ? 'bubbles' : (trailCfg.sparkType || 'star');
+          particlesEngine.emit(px, py, b.vx * 180, -b.vy * 180, hex, pType, 1);
+        }
       }
     }
 

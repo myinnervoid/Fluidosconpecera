@@ -171,7 +171,7 @@
             this.container.style.opacity = '0';
             setTimeout(() => {
               this.container.style.backgroundImage = 'none';
-              this.container.style.backgroundColor = '#07090e';
+              this.container.style.backgroundColor = '#051230';
               this.container.style.opacity = '1';
               const res = (typeof createApiResponse === 'function')
                 ? createApiResponse(true, { background: 'none' }, null, 'Fondo vacío aplicado')
@@ -180,7 +180,7 @@
             }, 300);
           } else {
             this.container.style.backgroundImage = 'none';
-            this.container.style.backgroundColor = '#07090e';
+            this.container.style.backgroundColor = '#051230';
             this.container.style.opacity = '1';
             const res = (typeof createApiResponse === 'function')
               ? createApiResponse(true, { background: 'none' }, null, 'Fondo vacío aplicado')

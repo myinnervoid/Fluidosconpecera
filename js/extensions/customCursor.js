@@ -27,10 +27,10 @@
     },
     nyan: {
       name: 'Nyan Cat',
-      tag: 'Arcoíris Pixel',
+      tag: 'Policromía Wada',
       radiusScale: 0.38,
       sparkType: 'pixel',
-      sparkColors: ['#ff0055', '#ff9900', '#ffff00', '#33ff00', '#0099ff', '#9900cc'],
+      sparkColors: ['#cc1236', '#f37420', '#ffdd00', '#00b49b', '#006eb8', '#b71f57'],
       sparkCount: 3,
       impulse: 0.85,
       offset: 0.000,
@@ -38,10 +38,10 @@
     },
     rocket: {
       name: 'Cohete',
-      tag: 'Tobera de Fuego',
+      tag: 'Fuego Solar Wada',
       radiusScale: 0.32,
       sparkType: 'fire',
-      sparkColors: ['#ffbe0b', '#ff4500', '#dd4027', '#ff9e1b', '#ffffff'],
+      sparkColors: ['#ffdd00', '#f37420', '#dd4027', '#f99d1b', '#f5ecc2'],
       sparkCount: 3,
       impulse: 1.25,
       offset: 0.000,
@@ -49,43 +49,43 @@
     },
     comet: {
       name: 'Cometa',
-      tag: 'Plasma Cósmico',
+      tag: 'Azul Maya & Cal',
       radiusScale: 0.28,
       sparkType: 'dust',
-      sparkColors: ['#38bdf8', '#dd4027', '#e0f2fe', '#ffffff', '#a78bfa'],
+      sparkColors: ['#0093a5', '#78cdd0', '#bce4e5', '#f5ecc2', '#00b49b'],
       sparkCount: 3,
       impulse: 1.10,
       offset: 0.000,
       angleCorrection: 45
     },
     clownfish: {
-      name: 'Pez Payaso',
-      tag: 'Burbujas Marinas',
+      name: 'Pez Arrecife',
+      tag: 'Nado Carangiforme',
       radiusScale: 0.34,
       sparkType: 'bubbles',
-      sparkColors: ['#38bdf8', '#a5f3fc', '#ffffff', '#fed7aa', '#ff7a00'],
+      sparkColors: ['#78cdd0', '#bce4e5', '#f5ecc2', '#f48067', '#f37420'],
       sparkCount: 2,
-      impulse: 0.75,
+      impulse: 0.78,
       offset: 0.000,
       angleCorrection: 0
     },
     fish: {
-      name: 'Pez Nemo',
-      tag: 'Burbujas Marinas',
+      name: 'Pez Arrecife',
+      tag: 'Nado Carangiforme',
       radiusScale: 0.34,
       sparkType: 'bubbles',
-      sparkColors: ['#38bdf8', '#a5f3fc', '#ffffff', '#fed7aa', '#ff7a00'],
+      sparkColors: ['#78cdd0', '#bce4e5', '#f5ecc2', '#f48067', '#f37420'],
       sparkCount: 2,
-      impulse: 0.75,
+      impulse: 0.78,
       offset: 0.000,
       angleCorrection: 0
     },
     miku: {
       name: 'Hatsune Miku',
-      tag: 'Techno Pop Neón',
+      tag: 'Jadeíta & Grana',
       radiusScale: 0.36,
       sparkType: 'neon',
-      sparkColors: ['#39C5BB', '#dd4027', '#dd4027', '#ff80ab', '#ffffff'],
+      sparkColors: ['#00b49b', '#00978d', '#f27291', '#b5decc', '#f5ecc2'],
       sparkCount: 3,
       impulse: 0.90,
       offset: 0.000,
@@ -93,10 +93,10 @@
     },
     custom: {
       name: 'Personalizado',
-      tag: 'Estrellas Oro',
+      tag: 'Estrellas Canario',
       radiusScale: 0.40,
       sparkType: 'star',
-      sparkColors: ['#fbbf24', '#f59e0b', '#fef08a', '#ffffff'],
+      sparkColors: ['#ffdd00', '#f99d1b', '#f3a257', '#f5ecc2'],
       sparkCount: 3,
       impulse: 1.00,
       offset: 0.000,
@@ -105,33 +105,33 @@
   };
 
   const AVATAR_SVGS = {
-    // 1. Nyan Cat
+    // 1. Nyan Cat (Sanzo Wada Polychrome)
     nyan: `
       <svg viewBox="0 0 48 32" class="cursor-svg nyan-svg" aria-hidden="true">
-        <path d="M0 8h8v16H0z" fill="#ff0000" opacity="0.85"/>
-        <path d="M0 11h8v10H0z" fill="#ff9900" opacity="0.85"/>
-        <path d="M0 14h8v4H0z" fill="#ffff00" opacity="0.85"/>
-        <path d="M0 16h8v4H0z" fill="#33ff00" opacity="0.85"/>
-        <path d="M0 18h8v4H0z" fill="#0099ff" opacity="0.85"/>
-        <path d="M0 20h8v4H0z" fill="#6633ff" opacity="0.85"/>
-        <rect x="10" y="6" width="24" height="20" rx="3" fill="#ffd199" stroke="#111" stroke-width="1.2"/>
-        <rect x="13" y="9" width="18" height="14" rx="2" fill="#ff99bb"/>
-        <circle cx="16" cy="12" r="1" fill="#ff0055"/>
-        <circle cx="22" cy="11" r="1" fill="#9900cc"/>
-        <circle cx="27" cy="14" r="1" fill="#ff0055"/>
-        <circle cx="17" cy="18" r="1" fill="#9900cc"/>
-        <circle cx="24" cy="19" r="1" fill="#ff0055"/>
-        <rect x="26" y="10" width="16" height="14" rx="3" fill="#999999" stroke="#111" stroke-width="1.2"/>
-        <polygon points="27,10 31,4 33,10" fill="#999999" stroke="#111" stroke-width="1"/>
-        <polygon points="37,10 39,4 41,10" fill="#999999" stroke="#111" stroke-width="1"/>
-        <circle cx="31" cy="15" r="1.5" fill="#000"/>
-        <circle cx="37" cy="15" r="1.5" fill="#000"/>
-        <circle cx="34" cy="17" r="1" fill="#ff6699"/>
-        <circle cx="28" cy="17" r="1.5" fill="#ff9999"/>
-        <circle cx="40" cy="17" r="1.5" fill="#ff9999"/>
-        <rect x="6" y="14" width="5" height="3" rx="1.5" fill="#999999" stroke="#111" stroke-width="1"/>
-        <rect x="14" y="25" width="4" height="4" rx="2" fill="#999999" stroke="#111" stroke-width="1"/>
-        <rect x="26" y="25" width="4" height="4" rx="2" fill="#999999" stroke="#111" stroke-width="1"/>
+        <path d="M0 8h8v16H0z" fill="#cc1236" opacity="0.9"/>
+        <path d="M0 11h8v10H0z" fill="#f37420" opacity="0.9"/>
+        <path d="M0 14h8v4H0z" fill="#ffdd00" opacity="0.9"/>
+        <path d="M0 16h8v4H0z" fill="#00b49b" opacity="0.9"/>
+        <path d="M0 18h8v4H0z" fill="#006eb8" opacity="0.9"/>
+        <path d="M0 20h8v4H0z" fill="#b71f57" opacity="0.9"/>
+        <rect x="10" y="6" width="24" height="20" rx="3" fill="#f8c779" stroke="#111314" stroke-width="1.2"/>
+        <rect x="13" y="9" width="18" height="14" rx="2" fill="#f27291"/>
+        <circle cx="16" cy="12" r="1" fill="#cc1236"/>
+        <circle cx="22" cy="11" r="1" fill="#b71f57"/>
+        <circle cx="27" cy="14" r="1" fill="#cc1236"/>
+        <circle cx="17" cy="18" r="1" fill="#b71f57"/>
+        <circle cx="24" cy="19" r="1" fill="#cc1236"/>
+        <rect x="26" y="10" width="16" height="14" rx="3" fill="#a1a39a" stroke="#111314" stroke-width="1.2"/>
+        <polygon points="27,10 31,4 33,10" fill="#a1a39a" stroke="#111314" stroke-width="1"/>
+        <polygon points="37,10 39,4 41,10" fill="#a1a39a" stroke="#111314" stroke-width="1"/>
+        <circle cx="31" cy="15" r="1.5" fill="#111314"/>
+        <circle cx="37" cy="15" r="1.5" fill="#111314"/>
+        <circle cx="34" cy="17" r="1" fill="#f27291"/>
+        <circle cx="28" cy="17" r="1.5" fill="#f48067"/>
+        <circle cx="40" cy="17" r="1.5" fill="#f48067"/>
+        <rect x="6" y="14" width="5" height="3" rx="1.5" fill="#a1a39a" stroke="#111314" stroke-width="1"/>
+        <rect x="14" y="25" width="4" height="4" rx="2" fill="#a1a39a" stroke="#111314" stroke-width="1"/>
+        <rect x="26" y="25" width="4" height="4" rx="2" fill="#a1a39a" stroke="#111314" stroke-width="1"/>
       </svg>
     `,
 

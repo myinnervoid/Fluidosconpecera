@@ -1,7 +1,7 @@
 /**
- * AETHERIA | Sand & Granular Particle Post-Process Shader Engine
- * Transforms fluid flow into thousands of distinct falling sand grains with cellular outlines,
- * mineral grain specular noise, and retro LUT color palette mapping.
+ * AETHERIA | Sand & Mineral Granular Post-Process Shader Engine (Hexagonal / Voronoi Tessellation)
+ * Transforms fluid flow into thousands of organic mineral grains (Tezontle, Nixtamal, Chaquira Wixárika)
+ * with staggered hexagonal packing, crystalline facet normals, and Sanzo Wada palette quantization.
  */
 
 (function (root) {
@@ -13,12 +13,20 @@
       this.program = null;
       this.quadBuffer = null;
       this.isEnabled = false;
-      this.grainSize = 10.0; // Size of individual sand grain in pixels
-      this.borderDarkness = 0.45; // Outline contrast between grains
-      this.grainJitter = 0.35; // Specular noise intensity per sand grain
+      this.grainSize = 10.0; // Size of individual mineral grain in pixels
+      this.borderDarkness = 0.52; // Inter-grain shadow contrast
+      this.grainJitter = 0.32; // Mineral facet sparkle intensity
+    }
+
+    setGrainSize(val) {
+      const parsed = parseFloat(val);
+      if (Number.isFinite(parsed)) {
+        this.grainSize = Math.max(4.0, Math.min(32.0, parsed));
+      }
     }
 
     init(gl) {
+      if (!gl) return;
       this.gl = gl;
 
       const vertexShaderSource = `
@@ -44,7 +52,12 @@
         uniform int uPaletteSize;
         uniform int uUsePalette;
 
-        // Hash function for procedural per-grain micro-variation
+        // Deterministic 2D hash for organic grain variation
+        vec2 hash22(vec2 p) {
+          p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
+          return fract(sin(p) * 43758.5453);
+        }
+
         float hash21(vec2 p) {
           p = fract(p * vec2(234.34, 435.345));
           p += dot(p, p + 34.23);
@@ -52,38 +65,51 @@
         }
 
         void main () {
-          vec2 gridCount = uResolution / max(uGrainSize, 2.0);
-          vec2 cellId = floor(vUv * gridCount);
-          vec2 cellUv = fract(vUv * gridCount);
-          vec2 sampleUv = (cellId + 0.5) / gridCount;
+          float scale = max(uGrainSize, 3.0);
+          vec2 gridCount = uResolution / scale;
+
+          // Staggered Hexagonal-like Row Offset for organic mineral packing (zero rigid square grid)
+          vec2 st = vUv * gridCount;
+          float rowIndex = floor(st.y);
+          st.x += mod(rowIndex, 2.0) * 0.5;
+
+          vec2 cellId = floor(st);
+          vec2 cellUv = fract(st) - 0.5;
+
+          // Micro-jitter per grain center
+          vec2 jitter = (hash22(cellId) - 0.5) * 0.22;
+          vec2 grainVec = cellUv - jitter;
+          float distFromCenter = length(grainVec);
+
+          // Sample underlying fluid density at grain center
+          vec2 sampleUv = (vec2(cellId.x - mod(rowIndex, 2.0) * 0.5, cellId.y) + 0.5) / gridCount;
+          sampleUv = clamp(sampleUv, 0.001, 0.999);
 
           vec3 src = texture2D(uTexture, sampleUv).rgb;
           float density = max(src.r, max(src.g, src.b));
 
-          // If no fluid in cell, render transparent background
-          if (density < 0.02) {
+          if (density < 0.018) {
             gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
             return;
           }
 
-          // Procedural mineral noise for each sand grain
+          // Rounded pebble / chaquira grain boundary with bevel normal
+          float grainRadius = 0.46 + (hash21(cellId + 7.1) - 0.5) * 0.08;
+          float rimMask = 1.0 - smoothstep(grainRadius - 0.14, grainRadius + 0.04, distFromCenter);
+
+          // 3D hemispherical normal per grain for mineral light reflection
+          vec2 normXY = grainVec / max(grainRadius, 0.1);
+          float normZ = sqrt(max(0.0, 1.0 - dot(normXY, normXY)));
+          vec3 grainNormal = normalize(vec3(normXY, normZ));
+          vec3 lightDir = normalize(vec3(-0.35, 0.45, 0.82));
+          float diffuse = clamp(dot(grainNormal, lightDir), 0.25, 1.0);
+          float spec = pow(max(dot(grainNormal, normalize(lightDir + vec3(0.0, 0.0, 1.0))), 0.0), 12.0) * 0.28;
+
           float grainSeed = hash21(cellId);
           float grainNoise = (grainSeed - 0.5) * uGrainJitter;
 
-          // Cellular border & grain bevel (gives the distinct granular hourglass look)
-          vec2 borderDist = min(cellUv, 1.0 - cellUv);
-          float minBorder = min(borderDist.x, borderDist.y);
-          float borderFactor = smoothstep(0.0, 0.16, minBorder);
-          
-          // Subtle circular bevel highlight
-          float centerDist = distance(cellUv, vec2(0.5));
-          float grainHighlight = smoothstep(0.45, 0.05, centerDist) * 0.25;
-
-          vec3 baseColor = src + grainNoise + grainHighlight;
-          baseColor *= mix(1.0 - uBorderDarkness, 1.0, borderFactor);
-
-          // Tone-mapping
-          baseColor = baseColor / (baseColor + vec3(0.65));
+          vec3 baseColor = src + grainNoise;
+          baseColor = baseColor / (baseColor + vec3(0.55));
 
           if (uUsePalette == 1 && uPaletteSize > 0) {
             float minDist = 999.0;
@@ -97,10 +123,15 @@
                 bestColor = uPalette[i];
               }
             }
-            baseColor = mix(bestColor, baseColor, 0.25) * mix(1.0 - uBorderDarkness, 1.0, borderFactor);
+            baseColor = mix(bestColor, baseColor, 0.22);
           }
 
-          gl_FragColor = vec4(baseColor, 1.0);
+          // Apply 3D mineral facet shading & inter-grain mortar shadow
+          float shadowFactor = mix(1.0 - uBorderDarkness, 1.0, rimMask);
+          vec3 finalColor = (baseColor * (0.55 + 0.55 * diffuse) + vec3(spec)) * shadowFactor;
+
+          float alpha = clamp((density - 0.018) * 14.0, 0.0, 1.0) * mix(0.65, 1.0, rimMask);
+          gl_FragColor = vec4(finalColor, alpha);
         }
       `;
 

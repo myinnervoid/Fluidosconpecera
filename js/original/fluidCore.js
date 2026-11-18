@@ -30,10 +30,11 @@
         SHADING: true,
         COLORFUL: true,
         PAUSED: false,
-        BACK_COLOR: { r: 7, g: 9, b: 14 },
+        BACK_COLOR: { r: 5, g: 18, b: 48 }, // Wada Deep Indigo #051230
         TRANSPARENT: false,
         BLOOM: false,
         SUNRAYS: false,
+        THERMAL_CONVECTION: false,
         GRAVITY: { x: 0.0, y: 0.0 }
       };
 
@@ -246,12 +247,15 @@
         varying vec2 vUv;
         uniform sampler2D uVelocity;
         uniform sampler2D uSource;
+        uniform sampler2D uDensityField;
         uniform vec2 texelSize;
         uniform vec2 dyeTexelSize;
         uniform float dt;
         uniform float dissipation;
         uniform vec2 u_gravity;
         uniform int isVelocity;
+        uniform int uThermalConvection;
+        uniform float uTime;
 
         vec4 bilerp (sampler2D sam, vec2 uv, vec2 tSize) {
           vec2 st = uv / tSize - 0.5;
@@ -272,6 +276,19 @@
           
           if (isVelocity == 1) {
             result.xy += u_gravity * dt;
+
+            // Convección Térmica Rayleigh-Bénard (Modo Lava / Magma Popocatépetl)
+            if (uThermalConvection == 1) {
+              vec3 dye = texture2D(uDensityField, vUv).rgb;
+              float heat = dot(dye, vec3(0.45, 0.38, 0.17));
+              // Flotabilidad ascendente cuando hay calor concentrado y enfriamiento descendente en la cima
+              float verticalZone = (0.52 - vUv.y) * 2.2;
+              float buoyancy = (heat - 0.18) * 18.0 + verticalZone * 1.4;
+              float lateralWave = sin(vUv.y * 9.42 + uTime * 1.2) * heat * 3.5;
+              result.x += lateralWave * dt;
+              result.y += buoyancy * dt;
+            }
+
             result.xy = clamp(result.xy, -2500.0, 2500.0);
           }
 
@@ -463,11 +480,16 @@
             float dx = length(rc) - length(lc);
             float dy = length(tc) - length(bc);
 
-            vec3 n = normalize(vec3(dx, dy, length(texelSize)));
-            vec3 l = vec3(0.0, 0.0, 1.0);
+            vec3 n = normalize(vec3(dx * 1.4, dy * 1.4, length(texelSize) * 1.75));
+            vec3 lightDir = normalize(vec3(-0.32, 0.48, 0.82));
+            vec3 viewDir = vec3(0.0, 0.0, 1.0);
+            vec3 halfVec = normalize(lightDir + viewDir);
 
-            float diffuse = clamp(dot(n, l) + 0.65, 0.65, 1.0);
-            c *= diffuse;
+            float diffuse = clamp(dot(n, lightDir) * 0.45 + 0.72, 0.62, 1.12);
+            float spec = pow(max(dot(n, halfVec), 0.0), 24.0) * 0.22 * clamp(densityMag, 0.0, 1.0);
+            float fresnel = pow(1.0 - max(dot(n, viewDir), 0.0), 2.6) * 0.18;
+
+            c = c * diffuse + vec3(spec) + c * fresnel;
           }
 
           // Apply ACES Filmic compression (only affects bright colours, not blacks)
@@ -852,17 +874,20 @@
       this.blit(this.velocity.write);
       this.velocity.swap();
 
-      // 7. Advect Velocity (with u_gravity pre-Poisson force)
+      // 7. Advect Velocity (with u_gravity & Rayleigh-Bénard thermal convection)
       const pAdv = this.programs.advection;
       pAdv.bind();
       gl.uniform2f(pAdv.uniforms.texelSize, this.velocity.texelSizeX, this.velocity.texelSizeY);
       gl.uniform2f(pAdv.uniforms.dyeTexelSize, this.velocity.texelSizeX, this.velocity.texelSizeY);
       gl.uniform1i(pAdv.uniforms.uVelocity, this.velocity.read.attach(0));
       gl.uniform1i(pAdv.uniforms.uSource, this.velocity.read.attach(0));
+      gl.uniform1i(pAdv.uniforms.uDensityField, this.density.read.attach(2));
       gl.uniform1f(pAdv.uniforms.dt, dt);
       gl.uniform1f(pAdv.uniforms.dissipation, this.config.VELOCITY_DISSIPATION);
       gl.uniform2f(pAdv.uniforms.u_gravity, this.config.GRAVITY.x, this.config.GRAVITY.y);
       gl.uniform1i(pAdv.uniforms.isVelocity, 1);
+      gl.uniform1i(pAdv.uniforms.uThermalConvection, this.config.THERMAL_CONVECTION ? 1 : 0);
+      gl.uniform1f(pAdv.uniforms.uTime, (typeof performance !== 'undefined' ? performance.now() : Date.now()) * 0.001);
       this.blit(this.velocity.write);
       this.velocity.swap();
 
@@ -874,6 +899,7 @@
       gl.uniform1f(pAdv.uniforms.dissipation, this.config.DENSITY_DISSIPATION);
       gl.uniform2f(pAdv.uniforms.u_gravity, 0.0, 0.0);
       gl.uniform1i(pAdv.uniforms.isVelocity, 0);
+      gl.uniform1i(pAdv.uniforms.uThermalConvection, 0);
       this.blit(this.density.write);
       this.density.swap();
     }

@@ -1,7 +1,8 @@
 /**
  * AETHERIA | Fidgets & Physical Interactions
- * Controls Supernova radial shockwave, Vortex rotational impulse, Tangible Gravity,
- * and Sensory Profiles (Fluid, Sand, Gas, Lava Lamp).
+ * Controls Supernova polychrome radial shockwave, Vortex rotational impulse,
+ * Tsunami wave, Cosmic Rain, Tangible Gravity, and Sensory Profiles (Fluid, Sand, Gas, Lava Lamp).
+ * Physically coupled with Autonomous Swarm Boids (AetheriaSwarm.applyForceField).
  */
 
 (function (root) {
@@ -30,11 +31,21 @@
       if (typeof window !== 'undefined' && window.AetheriaUI && typeof window.AetheriaUI.getNextColor === 'function') {
         return window.AetheriaUI.getNextColor();
       }
-      return [1.0, 0.2, 0.6];
+      return [0.957, 0.502, 0.404]; // Wada Grenadine Pink #f48067
+    }
+
+    _getPaletteColorAt(idx, fallbackColor) {
+      if (typeof AetheriaState !== 'undefined' && typeof AetheriaState.getPaletteColors === 'function') {
+        const cols = AetheriaState.getPaletteColors();
+        if (Array.isArray(cols) && cols.length > 0) {
+          return cols[idx % cols.length];
+        }
+      }
+      return fallbackColor;
     }
 
     // ==========================================
-    // 3.1 Supernova (con coordenadas de cursor)
+    // 3.1 Supernova (Onda de Choque Policromática Wada)
     // ==========================================
     supernova(x = 0.5, y = 0.5) {
       const core = this._getCore();
@@ -48,39 +59,46 @@
       if (!activeCore) return;
       const col = this._getColor(colorRgb);
 
-      // [MEJORA] Detectar si el swarm está activo y ajustar intensidad
       const isSwarmActive = (typeof AetheriaSwarm !== 'undefined' && AetheriaSwarm.isEnabled);
-      const extraIntensity = isSwarmActive ? 2.0 : 1.0;
+      const extraIntensity = isSwarmActive ? 1.85 : 1.0;
       const count = isSwarmActive ? 36 : 24;
       const force = 3400 * extraIntensity;
-      const radiusScale = 0.65 * (isSwarmActive ? 1.3 : 1.0);
+      const radiusScale = 0.65 * (isSwarmActive ? 1.25 : 1.0);
 
       for (let i = 0; i < count; i++) {
         const angle = (i / count) * Math.PI * 2;
         const dx = Math.cos(angle) * force;
         const dy = Math.sin(angle) * force;
-        activeCore.splat(center.x, center.y, dx, dy, col, radiusScale);
+        const rayColor = (Array.isArray(colorRgb) && colorRgb.length >= 3)
+          ? col
+          : this._getPaletteColorAt(i, col);
+        activeCore.splat(center.x, center.y, dx, dy, rayColor, radiusScale);
       }
 
-      // === EMITIR PARTÍCULAS (Fuego/Plasma) ===
+      // Impulsar físicamente el cardumen de peces ante la onda expansiva
+      if (typeof AetheriaSwarm !== 'undefined' && typeof AetheriaSwarm.applyForceField === 'function') {
+        AetheriaSwarm.applyForceField(center.x, center.y, 0.0055, 'radial');
+      }
+
+      // Emitir partículas solares Wada (Cempasúchil #f37420 & Canario #ffdd00)
       const ps = this.particleSystem;
       if (ps && typeof document !== 'undefined') {
         const canvas = document.getElementById('gl-canvas');
         const rect = canvas ? canvas.getBoundingClientRect() : { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
         const cx = rect.left + center.x * rect.width;
-        const cy = rect.top + (1.0 - center.y) * rect.height; // WebGL Y invertido
+        const cy = rect.top + (1.0 - center.y) * rect.height;
 
         if (typeof ps.setEffect === 'function') {
-          ps.setEffect('fire', '#ffaa44');
+          ps.setEffect('fire', '#f37420');
         }
-        const particleCount = isSwarmActive ? 50 : 30; // Más partículas si swarm activo
+        const particleCount = isSwarmActive ? 46 : 30;
         for (let i = 0; i < particleCount; i++) {
           const angle = Math.random() * Math.PI * 2;
-          const speed = 2 + Math.random() * (isSwarmActive ? 12 : 8);
+          const speed = 2 + Math.random() * (isSwarmActive ? 11 : 8);
           const vx = Math.cos(angle) * speed;
           const vy = Math.sin(angle) * speed - 1;
           if (typeof ps.emit === 'function') {
-            ps.emit(cx, cy, vx, vy, '#dd4027', 'fire', 2);
+            ps.emit(cx, cy, vx, vy, (i % 2 === 0) ? '#ffdd00' : '#dd4027', 'fire', 2);
           }
         }
       }
@@ -89,7 +107,7 @@
     }
 
     // ==========================================
-    // 3.2 Vórtice (con coordenadas de cursor)
+    // 3.2 Vórtice (Remolino Helicoidal Ollin)
     // ==========================================
     vortex(x = 0.5, y = 0.5) {
       const core = this._getCore();
@@ -104,7 +122,7 @@
       const col = this._getColor(colorRgb);
       const count = 28;
       const force = 3200 * (clockwise ? 1 : -1);
-      const radius = 0.08;
+      const radius = 0.085;
 
       for (let i = 0; i < count; i++) {
         const angle = (i / count) * Math.PI * 2;
@@ -112,10 +130,17 @@
         const oy = MathUtils.clamp(center.y + Math.sin(angle) * radius, 0, 1);
         const dx = -Math.sin(angle) * force;
         const dy = Math.cos(angle) * force;
-        activeCore.splat(ox, oy, dx, dy, col, 0.6);
+        const armColor = (Array.isArray(colorRgb) && colorRgb.length >= 3)
+          ? col
+          : this._getPaletteColorAt(i, col);
+        activeCore.splat(ox, oy, dx, dy, armColor, 0.6);
       }
 
-      // === EMITIR PARTÍCULAS (Polvo cósmico) ===
+      // Arrastrar tangencialmente a los peces cercanos
+      if (typeof AetheriaSwarm !== 'undefined' && typeof AetheriaSwarm.applyForceField === 'function') {
+        AetheriaSwarm.applyForceField(center.x, center.y, 0.0048, 'vortex');
+      }
+
       const ps = this.particleSystem;
       if (ps && typeof document !== 'undefined') {
         const canvas = document.getElementById('gl-canvas');
@@ -124,7 +149,7 @@
         const cy = rect.top + (1.0 - center.y) * rect.height;
 
         if (typeof ps.setEffect === 'function') {
-          ps.setEffect('dust', '#00ccff');
+          ps.setEffect('dust', '#0093a5');
         }
         for (let i = 0; i < 35; i++) {
           const angle = Math.random() * Math.PI * 2;
@@ -132,7 +157,7 @@
           const vx = Math.cos(angle) * speed;
           const vy = Math.sin(angle) * speed;
           if (typeof ps.emit === 'function') {
-            ps.emit(cx + Math.cos(angle) * 30, cy + Math.sin(angle) * 30, vx, vy, '#00e5ff', 'dust', 2);
+            ps.emit(cx + Math.cos(angle) * 30, cy + Math.sin(angle) * 30, vx, vy, '#78cdd0', 'dust', 2);
           }
         }
       }
@@ -141,7 +166,7 @@
     }
 
     // ==========================================
-    // 3.3 Tsunami / Pulso Cuántico
+    // 3.3 Tsunami / Marea Transversal
     // ==========================================
     tsunami() {
       const core = this._getCore();
@@ -158,31 +183,34 @@
       const force = 4000;
 
       for (let i = 0; i < steps; i++) {
-        const norm = (i + 0.5) / steps;
+        const waveCol = (Array.isArray(colorRgb) && colorRgb.length >= 3)
+          ? col
+          : this._getPaletteColorAt(i, col);
         if (direction === 'horizontal') {
-          // Onda transversal que barre de izquierda a derecha con oscilación
-          const y = 0.3 + Math.sin(i * 0.8) * 0.3;
-          activeCore.splat(0.08, y, force, (Math.random() - 0.5) * 600, col, 0.55);
+          const y = 0.15 + (i / steps) * 0.70 + Math.sin(i * 0.8) * 0.06;
+          activeCore.splat(0.08, MathUtils.clamp(y, 0.05, 0.95), force, (Math.random() - 0.5) * 600, waveCol, 0.55);
         } else {
-          // Onda vertical que surge desde la base
-          const x = 0.3 + Math.cos(i * 0.8) * 0.3;
-          activeCore.splat(x, 0.08, (Math.random() - 0.5) * 600, force, col, 0.55);
+          const x = 0.15 + (i / steps) * 0.70 + Math.cos(i * 0.8) * 0.06;
+          activeCore.splat(MathUtils.clamp(x, 0.05, 0.95), 0.08, (Math.random() - 0.5) * 600, force, waveCol, 0.55);
         }
       }
 
-      // === EMITIR PARTÍCULAS (Espuma / Burbujas) ===
+      if (typeof AetheriaSwarm !== 'undefined' && typeof AetheriaSwarm.applyForceField === 'function') {
+        AetheriaSwarm.applyForceField(0.1, 0.5, 0.005, 'tsunami');
+      }
+
       const ps = this.particleSystem;
       if (ps && typeof document !== 'undefined') {
         const canvas = document.getElementById('gl-canvas');
         const rect = canvas ? canvas.getBoundingClientRect() : { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
         if (typeof ps.setEffect === 'function') {
-          ps.setEffect('bubbles', '#66ccff');
+          ps.setEffect('bubbles', '#78cdd0');
         }
         for (let i = 0; i < 25; i++) {
           const cx = rect.left + Math.random() * rect.width;
           const cy = rect.top + Math.random() * rect.height;
           if (typeof ps.emit === 'function') {
-            ps.emit(cx, cy, (Math.random() - 0.5) * 8, -2 - Math.random() * 4, '#66ccff', 'bubbles', 2);
+            ps.emit(cx, cy, (Math.random() - 0.5) * 8, -2 - Math.random() * 4, '#78cdd0', 'bubbles', 2);
           }
         }
       }
@@ -191,7 +219,7 @@
     }
 
     // ==========================================
-    // 3.4 Lluvia Cósmica / Gotas
+    // 3.4 Lluvia de Tláloc / Gotas Minerales
     // ==========================================
     meteorRain() {
       const core = this._getCore();
@@ -204,27 +232,29 @@
       const activeCore = this._getCore(core);
       if (!activeCore) return;
       const col = this._getColor(colorRgb);
-      const force = -3200; // Impulso gravitatorio hacia abajo
+      const force = -3200;
 
       for (let i = 0; i < count; i++) {
         const rx = Math.random() * 0.94 + 0.03;
         const ry = 0.96 - Math.random() * 0.15;
-        activeCore.splat(rx, ry, (Math.random() - 0.5) * 250, force, col, 0.35);
+        const dropCol = (Array.isArray(colorRgb) && colorRgb.length >= 3)
+          ? col
+          : this._getPaletteColorAt(i, col);
+        activeCore.splat(rx, ry, (Math.random() - 0.5) * 250, force, dropCol, 0.35);
       }
 
-      // === EMITIR PARTÍCULAS (Estrellas / Chispas) ===
       const ps = this.particleSystem;
       if (ps && typeof document !== 'undefined') {
         const canvas = document.getElementById('gl-canvas');
         const rect = canvas ? canvas.getBoundingClientRect() : { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
         if (typeof ps.setEffect === 'function') {
-          ps.setEffect('star', '#88ddff');
+          ps.setEffect('star', '#f5ecc2');
         }
         for (let i = 0; i < count; i++) {
           const px = rect.left + Math.random() * rect.width;
           const py = rect.top + Math.random() * (rect.height * 0.3);
           if (typeof ps.emit === 'function') {
-            ps.emit(px, py, (Math.random() - 0.5) * 3, 5 + Math.random() * 6, '#88ddff', 'star', 2);
+            ps.emit(px, py, (Math.random() - 0.5) * 3, 5 + Math.random() * 6, '#ffdd00', 'star', 2);
           }
         }
       }
@@ -251,7 +281,15 @@
     }
 
     setGravityMagnitude(core, mag) {
-      this.gravityMagnitude = mag;
+      // Soportar firma setGravityMagnitude(mag) y setGravityMagnitude(core, mag)
+      if (typeof core === 'number' && mag === undefined) {
+        mag = core;
+        core = null;
+      }
+      const parsed = parseFloat(mag);
+      if (Number.isFinite(parsed)) {
+        this.gravityMagnitude = -Math.abs(parsed);
+      }
       const activeCore = this._getCore(core);
       if (this.isGravityActive && activeCore) {
         activeCore.setGravity(0.0, this.gravityMagnitude);
@@ -265,6 +303,9 @@
       const activeCore = this._getCore(core);
       if (!activeCore) return false;
       activeCore.config.PAUSED = !activeCore.config.PAUSED;
+      if (typeof AetheriaState !== 'undefined') {
+        AetheriaState.isPaused = activeCore.config.PAUSED;
+      }
       this.lastAction = 'pause';
       return activeCore.config.PAUSED;
     }
@@ -318,8 +359,9 @@
         activeCore.setConfig({
           DENSITY_DISSIPATION: 0.35,
           VELOCITY_DISSIPATION: 0.15,
-          CURL: 42.0,
+          CURL: 44.0,
           SPLAT_RADIUS: 0.25,
+          THERMAL_CONVECTION: false,
           SUNRAYS: true,
           BLOOM: true
         });
@@ -328,28 +370,32 @@
         activeCore.setConfig({
           DENSITY_DISSIPATION: 0.85,
           VELOCITY_DISSIPATION: 0.28,
-          CURL: 20.0,
+          CURL: 18.0,
           SPLAT_RADIUS: 0.25,
+          THERMAL_CONVECTION: false,
           SUNRAYS: false,
           BLOOM: false
         });
         activeCore.setGravity(0.0, 0.0);
       } else if (elementName === 'lava') {
         activeCore.setConfig({
-          DENSITY_DISSIPATION: 0.993,
-          VELOCITY_DISSIPATION: 0.985,
-          CURL: 15.0,
+          DENSITY_DISSIPATION: 0.992,
+          VELOCITY_DISSIPATION: 0.96,
+          CURL: 14.0,
           SPLAT_RADIUS: 0.42,
+          THERMAL_CONVECTION: true,
           SUNRAYS: true,
           BLOOM: true
         });
-        activeCore.setGravity(0.0, 0.95);
+        // En modo Lava la flotabilidad la gobierna THERMAL_CONVECTION (Rayleigh-Bénard)
+        activeCore.setGravity(0.0, 0.0);
       } else if (elementName === 'fluid') {
         activeCore.setConfig({
           DENSITY_DISSIPATION: 0.98,
           VELOCITY_DISSIPATION: 0.20,
           CURL: 30.0,
           SPLAT_RADIUS: 0.25,
+          THERMAL_CONVECTION: false,
           SUNRAYS: true,
           BLOOM: true
         });

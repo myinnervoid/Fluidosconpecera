@@ -1,82 +1,57 @@
-# DESIGN_SYSTEM.md — Sistema de Diseño Aetheria
+# DESIGN_SYSTEM.md — Sistema de Diseño Aetheria (Sanzo Wada × Meximalismo v2.2.0)
 
-Sistema visual y tokens de diseño extraídos del entorno Glassmorphic y Canvas de Aetheria.
-
----
-
-## 1. Tokens de Color (Color Palette Tokens)
-
-### Colores Base de Superficie y Vidrio (Glassmorphic Neutral Surfaces)
-```css
---bg-dark:            #07090e;                      /* Fondo profundo / Canvas backdrop */
---bg-panel:           rgba(14, 18, 28, 0.82);       /* Superficie panel con saturación */
---bg-btn:             rgba(255, 255, 255, 0.08);    /* Botón neutro reposo */
---bg-btn-hover:       rgba(255, 255, 255, 0.16);    /* Botón hover */
---bg-btn-active:      rgba(0, 242, 254, 0.25);      /* Botón seleccionado/activo */
-
---border-glass:       rgba(255, 255, 255, 0.14);    /* Borde sutil traslúcido */
---border-glow:        rgba(0, 242, 254, 0.50);      /* Resplandor hover */
---border-glow-active: #00f2fe;                      /* Borde activo */
-```
-
-### Colores Semánticos y Resplandores (Accent & Glow Tokens)
-```css
---accent-cyan:        #00f2fe;    /* Color primario interactivo / Fluido */
---accent-magenta:     #ff007f;    /* Supernova / Energía */
---accent-green:       #00f5d4;    /* Vórtice / Gas / Éter */
---accent-gold:        #ffbe0b;    /* Gravedad / Calor */
---accent-purple:      #9d4edd;    /* Paleta / Seda mística */
---accent-danger:      #ff4757;    /* Pausa / Limpiar */
-```
-
-### Jerarquía Tipográfica de Color
-```css
---text-main:          #f8fafc;    /* Alto contraste (Titulares y valores) */
---text-muted:         #94a3b8;    /* Contraste medio (Etiquetas secundarias) */
---text-dim:           #64748b;    /* Contraste bajo (Grupos de herramientas) */
-```
+Sistema visual y tokens de diseño de **Fluidos Studio (Aetheria)**, alineado al 100% con el [MANUAL_ARMONIA_CROMATICA_WADA_MEXICO.md](file:///home/myinnervoid/Estudio%20Memexicanisimos/MANUAL_ARMONIA_CROMATICA_WADA_MEXICO.md) (159 pigmentos base de Sanzo Wada y el Canon del Rotulismo Popular Mexicano).
 
 ---
 
-## 2. Tipografía (Typography Stack)
+## 1. Proporción Áurea 60-30-10 y Tokens Cromáticos
 
-Aetheria utiliza un **System Font Stack** optimizado de carga inmediata (cero peticiones de red externas):
-
+### 60% Dominante: Cielo Nocturno & Obsidiana (FAM-07)
 ```css
---font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
---font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+--bg-dark:            #051230;                      /* Deep Indigo (Wada) — Lienzo y cielo nocturno */
+--bg-obsidian:        #111314;                      /* Obsidian — Sombra dura de recorte */
+--bg-panel:           rgba(5, 18, 48, 0.92);        /* Consola principal de estudio */
+--bg-drawer:          rgba(5, 18, 48, 0.96);        /* Tablero arquitectónico de configuración */
 ```
 
-### Escala de Tamaños
-* **Display / Brand:** `0.95rem` (15.2px) | Peso: `800` | Tracking: `2px` | Gradiente Cyan-Magenta
-* **H3 Panel Header:** `0.95rem` (15.2px) | Peso: `700` | Tracking: `0.5px`
-* **H4 Section Title:** `0.75rem` (12.0px) | Peso: `700` | Tracking: `1px` (Uppercase)
-* **Button Text:** `0.78rem` (12.5px) | Peso: `600` | Tracking: `0.3px`
-* **Label / Badge:** `0.65rem` (10.4px) | Peso: `700` | Tracking: `1px` (Uppercase)
-* **Mono Value:** `0.75rem` (12.0px) | Peso: `600` (Mono)
+### 30% Estructura Secundaria: Talavera, Cal & Latón (FAM-04 / FAM-08)
+```css
+--bg-card:            rgba(18, 53, 78, 0.72);       /* Dark Tyrian Blue (#12354e) */
+--bg-card-hover:      rgba(18, 53, 78, 0.95);       /* Superficie activa de tarjeta */
+--blanco-hueso:       #f5ecc2;                      /* Sulpher Yellow — Cal viva y filetes de luz */
+--border-glass:       rgba(245, 236, 194, 0.28);    /* Filete de cal (>3:1 contraste no-textual) */
+--border-brass:       rgba(139, 131, 91, 0.55);     /* Dark Citrine (#8b835b) — Bisel de latón */
+```
+
+### 10% Acentos de Ignición: Tríada del Rótulo & Cenote (FAM-01 / FAM-02 / FAM-05)
+```css
+--accent-carmine:     #cc1236;    /* Carmine — Rojo Tocino de llamado */
+--accent-primary:     #dd4027;    /* Red Orange — Rojo Enchilada / Cinabrio */
+--accent-active:      #ffdd00;    /* Apricot Yellow — Amarillo Canario radiante */
+--accent-gold:        #f37420;    /* Orange — Naranja Cempasúchil */
+--accent-amber:       #f99d1b;    /* Amber Yellow — Oro Solar */
+--accent-green:       #00b49b;    /* Sea Green — Jade de Cenote / Quetzal */
+--accent-maya:        #0093a5;    /* Cerulian Blue — Azul Maya */
+--accent-cobalt:      #006eb8;    /* Cobalt Blue — Sombra de Rótulo */
+--accent-olympic:     #005b8d;    /* Olympic Blue — Contorno profundo */
+--accent-grenadine:   #f48067;    /* Grenadine Pink — Coral cálido */
+```
+
+> **Regla Anti-Morado de Plantilla IA:** Queda prohibido el uso de morados/violetas sintéticos (`#7B1FA2`, `#8A2BE2`, `#9B51E0`, `#9d4edd`) y negros puros en titulares.
 
 ---
 
-## 3. Espaciado, Bordes y Elevación (Spacings & Elevation)
+## 2. Tipografía y Regla Sagrada Anti-Negro
 
-### Radios de Borde (Border Radius)
-* `border-radius: 20px;` (Toolbar flotante y Drawer de ajustes)
-* `border-radius: 12px;` (Botones de herramientas y fidgets)
-* `border-radius: 10px;` (Tarjetas de paleta)
-* `border-radius: 50%;` (Swatches y cursores de simetría)
-
-### Sombras y Resplandores (Elevation / Shadows)
-* **Panel Glass:** `0 12px 36px 0 rgba(0, 0, 0, 0.55), inset 0 1px 1px 0 rgba(255, 255, 255, 0.15)`
-* **Active Glow:** `0 0 20px rgba(0, 242, 254, 0.60)`
-* **Backdrop Blur:** `blur(20px) saturate(180%)`
+* **Brand / Rótulo (`--font-display`):** `"Arial Black", "Impact", system-ui, sans-serif` — Titulado en **Amarillo Canario (`#ffdd00`)** con sombra dura 3D escalonada en **Rojo Carmín (`#cc1236`)** y **Azul Olímpico (`#005b8d`)**.
+* **UI Principal (`--font-main`):** `system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif` en **Blanco Hueso (`#f5ecc2`)**.
+* **Valores de Telemetría (`--font-mono`):** `ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace` en medallas de alto contraste (`#ffdd00` sobre `#12354e`).
 
 ---
 
-## 4. Estados de Componentes (Component States)
+## 3. Elevación Meximalista (Layering & Sombra Dura 3D)
 
-| Componente | Reposo (Default) | Hover | Active / Focus | Disabled |
-| :--- | :--- | :--- | :--- | :--- |
-| **Tool Button** | Borde `0.14` alfa, Fondo `0.08` | `translateY(-2px)`, Borde `0.35` | Fondo Cyan `0.25`, Sombra Glow | Opacidad `0.4`, `cursor: not-allowed` |
-| **Fidget Button** | Borde acentuado de color suave | Sombra intensa de color | `scale(0.92)` en clic | - |
-| **Slider Range** | Pista `0.12` alfa, Pulgar Cyan | Pulgar `scale(1.2)` | Resplandor en foco | - |
-| **Palette Card** | Fondo `0.05` alfa | Fondo `0.10` alfa, `translateY(-1px)` | Borde Cyan, Sombra `0 0 12px` | - |
+* **Sombra de Rótulo Corta (`--shadow-rotulo-sm`):** `1px 1px 0px #051230, 2px 2px 0px #111314, 3px 3px 0px #000000`
+* **Sombra de Rótulo Media (`--shadow-rotulo-md`):** `2px 2px 0px #005b8d, 4px 4px 0px #111314`
+* **Estado Activo (`--shadow-active`):** `0 0 18px rgba(255, 221, 0, 0.45), 2px 2px 0px #cc1236`
+* **Accesibilidad WCAG 2.2 AA:** Soporte nativo para `color-scheme: dark`, `accent-color: #ffdd00`, `@media (forced-colors: active)` y `@media (prefers-reduced-motion: reduce)`.

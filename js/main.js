@@ -193,18 +193,24 @@
       const rawDy = (normY - pointer.prevY);
       const dx = rawDx * FluidCore.config.SPLAT_FORCE;
       const dy = rawDy * FluidCore.config.SPLAT_FORCE;
+      const prevX = pointer.prevX;
+      const prevY = pointer.prevY;
 
       pointer.prevX = pointer.x;
       pointer.prevY = pointer.y;
       pointer.x = normX;
       pointer.y = normY;
+      pointer.stepCount = (pointer.stepCount || 0) + 1;
 
       const trailCfg = (typeof AetheriaCursor !== 'undefined') ? AetheriaCursor.getTrailConfig() : { radiusScale: 1.0, sparkType: 'star', sparkCount: 2, impulse: 1.0 };
-      const col = (typeof AetheriaCursor !== 'undefined') ? AetheriaCursor.getUserSplatColor(0) : [0.0, 0.95, 1.0];
+      const colIdx = Math.floor(pointer.stepCount / 14);
+      const col = (typeof AetheriaCursor !== 'undefined') ? AetheriaCursor.getUserSplatColor(colIdx) : [0.957, 0.502, 0.404];
 
-      // Inyección de fluido con simetría unificada directamente en la posición del puntero
+      // Inyección de fluido con interpolación de sub-pasos y simetría unificada
       const impulse = trailCfg.impulse || 1.0;
-      if (typeof AetheriaSymmetry !== 'undefined') {
+      if (typeof AetheriaSymmetry !== 'undefined' && typeof AetheriaSymmetry.injectStroke === 'function') {
+        AetheriaSymmetry.injectStroke(prevX, prevY, normX, normY, dx * impulse, dy * impulse, col, trailCfg.radiusScale, aspect);
+      } else if (typeof AetheriaSymmetry !== 'undefined') {
         AetheriaSymmetry.injectSplat(normX, normY, dx * impulse, dy * impulse, col, trailCfg.radiusScale, aspect);
       } else {
         FluidCore.splat(normX, normY, dx * impulse, dy * impulse, col, trailCfg.radiusScale);
@@ -256,8 +262,8 @@
         exportCanvas.height = h;
         const ctx = exportCanvas.getContext('2d');
 
-        // Draw Background Color
-        ctx.fillStyle = '#07090e';
+        // Draw Background Color (Wada Deep Indigo #051230)
+        ctx.fillStyle = '#051230';
         ctx.fillRect(0, 0, w, h);
 
         // Draw WebGL layer

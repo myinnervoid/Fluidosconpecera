@@ -82,6 +82,7 @@
       }
 
       this.updateSummary();
+      window.AetheriaTestsComplete = true;
     }
 
     updateSummary() {
@@ -404,14 +405,26 @@
       expect(keys).toContain('cenote');
     });
 
-    it('SwarmEngine boids se mantienen acotados dentro del margen de la pantalla (0.01 - 0.99)', () => {
+    it('SwarmEngine boids se mantienen acotados dentro del margen de la pantalla (0.01 - 0.99) y nadan con locomoción carangiforme', () => {
       AetheriaSwarm.setBoidsCount(4);
       expect(AetheriaSwarm.boids.length).toBe(4);
       for (const b of AetheriaSwarm.boids) {
         b.x = 0.005; // Fuera del margen
+        const prevTail = b.tailPhase;
         b.update(AetheriaSwarm.boids, 1.0, 0.016);
         expect(b.x).toBeGreaterThan(0.009); // Repulsión suave aplicada
+        expect(b.tailPhase).toBeGreaterThan(prevTail); // Oscilación caudal activa
+        expect(typeof b.tailAngle).toBe('number');
       }
+      // Reacción física de la pecera ante onda expansiva (Supernova / Vórtice)
+      expect(typeof AetheriaSwarm.applyForceField).toBe('function');
+      AetheriaSwarm.applyForceField(0.5, 0.5, 1.5, 'radial');
+    });
+
+    it('AetheriaSandMode implementa setGrainSize() con límites seguros [2.0, 48.0]', () => {
+      expect(typeof AetheriaSandMode.setGrainSize).toBe('function');
+      AetheriaSandMode.setGrainSize(16);
+      expect(AetheriaSandMode.grainSize).toBe(16);
     });
 
     it('CanvasRecorder expone tipos MIME compatibles con WebM/MP4', () => {

@@ -15,17 +15,17 @@
 
   class StateController {
     constructor() {
-      // Estado de Elemento y Color
-      this.palette = { key: 'aurora', name: '🌌 Aurora Boreal' };
+      // Estado de Elemento y Color (Canon Sanzo Wada × Meximalismo)
+      this.palette = { key: 'aurora', name: '🕳️ Cenote Bioluminiscente (Wada)' };
       this.activeElement = 'fluid'; // 'fluid', 'sand', 'gas', 'lava'
-      this.symmetry = 4; // 1, 2, 4, 6, 8
+      this.symmetry = 4; // 1..8
       this.isPaused = false;
       this.isGravityOn = false;
       this.gravityMagnitude = -1.85;
       
       // Avatares
       this.userAvatar = 'none'; // 'none', 'nyan', 'rocket', 'comet', 'clownfish', 'miku', 'custom'
-      this.swarmAvatar = 'nyan';
+      this.swarmAvatar = 'clownfish';
       this.swarmCount = 3;
       this.isSwarmActive = false;
 
@@ -44,10 +44,10 @@
         if (pal && pal.colors) return pal.colors;
       }
       return [
-        [0.0, 0.95, 1.0],
-        [0.55, 0.1, 1.0],
-        [1.0, 0.05, 0.55],
-        [0.1, 0.95, 0.6]
+        [0.957, 0.502, 0.404], // Grenadine Pink #f48067
+        [0.000, 0.576, 0.647], // Cerulian Blue #0093a5
+        [0.000, 0.706, 0.608], // Sea Green #00b49b
+        [1.000, 0.867, 0.000]  // Apricot Yellow #ffdd00
       ];
     }
 
